@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"slices"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -17,6 +16,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/vektah/gqlparser/v2/ast"
+
+	"github.com/eeritvan/calendar/internal/middleware"
 )
 
 const defaultPort = "8081"
@@ -62,13 +63,7 @@ func main() {
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				origin := r.Header.Get("Origin")
-				if origin == "" || origin == r.Header.Get("Host") {
-					return true
-				}
-
-				return slices.Contains(
-					[]string{":5173", "http://localhost"}, origin,
-				)
+				return origin == "http://localhost:5173" || origin == "ws://localhost:5173"
 			},
 		},
 	})
@@ -80,9 +75,10 @@ func main() {
 	srv.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New[string](100),
 	})
+	handler := middleware.CorsMiddleware(srv)
 
 	http.Handle("/healthz", http.HandlerFunc(healthCheck))
-	http.Handle("/api", srv)
+	http.Handle("/api", handler)
 
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
