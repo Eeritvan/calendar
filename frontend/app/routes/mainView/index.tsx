@@ -2,7 +2,7 @@
 import type { Route } from "./+types/index";
 import { gql, useSubscription } from "urql";
 import { client } from "~/root";
-import { Form, Await } from "react-router";
+import { Await, useFetcher } from "react-router";
 import type { UUID } from "crypto";
 import { Suspense, useEffect, useState } from "react";
 
@@ -14,15 +14,19 @@ export const meta = () => {
 };
 
 interface EventType {
-  id: UUID
-  name: string
-  description: string
-  startTime: string
-  endTime: string
+  id: UUID | undefined;
+  name: string;
+  description: string;
+  startTime: string;
+  endTime: string;
 }
 
 interface EventProps {
   event: EventType;
+}
+
+interface ListEventsProps {
+  eventsProp: EventType[];
 }
 
 const GET_QUERY = gql`
@@ -54,21 +58,17 @@ const SUBS_TEST = gql`
 
 export const loader = async () => {
   // const result = client.query(GET_QUERY, {}).toPromise();
-  const result = new Promise(resolve => setTimeout(resolve, 3000))
-    .then(() => client.query(GET_QUERY, {}).toPromise());
-  return { eventsPromise: result };
-};
-
-export const clientLoader = async () => {
-  // const result = client.query(GET_QUERY, {}).toPromise();
-  const result = new Promise(resolve => setTimeout(resolve, 3000))
+  const result = new Promise(resolve => setTimeout(resolve, 1000))
     .then(() => client.query(GET_QUERY, {}).toPromise());
   return { eventsPromise: result };
 };
 
 const AddNewForm = () => {
+  const fetcher = useFetcher({ key: "addEvent" });
+  const isSubmitting = fetcher.state === "submitting";
+
   return (
-    <Form action="new" method="post">
+    <fetcher.Form action="new" method="post">
       <div>
         <label> name </label>
         <input type="text" name="name" required />
@@ -77,28 +77,59 @@ const AddNewForm = () => {
         <label> description </label>
         <input type="text" name="description" />
       </div>
-      <button type="submit"> create </button>
-    </Form>
+      <button type="submit">
+        {isSubmitting ? "Creating..." : "Create"}
+      </button>
+    </fetcher.Form>
   );
 };
 
 const Event = ({ event }: EventProps) => {
+  const fetcher = useFetcher({ key: "deleteEvent" });
+
   return (
     <li>
-      {event.name} - {event.description}
-      <Form
+      {event.id} - {event.name} - {event.description}
+      <fetcher.Form
         action={`/delete/${event.id}`}
         method="post"
+        key={"test"}
       >
+        <input type="hidden" name="eventId" value={event.id} />
         <button type="submit"> delete </button>
-      </Form>
+      </fetcher.Form>
     </li>
   );
 };
 
-const ListEvents = ({ eventsProp }) => {
+const ListEvents = ({ eventsProp }: ListEventsProps) => {
+  const deleteFetcher = useFetcher({ key: "deleteEvent" });
+  const addFetcher = useFetcher({ key: "addEvent" });
   const [res] = useSubscription({ query: SUBS_TEST });
   const [events, setEvents] = useState<EventType[]>(eventsProp);
+
+  useEffect(() => {
+    const deletedId = deleteFetcher.formData?.get("eventId");
+    setEvents(events => events.filter(e => e.id !== deletedId));
+  }, [deleteFetcher.formData]);
+
+  useEffect(() => {
+    const eventName = addFetcher.formData?.get("name");
+    const eventDesc = addFetcher.formData?.get("description");
+
+    if (eventName) {
+      setEvents(prevEvents => [
+        ...prevEvents,
+        {
+          id: undefined,
+          name: eventName as string,
+          description: eventDesc as string,
+          startTime: new Date().toISOString(),
+          endTime: new Date().toISOString()
+        }
+      ]);
+    }
+  }, [addFetcher.formData]);
 
   useEffect(() => {
     if (res.data?.eventChanged) {
@@ -106,9 +137,22 @@ const ListEvents = ({ eventsProp }) => {
 
       setEvents(events => {
         switch (action) {
-        case "INSERT":
+        case "INSERT": {
+          const optimisticIndex = events.findIndex(e =>
+            e.id === undefined &&
+            e.name === event.name &&
+            e.description === event.description
+          );
+          if (optimisticIndex !== -1) {
+            const updatedEvents = [...events];
+            updatedEvents[optimisticIndex] = event;
+            return updatedEvents;
+          }
           const exists = events.some(e => e.id === event.id);
           return exists ? events : [...events, event];
+        }
+        case "DELETE":
+          return events.filter(e => e.id !== event.id);
         default:
           return events;
         }
@@ -135,7 +179,11 @@ const MainView = ({ loaderData }: Route.ComponentProps) => {
       <h2 className="text-2xl font-bold mb-4"> All events </h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={loaderData.eventsPromise}>
-          {(data) => <ListEvents eventsProp={data.data.allEvents} />}
+          {(data) => {
+            return (
+              <ListEvents eventsProp={data.data.allEvents} />
+            );
+          }}
         </Await>
       </Suspense>
     </div>
