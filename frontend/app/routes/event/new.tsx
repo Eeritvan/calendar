@@ -39,5 +39,6 @@ export const clientAction = async ({ request }: Route.ActionArgs) => {
       startTime: time1,
       endTime: time2
     }).toPromise();
+
   return redirect("/");
 };

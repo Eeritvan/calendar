@@ -7,29 +7,39 @@ import {
   Scripts,
   ScrollRestoration
 } from "react-router";
-import type { Route } from "./+types/root";
-import "./app.css";
 import {
   Client,
-  cacheExchange,
   fetchExchange,
-  ssrExchange,
-  Provider
+  Provider,
+  subscriptionExchange
 } from "urql";
+import { createClient as createWSClient } from "graphql-ws";
+import type { Route } from "./+types/root";
+import "./app.css";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-const isServerSide = typeof window === "undefined";
-
-const ssr = ssrExchange({
-  isClient: !isServerSide,
-  initialState: !isServerSide ? window.__URQL_DATA__ : undefined
+const wsClient = createWSClient({
+  url: "ws://localhost:8081/api"
 });
 
 export const client = new Client({
   url: BACKEND_URL,
   suspense: true,
-  exchanges: [cacheExchange, ssr, fetchExchange]
+  exchanges: [
+    fetchExchange,
+    subscriptionExchange({
+      forwardSubscription(request) {
+        const input = { ...request, query: request.query || "" };
+        return {
+          subscribe(sink) {
+            const unsubscribe = wsClient.subscribe(input, sink);
+            return { unsubscribe };
+          }
+        };
+      }
+    })
+  ]
 });
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {

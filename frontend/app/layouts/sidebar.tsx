@@ -3,8 +3,7 @@ import { NavLink, Outlet } from "react-router";
 const SidebarLayout = () => {
   return (
     <>
-      <NavLink to="/"> home page </NavLink>
-      <NavLink to="/test"> testpage </NavLink>
+      <NavLink to="/"> home </NavLink>
       <Outlet />
     </>
   );

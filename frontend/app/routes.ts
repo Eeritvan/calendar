@@ -10,6 +10,5 @@ export default [
     index("routes/mainView/index.tsx")
   ]),
   route("new", "routes/event/new.tsx"),
-  route("delete/:EventID", "routes/event/delete.tsx"),
-  route("test", "routes/test.tsx")
+  route("delete/:EventID", "routes/event/delete.tsx")
 ] satisfies RouteConfig;
