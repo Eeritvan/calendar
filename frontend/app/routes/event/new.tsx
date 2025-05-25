@@ -2,6 +2,9 @@ import { gql } from "urql";
 import { client } from "~/root";
 import type { Route } from "./+types/new";
 import { redirect } from "react-router";
+import dayjs from "dayjs";
+
+type Time = string & { readonly __brand: unique symbol };
 
 const ADD_QUERY = gql`
   mutation CreateEvent(
@@ -29,15 +32,15 @@ export const clientAction = async ({ request }: Route.ActionArgs) => {
 
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
-  const time1 = new Date();
-  const time2 = new Date();
+  const startTime = dayjs(formData.get("startTime") as string).format() as Time;
+  const endTime = dayjs(formData.get("endTime") as string).format() as Time;
 
   await client.mutation(
     ADD_QUERY, {
       name: name,
       description: description,
-      startTime: time1,
-      endTime: time2
+      startTime: startTime,
+      endTime: endTime
     }).toPromise();
 
   return redirect("/");

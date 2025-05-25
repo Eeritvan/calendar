@@ -67,6 +67,14 @@ const AddNewForm = () => {
         <label> description </label>
         <input type="text" name="description" />
       </div>
+      <div>
+        <label> start time </label>
+        <input type="datetime-local" name="startTime" required />
+      </div>
+      <div>
+        <label> end time </label>
+        <input type="datetime-local" name="endTime" required />
+      </div>
       <button type="submit">
         {isSubmitting ? "Creating..." : "Create"}
       </button>
@@ -79,7 +87,13 @@ const Event = ({ event }: { event: Event }) => {
 
   return (
     <li>
-      {event.id} - {event.name} - {event.description}
+      <div>
+        <div>{event.id}</div>
+        <div>{event.name}</div>
+        <div>{event.description}</div>
+        <div>{event.startTime}</div>
+        <div>{event.endTime}</div>
+      </div>
       <fetcher.Form
         action={`/delete/${event.id}`}
         method="post"
@@ -106,6 +120,8 @@ const ListEvents = ({ eventsProp }: { eventsProp: Event[] }) => {
   useEffect(() => {
     const eventName = addFetcher.formData?.get("name");
     const eventDesc = addFetcher.formData?.get("description");
+    const startTime = addFetcher.formData?.get("startTime");
+    const endTime = addFetcher.formData?.get("endTime");
 
     if (eventName) {
       setEvents(prevEvents => [
@@ -114,8 +130,8 @@ const ListEvents = ({ eventsProp }: { eventsProp: Event[] }) => {
           id: undefined,
           name: eventName as string,
           description: eventDesc as string,
-          startTime: new Date().toISOString(),
-          endTime: new Date().toISOString()
+          startTime: startTime as string,
+          endTime: endTime as string
         }
       ]);
     }
