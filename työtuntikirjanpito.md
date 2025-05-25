@@ -1,5 +1,11 @@
 | päivä      | tehty                                       | aika |
 | ---------- | ------------------------------------------- | ---- |
+| 25.05.2025 | lisäsin alkamis ja päättymispäivät frotnend | 1    |
+| 25.05.2025 | lisätty sivupalkki frontendiin              | 2    |
+| 24.05.2025 | frotnend refaktorointia ja parannuksia      | 2    |
+| 23.05.2025 | lisätty cors backendiin                     | 1    |
+| 21.05.2025 | lisätty grapgql subscriptiot backend        | 2,5  |
+| 18.05.2025 | pieniä päivityksiä                          | 0,5  |
 | 11.05.2025 | muokattu backend rakennetta ja lisätty sqlc | 5    |
 | 02.05.2025 | lisätty proxy ja korjattu docker compose    | 3    |
 | 29.04.2025 | lisätty docker compose                      | 1,5  |
