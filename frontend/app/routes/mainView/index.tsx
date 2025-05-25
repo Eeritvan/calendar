@@ -13,20 +13,12 @@ export const meta = () => {
   ];
 };
 
-interface EventType {
-  id: UUID | undefined;
+interface Event {
+  id?: UUID;
   name: string;
   description: string;
   startTime: string;
   endTime: string;
-}
-
-interface EventProps {
-  event: EventType;
-}
-
-interface ListEventsProps {
-  eventsProp: EventType[];
 }
 
 const GET_QUERY = gql`
@@ -57,9 +49,7 @@ const SUBS_TEST = gql`
 `;
 
 export const loader = async () => {
-  // const result = client.query(GET_QUERY, {}).toPromise();
-  const result = new Promise(resolve => setTimeout(resolve, 1000))
-    .then(() => client.query(GET_QUERY, {}).toPromise());
+  const result = client.query(GET_QUERY, {}).toPromise();
   return { eventsPromise: result };
 };
 
@@ -84,7 +74,7 @@ const AddNewForm = () => {
   );
 };
 
-const Event = ({ event }: EventProps) => {
+const Event = ({ event }: { event: Event }) => {
   const fetcher = useFetcher({ key: "deleteEvent" });
 
   return (
@@ -102,11 +92,11 @@ const Event = ({ event }: EventProps) => {
   );
 };
 
-const ListEvents = ({ eventsProp }: ListEventsProps) => {
+const ListEvents = ({ eventsProp }: { eventsProp: Event[] }) => {
   const deleteFetcher = useFetcher({ key: "deleteEvent" });
   const addFetcher = useFetcher({ key: "addEvent" });
   const [res] = useSubscription({ query: SUBS_TEST });
-  const [events, setEvents] = useState<EventType[]>(eventsProp);
+  const [events, setEvents] = useState<Event[]>(eventsProp);
 
   useEffect(() => {
     const deletedId = deleteFetcher.formData?.get("eventId");
@@ -163,7 +153,7 @@ const ListEvents = ({ eventsProp }: ListEventsProps) => {
   return (
     <ul>
       {events && events.length > 0 ?
-        events.map((event: EventType) => <Event key={event.id} event={event} />)
+        events.map((event: Event) => <Event key={event.id} event={event} />)
         : <p>No events found.</p>
       }
     </ul>
@@ -176,7 +166,7 @@ const MainView = ({ loaderData }: Route.ComponentProps) => {
       <h2 className="text-2xl font-bold mb-4"> Add event </h2>
       <AddNewForm />
 
-      <h2 className="text-2xl font-bold mb-4"> All events </h2>
+      <h1 className="text-2xl font-bold mb-4"> All events </h1>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={loaderData.eventsPromise}>
           {(data) => {

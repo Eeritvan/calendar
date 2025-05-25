@@ -6,8 +6,9 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("layouts/sidebar.tsx", [
-    index("routes/mainView/index.tsx")
+  layout("layouts/_index.tsx", [
+    index("routes/mainView/index.tsx"),
+    route("test", "routes/test.tsx")
   ]),
   route("new", "routes/event/new.tsx"),
   route("delete/:EventID", "routes/event/delete.tsx")
