@@ -6,10 +6,11 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("layouts/_index.tsx", [
+  layout("routes/sidebar/sidebar.tsx", [
     index("routes/mainView/index.tsx"),
     route("test", "routes/test.tsx")
   ]),
   route("new", "routes/event/new.tsx"),
-  route("delete/:EventID", "routes/event/delete.tsx")
+  route("delete/:EventID", "routes/event/delete.tsx"),
+  route("changeWidth", "routes/sidebar/changeWidth.tsx")
 ] satisfies RouteConfig;

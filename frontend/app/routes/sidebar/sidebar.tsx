@@ -1,8 +1,20 @@
-import { type ReactNode, useState, useRef } from "react";
+import { useRef } from "react";
+import { createCookie, data, NavLink, Outlet, useFetcher } from "react-router";
+import type { Route } from "../../+types/root";
 
-const Sidebar = ({ children }: { children: ReactNode }) => {
-  const [size, setSize] = useState<number>(400);
+export const prefs = createCookie("prefs");
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const cookie = (await prefs.parse(cookieHeader)) || {};
+  return data({ sidebarWidth: cookie.sidebarWidth || 250 });
+}
+
+const Sidebar = ({ loaderData }: Route.ComponentProps) => {
+  const fetcher = useFetcher();
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  const { sidebarWidth = 250 } = loaderData  || {};
 
   const startResizing = () => {
     document.body.style.userSelect = "none";
@@ -17,9 +29,14 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
 
     const handleMouseUp = (moveEvent: MouseEvent) => {
       const newWidth = moveEvent.clientX;
-      if (newWidth >= 150 && newWidth <= 500) {
-        setSize(newWidth);
-      }
+      const clampedWidth = Math.max(150, Math.min(500, newWidth));
+      fetcher.submit(
+        { sidebarWidth: clampedWidth },
+        {
+          method: "post",
+          action: "/changeWidth"
+        }
+      );
 
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
@@ -33,19 +50,21 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <>
+    <div className="flex flex-row h-dvh">
       <div
         ref={sidebarRef}
         className="bg-cyan-700"
-        style={{ width: `${size}px` }}
+        style={{ width: `${sidebarWidth}px` }}
       >
-        {children}
+        <NavLink to="/"> home </NavLink>
+        <NavLink to="/test"> test </NavLink>
       </div>
       <div
         className="w-2 bg-red-500"
         onMouseDown={startResizing}
       />
-    </>
+      <Outlet />
+    </div>
   );
 };
 
