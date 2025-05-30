@@ -58,10 +58,10 @@ const AddNewForm = () => {
   const isSubmitting = fetcher.state === "submitting";
 
   return (
-    <fetcher.Form action="new" method="post">
+    <fetcher.Form action="new" method="POST">
       <div>
         <label> name </label>
-        <input type="text" name="name" required />
+        <input type="text" name="name" required/>
       </div>
       <div>
         <label> description </label>
@@ -69,11 +69,11 @@ const AddNewForm = () => {
       </div>
       <div>
         <label> start time </label>
-        <input type="datetime-local" name="startTime" required />
+        <input type="datetime-local" name="startTime" required/>
       </div>
       <div>
         <label> end time </label>
-        <input type="datetime-local" name="endTime" required />
+        <input type="datetime-local" name="endTime" required/>
       </div>
       <button type="submit">
         {isSubmitting ? "Creating..." : "Create"}
