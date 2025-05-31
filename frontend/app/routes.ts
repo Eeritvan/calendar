@@ -12,5 +12,5 @@ export default [
   ]),
   route("new", "routes/event/new.tsx"),
   route("delete/:EventID", "routes/event/delete.tsx"),
-  route("changeWidth", "routes/sidebar/changeWidth.tsx")
+  route("changeSidebar", "routes/sidebar/changeSidebar.tsx")
 ] satisfies RouteConfig;

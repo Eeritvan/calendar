@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { createCookie, data, NavLink, Outlet, useFetcher } from "react-router";
 import type { Route } from "../../+types/root";
 
@@ -7,12 +7,24 @@ export const prefs = createCookie("prefs");
 export async function loader({ request }: Route.LoaderArgs) {
   const cookieHeader = request.headers.get("Cookie");
   const cookie = (await prefs.parse(cookieHeader)) || {};
-  return data({ sidebarWidth: cookie.sidebarWidth || 250 });
+  return data({
+    sidebarWidth: cookie.sidebarWidth || 250,
+    isCollapsed: cookie.isCollapsed || false
+  });
 }
 
-const Sidebar = ({ loaderData }: Route.ComponentProps) => {
+interface SidebarProps {
+  loaderData: {
+    isCollapsed?: boolean;
+    sidebarWidth?: number;
+  };
+}
+
+const Sidebar = ({ loaderData }: SidebarProps) => {
   const fetcher = useFetcher();
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [isCollapsed, setIsCollapsed] =
+    useState<boolean>(loaderData?.isCollapsed || false);
 
   const { sidebarWidth = 250 } = loaderData  || {};
 
@@ -33,8 +45,8 @@ const Sidebar = ({ loaderData }: Route.ComponentProps) => {
       fetcher.submit(
         { sidebarWidth: clampedWidth },
         {
-          method: "post",
-          action: "/changeWidth"
+          method: "POST",
+          action: "/changeSidebar"
         }
       );
 
@@ -49,22 +61,49 @@ const Sidebar = ({ loaderData }: Route.ComponentProps) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+    fetcher.submit(
+      { isCollapsed: !isCollapsed },
+      {
+        method: "POST",
+        action: "/changeSidebar"
+      }
+    );
+  };
+
   return (
-    <div className="flex flex-row h-dvh">
-      <div
-        ref={sidebarRef}
-        className="bg-cyan-700"
-        style={{ width: `${sidebarWidth}px` }}
-      >
-        <NavLink to="/"> home </NavLink>
-        <NavLink to="/test"> test </NavLink>
-      </div>
-      <div
-        className="w-2 bg-red-500"
-        onMouseDown={startResizing}
-      />
-      <Outlet />
-    </div>
+    <>
+      { isCollapsed ?
+        <>
+          <button onClick={toggleSidebar}>
+            toggle
+          </button>
+          <Outlet />
+        </> :
+        <div className="flex flex-row h-dvh">
+          <div
+            ref={sidebarRef}
+            className="bg-cyan-700 relative"
+            style={{ width: `${sidebarWidth}px` }}
+          >
+            <NavLink to="/"> home </NavLink>
+            <NavLink to="/test"> test </NavLink>
+            <button
+              onClick={toggleSidebar}
+              className="absolute top-0 right-0"
+            >
+              toggle
+            </button>
+          </div>
+          <div
+            className="w-2 bg-red-500"
+            onMouseDown={startResizing}
+          />
+          <Outlet />
+        </div>
+      }
+    </>
   );
 };
 
