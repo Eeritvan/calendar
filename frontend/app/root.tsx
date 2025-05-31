@@ -1,49 +1,17 @@
 /* eslint-disable react/no-multi-comp */
+import type { Route } from "./+types/root";
 import {
   isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration,
-  useLocation,
-  useNavigate
+  ScrollRestoration
 } from "react-router";
-import {
-  Client,
-  fetchExchange,
-  Provider,
-  subscriptionExchange
-} from "urql";
-import { createClient as createWSClient } from "graphql-ws";
-import type { Route } from "./+types/root";
+import { Provider } from "urql";
+import { client } from "./api/graphql";
+import Settings from "./features/settings/components";
 import "./app.css";
-import { useState, useEffect } from "react";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-const wsClient = createWSClient({
-  url: "ws://localhost:8081/api"
-});
-
-export const client = new Client({
-  url: BACKEND_URL,
-  suspense: true,
-  exchanges: [
-    fetchExchange,
-    subscriptionExchange({
-      forwardSubscription(request) {
-        const input = { ...request, query: request.query || "" };
-        return {
-          subscribe(sink) {
-            const unsubscribe = wsClient.subscribe(input, sink);
-            return { unsubscribe };
-          }
-        };
-      }
-    })
-  ]
-});
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -92,44 +60,11 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   );
 };
 
-const SettingsModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const isSettingsOpen = location.hash === "#settings";
-    setIsOpen(isSettingsOpen);
-  }, [location.hash]);
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      navigate(location.pathname + location.search, { replace: true });
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center"
-      onClick={handleOverlayClick}
-    >
-      <div className="bg-white text-black p-6 max-w-md w-full mx-4">
-        <h2 className="text-xl font-bold">Settings</h2>
-        <div>
-          <p>okok</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const App = () => {
   return (
     <Provider value={client}>
       <Outlet />
-      <SettingsModal />
+      <Settings />
     </Provider>
   );
 };

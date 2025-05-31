@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { createCookie, data, NavLink, Outlet, useFetcher } from "react-router";
-import type { Route } from "../../+types/root";
+import type { Route } from "./+types";
 
 export const prefs = createCookie("prefs");
 

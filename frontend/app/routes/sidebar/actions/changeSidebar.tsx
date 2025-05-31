@@ -1,6 +1,6 @@
 import { data } from "react-router";
-import type { Route } from "./+types/sidebar";
-import { prefs } from "./sidebar";
+import type { Route } from "./+types/changeSidebar";
+import { prefs } from "../components";
 
 export async function action({ request }: Route.ActionArgs) {
   const cookieHeader = request.headers.get("Cookie");
