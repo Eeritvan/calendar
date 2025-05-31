@@ -1,6 +1,6 @@
 import { gql } from "urql";
 
-export const ADD_QUERY = gql`
+export const ADD_EVENT = gql`
   mutation CreateEvent(
     $name: String!,
     $description: String,
@@ -21,7 +21,7 @@ export const ADD_QUERY = gql`
   }
 `;
 
-export const DELETE_QUERY = gql`
+export const DELETE_EVENT = gql`
   mutation DeleteEvent($id: UUID!) {
     deleteEvent(id: $id)
   }

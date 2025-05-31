@@ -2,7 +2,7 @@ import { client } from "~/api/graphql";
 import { redirect } from "react-router";
 import dayjs from "dayjs";
 import { eventValidationSchema } from "../validation/schemas";
-import { ADD_QUERY } from "../api/mutations";
+import { ADD_EVENT } from "../api/mutations";
 import type { Time } from "../types";
 import type { Route } from "./+types/new";
 
@@ -25,7 +25,7 @@ export const clientAction = async ({ request }: Route.ActionArgs) => {
     };
   }
 
-  await client.mutation(ADD_QUERY, rawData).toPromise();
+  await client.mutation(ADD_EVENT, rawData).toPromise();
 
   return redirect("/");
 };
