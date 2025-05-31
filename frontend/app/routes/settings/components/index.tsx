@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 
+export const meta = () => {
+  return [
+    { title: "settings" },
+    { name: "description", content: "Testing react router!" }
+  ];
+};
+
 const Settings = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
@@ -16,6 +23,8 @@ const Settings = () => {
       navigate(location.pathname + location.search, { replace: true });
     }
   };
+
+  if (location.pathname === "/settings") return null;
 
   if (!isOpen) return null;
 

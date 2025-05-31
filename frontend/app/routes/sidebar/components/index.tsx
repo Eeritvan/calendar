@@ -89,6 +89,7 @@ const Sidebar = ({ loaderData }: SidebarProps) => {
           >
             <NavLink to="/"> home </NavLink>
             <NavLink to="/test"> test </NavLink>
+            <NavLink to="#settings"> settings </NavLink>
             <button
               onClick={toggleSidebar}
               className="absolute top-0 right-0"

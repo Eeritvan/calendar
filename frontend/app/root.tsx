@@ -10,7 +10,7 @@ import {
 } from "react-router";
 import { Provider } from "urql";
 import { client } from "./api/graphql";
-import Settings from "./features/settings/components";
+import Settings from "./routes/settings/components";
 import "./app.css";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {

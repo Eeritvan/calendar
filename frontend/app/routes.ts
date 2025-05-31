@@ -13,7 +13,8 @@ export default [
         route("delete/:eventId", "routes/events/actions/delete.tsx")
       ])
     ]),
-    route("test", "routes/test.tsx")
+    route("test", "routes/test.tsx"),
+    route("settings", "routes/settings/components/index.tsx")
   ]),
   route("changeSidebar", "routes/sidebar/actions/changeSidebar.tsx")
 ] satisfies RouteConfig;
