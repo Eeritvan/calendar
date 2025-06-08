@@ -20,15 +20,7 @@ import (
 	"github.com/eeritvan/calendar/internal/middleware"
 )
 
-const defaultPort = "8081"
-
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("ok")); err != nil {
-		// todo: better error handling
-		log.Print("health check failed")
-	}
-}
+const DEFAULT_PORT = "8081"
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -42,14 +34,12 @@ func main() {
 		log.Fatal("failed to initialize database service")
 	}
 	defer func() {
-		if err := dbService.Conn.Close(ctx); err != nil {
-			log.Printf("failed to close DB connection: %v", err)
-		}
+		dbService.Pool.Close()
 	}()
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = defaultPort
+		port = DEFAULT_PORT
 	}
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
@@ -62,8 +52,9 @@ func main() {
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
-				origin := r.Header.Get("Origin")
-				return origin == "http://localhost:5173" || origin == "ws://localhost:5173"
+				return true
+				// origin := r.Header.Get("Origin")
+				// return origin == "http://localhost:3000" || origin == "ws://localhost:3000" || origin == "http://localhost:5173" || origin == "ws://localhost:5173"
 			},
 		},
 	})
@@ -77,7 +68,6 @@ func main() {
 	})
 	handler := middleware.CorsMiddleware(srv)
 
-	http.Handle("/healthz", http.HandlerFunc(healthCheck))
 	http.Handle("/api", handler)
 
 	log.Fatal(http.ListenAndServe(":"+port, nil))

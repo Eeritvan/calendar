@@ -6,7 +6,7 @@ import { ADD_EVENT } from "../api/mutations";
 import type { Time } from "../types";
 import type { Route } from "./+types/new";
 
-export const clientAction = async ({ request }: Route.ActionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
 
   const rawData = {

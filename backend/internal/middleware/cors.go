@@ -9,7 +9,7 @@ import (
 
 func CorsMiddleware(srv *handler.Server) http.Handler {
 	handler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"POST"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,

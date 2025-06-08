@@ -9,7 +9,7 @@ import (
 
 	sqlc "github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Event struct {
@@ -28,71 +28,76 @@ type EventNotification struct {
 }
 
 type DBService struct {
-	Queries      *sqlc.Queries
-	Conn         *pgx.Conn
-	ListenerConn *pgx.Conn
+	Queries *sqlc.Queries
+	Pool    *pgxpool.Pool
+}
+
+func initSchema(ctx context.Context, pool *pgxpool.Pool) error {
+	sqlFile, err := os.ReadFile("./schema.sql")
+	if err != nil {
+		return err
+	}
+	_, err = pool.Exec(ctx, string(sqlFile))
+	return err
 }
 
 func ConnectToDB(ctx context.Context) (*DBService, error) {
 	dbUrl := os.Getenv("DB_URL")
 
-	conn, err := pgx.Connect(ctx, dbUrl)
-	if err != nil {
-		log.Fatalln("Connection to db failed:", err)
-		return nil, err
-	}
-
-	listenerConn, err := pgx.Connect(ctx, dbUrl)
-	if err != nil {
-		log.Fatalln("Listener connection to db failed:", err)
-		if err := conn.Close(ctx); err != nil {
-			log.Fatalln("Failed to close connection:", err)
-		}
-		return nil, err
-	}
-
-	queries := sqlc.New(conn)
-
-	// initialize schema
-	sqlFile, err := os.ReadFile("./schema.sql")
+	pool, err := pgxpool.New(ctx, dbUrl)
 	if err != nil {
 		return nil, err
 	}
-	_, err = conn.Exec(ctx, string(sqlFile))
-	if err != nil {
+
+	if err := initSchema(ctx, pool); err != nil {
+		pool.Close()
 		return nil, err
 	}
 
 	return &DBService{
-		Queries:      queries,
-		Conn:         conn,
-		ListenerConn: listenerConn,
+		Queries: sqlc.New(pool),
+		Pool:    pool,
 	}, nil
 }
 
+// https://github.com/jackc/pgx/issues/1121 << reference for the code
 func (s *DBService) Listen(ctx context.Context, channel string, callback func(EventNotification)) error {
-	_, err := s.ListenerConn.Exec(ctx, "LISTEN "+channel)
+	conn, err := s.Pool.Acquire(ctx)
 	if err != nil {
 		return err
 	}
 
+	_, err = conn.Exec(ctx, "LISTEN "+channel)
+	if err != nil {
+		conn.Release()
+		return err
+	}
+
 	go func() {
+		defer conn.Release()
+
 		for {
-			notification, err := s.ListenerConn.WaitForNotification(ctx)
-			if err != nil {
-				log.Printf("Error waiting for notification: %v", err)
+			select {
+			case <-ctx.Done():
 				return
-			}
-			var eventNotification EventNotification
-			if err := json.Unmarshal([]byte(notification.Payload), &eventNotification); err != nil {
-				log.Printf("Error unmarshaling notification payload: %v", err)
-				continue
-			}
+			default:
+				notification, err := conn.Conn().WaitForNotification(ctx)
+				if err != nil {
+					log.Printf("Error waiting for notification: %v", err)
+					return
+				}
 
-			eventNotification.Data.StartTime = eventNotification.Data.StartTime.Local()
-			eventNotification.Data.EndTime = eventNotification.Data.EndTime.Local()
+				var eventNotification EventNotification
+				if err := json.Unmarshal([]byte(notification.Payload), &eventNotification); err != nil {
+					log.Printf("Error unmarshaling notification payload: %v", err)
+					continue
+				}
 
-			callback(eventNotification)
+				eventNotification.Data.StartTime = eventNotification.Data.StartTime.Local()
+				eventNotification.Data.EndTime = eventNotification.Data.EndTime.Local()
+
+				callback(eventNotification)
+			}
 		}
 	}()
 

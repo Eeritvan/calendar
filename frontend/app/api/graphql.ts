@@ -4,7 +4,7 @@ import { createClient as createWSClient } from "graphql-ws";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const wsClient = createWSClient({
-  url: "ws://localhost:8081/api"
+  url: BACKEND_URL.replace("http://", "ws://") || "ws://localhost:8081/api"
 });
 
 export const client = new Client({
