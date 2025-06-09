@@ -1,0 +1,39 @@
+name: e2e tests
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Start docker compose
+      env:
+        POSTGRES_PASSWORD: postgres
+      run: docker compose up -d
+
+    - name: Wait for the client
+      run: |
+        until curl -sSf http://localhost:5173; do
+          netstat -t
+          docker ps -a
+          sleep 1
+        done
+
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install Deps
+      run: bun install --frozen-lockfiles
+      working-directory: frontend
+
+    - name: Install Playwright Browsers
+      run: bunx playwright install --with-deps chromium firefox webkit
+
+    - name: Run Playwright tests
+      run: bunx playwright test
+      working-directory: frontend

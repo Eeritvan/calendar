@@ -51,11 +51,7 @@ jobs:
           (needs.frontend.result == 'success' || needs.frontend.result == 'skipped') &&
           (needs.backend.result == 'success' || needs.backend.result == 'skipped')
         )
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Print TODO for setup
-        run: |
-          echo "todo"
+    uses: ./.github/workflows/e2e.yaml
 
   deploy-frontend:
     needs: [paths-filter, e2e]

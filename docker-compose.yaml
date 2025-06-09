@@ -1,15 +1,4 @@
 services:
-  haproxy:
-    image: haproxy:alpine
-    container_name: haproxy
-    ports:
-      - "80:80"
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on:
-      - frontend
-      - backend
-
   frontend:
     build:
       context: frontend
@@ -17,8 +6,11 @@ services:
       cache_from:
         - type=registry,ref=eeritvan/calendar-frontend:buildcache
       args:
-        VITE_BACKEND_URL: http://localhost:8081/api
+        VITE_BACKEND_URL: http://backend:8081/api
+        VITE_WEBSOCKET_URL: ws://localhost:8081/api
     container_name: frontend
+    ports:
+      - "5173:3000"
     depends_on:
       - backend
 
@@ -34,6 +26,8 @@ services:
       - PORT=8081
     depends_on:
       - db
+    ports:
+      - "8081:8081"
     restart: on-failure
 
   db:
