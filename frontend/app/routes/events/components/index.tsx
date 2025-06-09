@@ -28,8 +28,9 @@ const MainView = ({ loaderData }: Route.ComponentProps) => {
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={loaderData.eventsPromise}>
           {(data) => {
+            const events = data?.data?.allEvents || [];
             return (
-              <ListEvents eventsProp={data.data.allEvents} />
+              <ListEvents eventsProp={events} />
             );
           }}
         </Await>
