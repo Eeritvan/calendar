@@ -9,6 +9,9 @@ BINARY_NAME=calendar-backend
 start: build
 	./$(BINARY_NAME)
 
+dev:
+	air
+
 build: clean
 	$(GOBUILD) -o $(BINARY_NAME)
 
