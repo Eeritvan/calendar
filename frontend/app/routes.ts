@@ -13,6 +13,7 @@ export default [
         route("delete/:eventId", "routes/events/actions/delete.tsx")
       ])
     ]),
+    route("/week/:startDate?", "routes/week/components/index.tsx"),
     route("test", "routes/test.tsx"),
     route("settings", "routes/settings/components/index.tsx")
   ]),

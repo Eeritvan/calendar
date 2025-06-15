@@ -81,7 +81,7 @@ const Sidebar = ({ loaderData }: SidebarProps) => {
           </button>
           <Outlet />
         </> :
-        <div className="flex flex-row h-dvh">
+        <div className="flex h-dvh">
           <div
             ref={sidebarRef}
             className="bg-cyan-700 relative"
@@ -98,10 +98,12 @@ const Sidebar = ({ loaderData }: SidebarProps) => {
             </button>
           </div>
           <div
-            className="w-2 bg-red-500"
+            className="w-2 bg-red-500 flex-shrink-0"
             onMouseDown={startResizing}
           />
-          <Outlet />
+          <div className="flex-1 overflow-y-auto">
+            <Outlet />
+          </div>
         </div>
       }
     </>

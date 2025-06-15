@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import dayjs from "dayjs";
 import { eventValidationSchema } from "../validation/schemas";
 import { ADD_EVENT } from "../api/mutations";
-import type { Time } from "../types";
+import type { Time } from "../../../types";
 import type { Route } from "./+types/new";
 
 export const action = async ({ request }: Route.ActionArgs) => {
