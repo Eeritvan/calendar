@@ -19,3 +19,8 @@ WHERE id = $1;
 -- name: ListEvents :many
 SELECT id, name, description, start_time, end_time
 FROM events;
+
+-- name: EventsByTimeRange :many
+SELECT id, name, description, start_time, end_time
+FROM events
+WHERE start_time < $1 AND end_time > $2;

@@ -53,6 +53,43 @@ func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const eventsByTimeRange = `-- name: EventsByTimeRange :many
+SELECT id, name, description, start_time, end_time
+FROM events
+WHERE start_time < $1 AND end_time > $2
+`
+
+type EventsByTimeRangeParams struct {
+	StartTime time.Time
+	EndTime   time.Time
+}
+
+func (q *Queries) EventsByTimeRange(ctx context.Context, arg EventsByTimeRangeParams) ([]Event, error) {
+	rows, err := q.db.Query(ctx, eventsByTimeRange, arg.StartTime, arg.EndTime)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.StartTime,
+			&i.EndTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEvents = `-- name: ListEvents :many
 SELECT id, name, description, start_time, end_time
 FROM events

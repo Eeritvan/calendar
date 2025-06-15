@@ -25,6 +25,7 @@ input UpdateEventInput {
 
 type Query {
   allEvents: [Event!]
+  eventsByTimeRange(startTime: Time!, endTime: Time!): [Event!]!
 }
 
 type Mutation {
