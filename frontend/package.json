@@ -36,6 +36,7 @@
     "@types/react-dom": "^19.1.6",
     "babel-plugin-react-compiler": "^19.1.0-rc.1-rc-af1b7da-20250421",
     "eslint": "^9.29.0",
+    "eslint-plugin-depend": "^1.2.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^6.0.0",
     "eslint-plugin-react-refresh": "^0.4.20",

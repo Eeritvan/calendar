@@ -5,10 +5,15 @@ import pluginReact from "eslint-plugin-react";
 import { defineConfig } from "eslint/config";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import depend from "eslint-plugin-depend";
 
 export default defineConfig([
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
+    plugins: {
+      depend
+    },
+    extends: ["depend/flat/recommended"],
     languageOptions:{
       ecmaVersion: "latest",
       globals: globals.browser,
@@ -26,7 +31,7 @@ export default defineConfig([
   reactHooks.configs.recommended,
   reactRefresh.configs.recommended,
 
-  { ignores: ["build", ".react-router"] },
+  { ignores: ["build", ".react-router", "eslint.config.js"] },
   {
     settings: {
       react: {
