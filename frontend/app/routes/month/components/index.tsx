@@ -1,41 +1,48 @@
-import { Await, useParams, redirect } from "react-router";
-import SingleDate from "./SingleDate";
 import dayjs from "dayjs";
+import { Await, redirect, useParams } from "react-router";
 import type { Route } from "./+types";
-import { client } from "~/api/graphql";
-import { GET_EVENTS_BY_TIME_RANGE } from "../api/queries";
 import { Suspense } from "react";
+import SingleDate from "~/routes/month/components/SingleDate";
+import { urlDateSchema } from "../validation/date";
+import { client } from "~/api/graphql";
+import { GET_EVENTS_BY_TIME_RANGE } from "../api/query";
 import type { Event } from "~/types";
 import isBetween from "dayjs/plugin/isBetween";
 
 dayjs.extend(isBetween);
 
 export const loader = ({ params }: Route.LoaderArgs) => {
-  // todo: validate params
-  if (!params.startDate) {
-    const currentDate = dayjs().format("YYYY-MM-DD");
-    return redirect(`/week/${currentDate}`);
+  if (!params.date) {
+    const currentDate = dayjs().format("YYYY-MM");
+    return redirect(`/month/${currentDate}`);
   }
 
-  const startDate = params.startDate ? dayjs(params.startDate) : dayjs();
+  const dateParseResult = urlDateSchema.safeParse(params.date);
+  if (!dateParseResult.success) {
+    const currentDate = dayjs().format("YYYY-MM");
+    return redirect(`/month/${currentDate}`);
+  }
+
+  const startOfMonth = dayjs(params.date);
+  const daysInMonth = startOfMonth ? dayjs(startOfMonth).daysInMonth() : 0;
 
   const result = client.query(GET_EVENTS_BY_TIME_RANGE, {
-    startTime: startDate,
-    endTime: startDate.add(7, "day")
+    startTime: startOfMonth,
+    endTime: startOfMonth.add(daysInMonth, "day")
   }).toPromise();
 
   return { events: result };
 };
 
-const Week = ({ loaderData }: Route.ComponentProps) => {
-  // todo: validate params
-  const { startDate } = useParams();
-  const startDateObj = startDate ? dayjs(startDate) : dayjs();
+const Month = ({ loaderData }: Route.ComponentProps) => {
+  const { date } = useParams();
+  const parsedDate = dayjs(date);
+  const daysInMonth = parsedDate.isValid() ? parsedDate.daysInMonth() : 0;
 
   return (
-    <div className="flex w-full">
-      {Array.from({ length: 7 }, (_, index) => {
-        const currentDate = startDateObj.add(index, "day");
+    <div className="grid grid-cols-7 m-2 h-dvh">
+      {Array.from({ length: daysInMonth }, (_, index) => {
+        const currentDate = parsedDate.add(index, "day");
 
         return (
           <Suspense
@@ -66,4 +73,4 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
   );
 };
 
-export default Week;
+export default Month;

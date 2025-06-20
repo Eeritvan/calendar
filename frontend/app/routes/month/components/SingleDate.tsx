@@ -5,7 +5,7 @@ const SingleDate = (
   { date, events }: { date: dayjs.Dayjs, events: Event[] }
 ) => {
   return (
-    <div className="bg-red-400 w-full m-2 h-300">
+    <div className="bg-red-400 m-2">
       { date.format() }
       {events.map((event: Event) => {
         return (
