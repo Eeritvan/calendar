@@ -43,50 +43,43 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
 
   return (
     <div className={`grid grid-cols-[minmax(0,1fr)_repeat(7,_minmax(0,4fr))]
-      grid-rows-[repeat(28,_40px)]`}
+      grid-rows-[repeat(25,_40px)] grid-flow-col`}
     >
       <div />
-      {Array.from({ length: 7 }, (_, index) => {
-        const currentDate = startDateObj.add(index, "day");
-        return (
-          <div key={index}>
-            { currentDate.format("YYYY-MM-DD")}
-          </div>
-        );
-      })}
       {HOURS.map((hour, index) => (
-        <div
-          key={hour}
-          style={{ gridRow: index + 2, gridColumn: 1 }}
-        >
+        <div key={index}>
           {hour}
         </div>
       ))}
+
       {Array.from({ length: 7 }, (_, index) => {
         const currentDate = startDateObj.add(index, "day");
         return (
-          <Suspense
-            key={index}
-            fallback={<SingleDate events={[]} />}
-          >
-            <Await resolve={loaderData.events}>
-              {(data) => {
-                const events: Event[] = data?.data?.eventsByTimeRange || [];
-                const dateEvents: Event[] = events.filter((event: Event) => {
-                  return dayjs(currentDate).isBetween(
-                    dayjs(event.startTime),
-                    dayjs(event.endTime),
-                    "day",
-                    "[]"
-                  );
-                });
+          <>
+            <div>
+              { currentDate.format("YYYY-MM-DD") }
+            </div>
+            <Suspense
+              key={index}
+              fallback={<SingleDate events={[]} />}
+            >
+              <Await resolve={loaderData.events}>
+                {(data) => {
+                  const events: Event[] = data?.data?.eventsByTimeRange || [];
+                  const dateEvents: Event[] = events.filter((event: Event) => {
+                    return dayjs(currentDate).isBetween(
+                      dayjs(event.startTime),
+                      dayjs(event.endTime),
+                      "day",
+                      "[]"
+                    );
+                  });
 
-                return (
-                  <SingleDate events={dateEvents} />
-                );
-              }}
-            </Await>
-          </Suspense>
+                  return <SingleDate events={dateEvents} />;
+                }}
+              </Await>
+            </Suspense>
+          </>
         );
       })}
     </div>
