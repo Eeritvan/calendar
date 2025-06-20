@@ -7,12 +7,18 @@ import { GET_EVENTS_BY_TIME_RANGE } from "../api/queries";
 import { Suspense } from "react";
 import type { Event } from "~/types";
 import isBetween from "dayjs/plugin/isBetween";
+import { urlDateSchema } from "../validation/dateUrl";
 
 dayjs.extend(isBetween);
 
 export const loader = ({ params }: Route.LoaderArgs) => {
-  // todo: validate params
   if (!params.startDate) {
+    const currentDate = dayjs().format("YYYY-MM-DD");
+    return redirect(`/week/${currentDate}`);
+  }
+
+  const dateParseResult = urlDateSchema.safeParse(params.startDate);
+  if (!dateParseResult.success) {
     const currentDate = dayjs().format("YYYY-MM-DD");
     return redirect(`/week/${currentDate}`);
   }
@@ -28,7 +34,6 @@ export const loader = ({ params }: Route.LoaderArgs) => {
 };
 
 const Week = ({ loaderData }: Route.ComponentProps) => {
-  // todo: validate params
   const { startDate } = useParams();
   const startDateObj = startDate ? dayjs(startDate) : dayjs();
 
