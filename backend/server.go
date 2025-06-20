@@ -21,6 +21,7 @@ import (
 )
 
 const DEFAULT_PORT = "8081"
+const DEFAULT_URL = "http://localhost:5173"
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -48,13 +49,17 @@ func main() {
 		},
 	}))
 
+	frontendUrl := os.Getenv("FRONTEND_ORIGIN")
+	if frontendUrl == "" {
+		frontendUrl = DEFAULT_URL
+	}
+
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
-				return true
-				// origin := r.Header.Get("Origin")
-				// return origin == "http://localhost:3000" || origin == "ws://localhost:3000" || origin == "http://localhost:5173" || origin == "ws://localhost:5173"
+				origin := r.Header.Get("Origin")
+				return origin == frontendUrl
 			},
 		},
 	})

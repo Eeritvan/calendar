@@ -60,7 +60,7 @@ func ConnectToDB(ctx context.Context) (*DBService, error) {
 	}, nil
 }
 
-// https://github.com/jackc/pgx/issues/1121 << reference for the code
+// https://github.com/jackc/pgx/issues/1121 << useful stuff
 func (s *DBService) Listen(ctx context.Context, channel string, callback func(EventNotification)) error {
 	conn, err := s.Pool.Acquire(ctx)
 	if err != nil {
