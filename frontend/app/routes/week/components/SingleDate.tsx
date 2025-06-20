@@ -1,19 +1,13 @@
-import type dayjs from "dayjs";
 import type { Event } from "~/types";
 
-const SingleDate = (
-  { date, events }: { date: dayjs.Dayjs, events: Event[] }
-) => {
+const SingleDate = ({ events }: { events: Event[] }) => {
   return (
-    <div className="bg-red-400 w-full m-2 h-300">
-      { date.format() }
-      {events.map((event: Event) => {
-        return (
-          <div key={event.id}>
-            {event.name}
-          </div>
-        );
-      })}
+    <div className="row-span-24 bg-red-400 m-2">
+      {events.map((event: Event) => (
+        <div key={event.id}>
+          {event.name}
+        </div>
+      ))}
     </div>
   );
 };

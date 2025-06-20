@@ -33,19 +33,41 @@ export const loader = ({ params }: Route.LoaderArgs) => {
   return { events: result };
 };
 
+const HOURS = Array.from(
+  { length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`
+);
+
 const Week = ({ loaderData }: Route.ComponentProps) => {
   const { startDate } = useParams();
   const startDateObj = startDate ? dayjs(startDate) : dayjs();
 
   return (
-    <div className="flex w-full">
+    <div className={`grid grid-cols-[minmax(0,1fr)_repeat(7,_minmax(0,4fr))]
+      grid-rows-[repeat(28,_40px)]`}
+    >
+      <div />
       {Array.from({ length: 7 }, (_, index) => {
         const currentDate = startDateObj.add(index, "day");
-
+        return (
+          <div key={index}>
+            { currentDate.format("YYYY-MM-DD")}
+          </div>
+        );
+      })}
+      {HOURS.map((hour, index) => (
+        <div
+          key={hour}
+          style={{ gridRow: index + 2, gridColumn: 1 }}
+        >
+          {hour}
+        </div>
+      ))}
+      {Array.from({ length: 7 }, (_, index) => {
+        const currentDate = startDateObj.add(index, "day");
         return (
           <Suspense
             key={index}
-            fallback={ <SingleDate date={currentDate} events={[]} /> }
+            fallback={<SingleDate events={[]} />}
           >
             <Await resolve={loaderData.events}>
               {(data) => {
@@ -60,7 +82,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                 });
 
                 return (
-                  <SingleDate date={currentDate} events={dateEvents} />
+                  <SingleDate events={dateEvents} />
                 );
               }}
             </Await>
