@@ -4,7 +4,7 @@ services:
       context: frontend
       dockerfile: Dockerfile
       cache_from:
-        - type=registry,ref=eeritvan/calendar-frontend:buildcache
+        - type=registry,ref=ghcr.io/eeritvan/frontend:buildcache
       args:
         VITE_BACKEND_URL: http://backend:8081/api
         VITE_WEBSOCKET_URL: ws://localhost:8081/api
@@ -19,7 +19,7 @@ services:
       context: backend
       dockerfile: Dockerfile
       cache_from:
-        - type=registry,ref=eeritvan/calendar-backend:buildcache
+        - type=registry,ref=ghcr.io/eeritvan/backend:buildcache
     container_name: backend
     environment:
       - DB_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
