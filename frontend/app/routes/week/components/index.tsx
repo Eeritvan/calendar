@@ -55,7 +55,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
       {Array.from({ length: 7 }, (_, index) => {
         const currentDate = startDateObj.add(index, "day");
         return (
-          <>
+          <div key={index} className="contents">
             <div>
               { currentDate.format("YYYY-MM-DD") }
             </div>
@@ -79,7 +79,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                 }}
               </Await>
             </Suspense>
-          </>
+          </div>
         );
       })}
     </div>
