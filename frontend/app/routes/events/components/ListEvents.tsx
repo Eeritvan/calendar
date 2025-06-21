@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useFetcher } from "react-router";
 import { useSubscription } from "urql";
 import { SUBS_TEST } from "../api/subscriptions";
-import type { Event as EventType } from "../../../types";
+import type { Event as EventType, Time } from "~/types";
 import Event from "./Event";
 
 const ListEvents = ({ eventsProp }: { eventsProp: EventType[] }) => {
@@ -29,8 +29,8 @@ const ListEvents = ({ eventsProp }: { eventsProp: EventType[] }) => {
           id: undefined,
           name: eventName as string,
           description: eventDesc as string,
-          startTime: startTime as string,
-          endTime: endTime as string
+          startTime: startTime as Time,
+          endTime: endTime as Time
         }
       ]);
     }

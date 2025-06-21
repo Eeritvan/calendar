@@ -1,16 +1,17 @@
-import type { Event } from "~/types";
+import dayjs from "dayjs";
+import type { Event, Time } from "~/types";
 
-const timeToPercentage = (time: string) => {
-  const date = new Date(time);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
+const timeToPercentage = (time: Time) => {
+  const date = dayjs(time);
+  const hours = date.hour();
+  const minutes = date.minute();
   return ((hours * 60 + minutes) / (24 * 60)) * 100;
 };
 
-const calculateDuration = (startTime: string, endTime: string) => {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const durationMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+const calculateDuration = (startTime: Time, endTime: Time) => {
+  const start = dayjs(startTime);
+  const end = dayjs(endTime);
+  const durationMinutes = end.diff(start, "minute");
   return (durationMinutes / (24 * 60)) * 100;
 };
 

@@ -3,6 +3,7 @@ import { Await } from "react-router";
 import { Suspense } from "react";
 import { GET_QUERY } from "../api/queries";
 import type { Route } from "./+types";
+import type { Event } from "~/types";
 import ListEvents from "./ListEvents";
 import EventForm from "./EventForm";
 
@@ -28,7 +29,7 @@ const MainView = ({ loaderData }: Route.ComponentProps) => {
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={loaderData.eventsPromise}>
           {(data) => {
-            const events = data?.data?.allEvents || [];
+            const events: Event[] = data?.data?.allEvents || [];
             return (
               <ListEvents eventsProp={events} />
             );

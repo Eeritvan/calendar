@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import dayjs from "dayjs";
 import { eventValidationSchema } from "../validation/schemas";
 import { ADD_EVENT } from "../api/mutations";
-import type { Time } from "../../../types";
+import type { Time } from "~/types";
 import type { Route } from "./+types/new";
 
 export const action = async ({ request }: Route.ActionArgs) => {
@@ -12,8 +12,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const rawData = {
     name: formData.get("name") as string,
     description: formData.get("description") as string,
-    startTime: dayjs(formData.get("startTime") as string).format() as Time,
-    endTime: dayjs(formData.get("endTime") as string).format() as Time
+    startTime: dayjs(formData.get("startTime") as Time).format(),
+    endTime: dayjs(formData.get("endTime") as Time).format()
   };
 
   const result = eventValidationSchema.safeParse(rawData);

@@ -1,11 +1,11 @@
 import type { UUID } from "crypto";
 
+export type Time = string & { readonly __brand: unique symbol };
+
 export interface Event {
   id?: UUID;
   name: string;
   description: string;
-  startTime: string;
-  endTime: string;
+  startTime: Time;
+  endTime: Time;
 };
-
-export type Time = string & { readonly __brand: unique symbol };
