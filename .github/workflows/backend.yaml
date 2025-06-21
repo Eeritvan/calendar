@@ -57,11 +57,12 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup buildx
         uses: docker/setup-buildx-action@v3
       - name: Build image
@@ -70,13 +71,13 @@ jobs:
           context: ./backend
           push: false
           tags: |
-            eeritvan/calendar-backend:${{ github.sha }}
-            eeritvan/calendar-backend:latest
-          cache-from: type=registry,ref=eeritvan/calendar-backend:buildcache
-          cache-to: type=registry,ref=eeritvan/calendar-backend:buildcache,mode=max
-          outputs: type=docker,dest=${{ runner.temp }}/calendar-backend-image.tar
+            ghcr.io/eeritvan/backend:${{ github.sha }}
+            ghcr.io/eeritvan/backend:latest
+          cache-from: type=registry,ref=ghcr.io/eeritvan/backend:buildcache
+          cache-to: type=registry,ref=ghcr.io/eeritvan/backend:buildcache,mode=max
+          outputs: type=docker,dest=${{ runner.temp }}/backend-image.tar
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: calendar-backend-image
-          path: ${{ runner.temp }}/calendar-backend-image.tar
+          name: backend-image
+          path: ${{ runner.temp }}/backend-image.tar
