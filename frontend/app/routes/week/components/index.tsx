@@ -19,6 +19,13 @@ interface GetEventsResponse {
   };
 }
 
+export const meta = () => {
+  return [
+    { title: "week view" },
+    { name: "weeks", content: "Testing react router!" }
+  ];
+};
+
 export const loader = ({ params }: Route.LoaderArgs) => {
   if (!params.startDate) {
     const currentDate = dayjs().format("YYYY-MM-DD");

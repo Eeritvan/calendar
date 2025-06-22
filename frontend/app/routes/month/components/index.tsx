@@ -18,6 +18,13 @@ interface GetEventsResponse {
   };
 }
 
+export const meta = () => {
+  return [
+    { title: "month view" },
+    { name: "months", content: "Testing react router!" }
+  ];
+};
+
 export const loader = ({ params }: Route.LoaderArgs) => {
   if (!params.date) {
     const currentDate = dayjs().format("YYYY-MM");
