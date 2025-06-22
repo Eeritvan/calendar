@@ -10,7 +10,14 @@ import isBetween from "dayjs/plugin/isBetween";
 import { urlDateSchema } from "../validation/dateUrl";
 import HourColumn from "./HourColumn";
 
+// eslint-disable-next-line import-x/no-named-as-default-member
 dayjs.extend(isBetween);
+
+interface GetEventsResponse {
+  data?: {
+    eventsByTimeRange?: Event[];
+  };
+}
 
 export const loader = ({ params }: Route.LoaderArgs) => {
   if (!params.startDate) {
@@ -38,6 +45,8 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
   const { startDate } = useParams();
   const startDateObj = startDate ? dayjs(startDate) : dayjs();
 
+  const emptyEvents: Event[] = [];
+
   return (
     <div className={`grid grid-cols-[minmax(0,1fr)_repeat(7,_minmax(0,4fr))]
       grid-rows-[repeat(25,_50px)] grid-flow-col`}
@@ -53,11 +62,11 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
             </div>
             <Suspense
               key={index}
-              fallback={<SingleDate events={[]} />}
+              fallback={<SingleDate events={emptyEvents} />}
             >
               <Await resolve={loaderData.events}>
-                {(data) => {
-                  const events: Event[] = data?.data?.eventsByTimeRange || [];
+                {(data: GetEventsResponse) => {
+                  const events: Event[] = data.data?.eventsByTimeRange || [];
                   const dateEvents: Event[] = events.filter((event: Event) => {
                     return dayjs(currentDate).isBetween(
                       dayjs(event.startTime),

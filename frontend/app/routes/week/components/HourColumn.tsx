@@ -6,7 +6,10 @@ const HourColumn = () => {
   return (
     <>
       {HOURS.map((hour, index) => (
-        <div key={index} className={`relative ${!index && "row-start-3"}`}>
+        <div
+          key={hour}
+          className={`relative ${!index ? "row-start-3" : ""}`}
+        >
           <span className="absolute -top-[13.5px]">
             {hour}
           </span>

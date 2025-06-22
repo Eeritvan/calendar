@@ -3,6 +3,7 @@ import type { Event as EventType } from "~/types";
 
 const Event = ({ event }: { event: EventType }) => {
   const fetcher = useFetcher({ key: "deleteEvent" });
+  const eventId = String(event.id);
 
   return (
     <li>
@@ -14,7 +15,7 @@ const Event = ({ event }: { event: EventType }) => {
         <div>{event.endTime}</div>
       </div>
       <fetcher.Form
-        action={`event/delete/${event.id}`}
+        action={`event/delete/${eventId}`}
         method="post"
         key={"test"}
       >

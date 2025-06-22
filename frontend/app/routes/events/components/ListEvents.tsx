@@ -5,10 +5,17 @@ import { SUBS_TEST } from "../api/subscriptions";
 import type { Event as EventType, Time } from "~/types";
 import Event from "./Event";
 
+type EventChangedResult = {
+  eventChanged?: {
+    action: "INSERT" | "DELETE";
+    event: EventType;
+  };
+};
+
 const ListEvents = ({ eventsProp }: { eventsProp: EventType[] }) => {
   const deleteFetcher = useFetcher({ key: "deleteEvent" });
   const addFetcher = useFetcher({ key: "addEvent" });
-  const [res] = useSubscription({ query: SUBS_TEST });
+  const [res] = useSubscription<EventChangedResult>({ query: SUBS_TEST });
   const [events, setEvents] = useState<EventType[]>(eventsProp);
 
   useEffect(() => {
@@ -67,7 +74,7 @@ const ListEvents = ({ eventsProp }: { eventsProp: EventType[] }) => {
 
   return (
     <ul>
-      {events && events.length > 0 ?
+      {events.length > 0 ?
         events.map((event: EventType) => <Event key={event.id} event={event} />)
         : <p>No events found.</p>
       }

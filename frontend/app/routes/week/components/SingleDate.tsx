@@ -31,8 +31,8 @@ const SingleDate = ({ events }: { events: Event[] }) => {
             key={event.id}
             className="absolute bg-blue-300 mx-1 inset-x-0"
             style={{
-              top: `${topPosition}%`,
-              height: `${height}%`
+              top: `${topPosition.toString()}%`,
+              height: `${height.toString()}%`
             }}
           >
             {event.name}

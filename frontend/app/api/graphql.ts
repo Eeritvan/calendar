@@ -1,5 +1,5 @@
 import { Client, fetchExchange, subscriptionExchange } from "urql";
-import { createClient as createWSClient } from "graphql-ws";
+import { createClient as createWSClient } from "graphql-ws/client";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;

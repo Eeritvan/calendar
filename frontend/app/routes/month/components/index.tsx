@@ -9,7 +9,14 @@ import { GET_EVENTS_BY_TIME_RANGE } from "../api/query";
 import type { Event } from "~/types";
 import isBetween from "dayjs/plugin/isBetween";
 
+// eslint-disable-next-line import-x/no-named-as-default-member
 dayjs.extend(isBetween);
+
+interface GetEventsResponse {
+  data?: {
+    eventsByTimeRange?: Event[];
+  };
+}
 
 export const loader = ({ params }: Route.LoaderArgs) => {
   if (!params.date) {
@@ -24,7 +31,7 @@ export const loader = ({ params }: Route.LoaderArgs) => {
   }
 
   const startOfMonth = dayjs(params.date);
-  const daysInMonth = startOfMonth ? dayjs(startOfMonth).daysInMonth() : 0;
+  const daysInMonth = dayjs(startOfMonth).daysInMonth();
 
   const result = client.query(GET_EVENTS_BY_TIME_RANGE, {
     startTime: startOfMonth,
@@ -39,6 +46,8 @@ const Month = ({ loaderData }: Route.ComponentProps) => {
   const parsedDate = dayjs(date);
   const daysInMonth = parsedDate.isValid() ? parsedDate.daysInMonth() : 0;
 
+  const emptyEvents: Event[] = [];
+
   return (
     <div className="grid grid-cols-7 m-2 h-dvh">
       {Array.from({ length: daysInMonth }, (_, index) => {
@@ -47,11 +56,11 @@ const Month = ({ loaderData }: Route.ComponentProps) => {
         return (
           <Suspense
             key={index}
-            fallback={ <SingleDate date={currentDate} events={[]} /> }
+            fallback={ <SingleDate date={currentDate} events={emptyEvents} /> }
           >
             <Await resolve={loaderData.events}>
-              {(data) => {
-                const events: Event[] = data?.data?.eventsByTimeRange || [];
+              {(data: GetEventsResponse) => {
+                const events: Event[] = data.data?.eventsByTimeRange || [];
                 const dateEvents: Event[] = events.filter((event: Event) => {
                   return dayjs(currentDate).isBetween(
                     dayjs(event.startTime),

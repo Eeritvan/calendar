@@ -7,19 +7,19 @@ const EventForm = () => {
   return (
     <fetcher.Form action="event/new" method="POST">
       <div>
-        <label> name </label>
+        <label htmlFor="name"> name </label>
         <input type="text" name="name" required/>
       </div>
       <div>
-        <label> description </label>
+        <label htmlFor="description"> description </label>
         <input type="text" name="description" />
       </div>
       <div>
-        <label> start time </label>
+        <label htmlFor="startTime"> start time </label>
         <input type="datetime-local" name="startTime" required/>
       </div>
       <div>
-        <label> end time </label>
+        <label htmlFor="endTime"> end time </label>
         <input type="datetime-local" name="endTime" required/>
       </div>
       <button type="submit">

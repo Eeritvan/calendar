@@ -2,9 +2,14 @@ import { data } from "react-router";
 import type { Route } from "./+types/changeSidebar";
 import { prefs } from "../components";
 
+interface CookieProps {
+  sidebarWidth: number;
+  isCollapsed: boolean;
+}
+
 export async function action({ request }: Route.ActionArgs) {
   const cookieHeader = request.headers.get("Cookie");
-  const cookie = (await prefs.parse(cookieHeader)) || {};
+  const cookie = await prefs.parse(cookieHeader) as CookieProps || {};
   const formData = await request.formData();
 
   const sidebarWidth = formData.get("sidebarWidth");
