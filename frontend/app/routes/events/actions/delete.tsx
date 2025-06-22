@@ -1,4 +1,4 @@
-import { client } from "~/api/graphql";
+import { client } from "@/api/graphql";
 import { redirect } from "react-router";
 import { DELETE_EVENT } from "../api/mutations";
 import type { Route } from "./+types/delete";

@@ -1,9 +1,9 @@
-import { client } from "~/api/graphql";
+import { client } from "@/api/graphql";
 import { Await } from "react-router";
 import { Suspense } from "react";
 import { GET_QUERY } from "../api/queries";
 import type { Route } from "./+types";
-import type { Event } from "~/types";
+import type { Event } from "@/types";
 import ListEvents from "./ListEvents";
 import EventForm from "./EventForm";
 

@@ -1,5 +1,5 @@
 import type dayjs from "dayjs";
-import type { Event } from "~/types";
+import type { Event } from "@/types";
 
 const SingleDate = (
   { date, events }: { date: dayjs.Dayjs, events: Event[] }

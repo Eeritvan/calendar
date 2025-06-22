@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { Event, Time } from "~/types";
+import type { Event, Time } from "@/types";
 
 const timeToPercentage = (time: Time) => {
   const date = dayjs(time);

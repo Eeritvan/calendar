@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useFetcher } from "react-router";
 import { useSubscription } from "urql";
 import { SUBS_TEST } from "../api/subscriptions";
-import type { Event as EventType, Time } from "~/types";
+import type { Event as EventType, Time } from "@/types";
 import Event from "./Event";
 
 type EventChangedResult = {

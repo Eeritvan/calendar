@@ -4,9 +4,9 @@ import type { Route } from "./+types";
 import { Suspense } from "react";
 import SingleDate from "./SingleDate";
 import { urlDateSchema } from "../validation/dateUrl";
-import { client } from "~/api/graphql";
+import { client } from "@/api/graphql";
 import { GET_EVENTS_BY_TIME_RANGE } from "../api/query";
-import type { Event } from "~/types";
+import type { Event } from "@/types";
 import isBetween from "dayjs/plugin/isBetween";
 
 // eslint-disable-next-line import-x/no-named-as-default-member
