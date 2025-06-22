@@ -78,6 +78,10 @@ export default defineConfig([
       "react-hooks/react-compiler": ["error"],
       "react-refresh/only-export-components": ["off"],
       "@typescript-eslint/no-unnecessary-condition": ["off"],
+      "@typescript-eslint/no-unsafe-assignment": ["off"],
+      "@typescript-eslint/no-unsafe-member-access": ["off"],
+      "@typescript-eslint/no-unsafe-argument": ["off"],
+      "@typescript-eslint/no-unsafe-call": ["off"],
     }
   },
 
