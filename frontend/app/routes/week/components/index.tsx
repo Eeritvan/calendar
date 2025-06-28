@@ -83,7 +83,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                     );
                   });
 
-                  return <SingleDate events={dateEvents} />;
+                  return <SingleDate date={currentDate} events={dateEvents} />;
                 }}
               </Await>
             </Suspense>
