@@ -7,10 +7,12 @@ interface DragSelectAreaProps {
 }
 
 const DragSelectArea = ({ date, handleSelect }: DragSelectAreaProps) => {
-  const { selectionRef, handleMouseDown } = useTimeSelection({
+  const { selectionRef, getTimeRange, handleMouseDown } = useTimeSelection({
     date,
     onTimeSelect: handleSelect
   });
+
+  const timeRange = getTimeRange();
 
   return (
     <div
@@ -21,7 +23,11 @@ const DragSelectArea = ({ date, handleSelect }: DragSelectAreaProps) => {
       <div
         ref={selectionRef}
         className="absolute bg-blue-500 inset-x-0 hidden"
-      />
+      >
+        {timeRange.startTime && (
+          <span>{timeRange.startTime} - {timeRange.endTime}</span>
+        )}
+      </div>
     </div>
   );
 };
