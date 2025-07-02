@@ -69,7 +69,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
             </div>
             <Suspense
               key={index}
-              fallback={<SingleDate events={emptyEvents} />}
+              fallback={<SingleDate date={currentDate} events={emptyEvents} />}
             >
               <Await resolve={loaderData.events}>
                 {(data: GetEventsResponse) => {

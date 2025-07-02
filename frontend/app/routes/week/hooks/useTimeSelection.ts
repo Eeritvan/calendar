@@ -4,24 +4,23 @@ import { percentageToTime } from "../utils/timeUtils";
 
 interface UseTimeSelectionProps {
   date: dayjs.Dayjs;
-  onTimeSelect?: (startTime: string, endTime: string) => void;
+  onTimeSelect: (startTime: string, endTime: string) => void;
 }
 
 export const useTimeSelection = ({
   date, onTimeSelect
 }: UseTimeSelectionProps) => {
   const selectionRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (!selectionRef.current || !containerRef.current) return;
-
     const selectionDiv = selectionRef.current;
-    const rect = containerRef.current.getBoundingClientRect();
+    const parentElement = selectionDiv?.parentElement;
+    if (!selectionDiv || !parentElement) return;
+
+    const rect = parentElement.getBoundingClientRect();
 
     const getVerticalPercentage = (e: MouseEvent) => {
-      if (!containerRef.current) return 0;
       const y = e.clientY - rect.top;
       const percentage = (y / rect.height) * 100;
       return Math.max(0, Math.min(100, percentage));
@@ -68,10 +67,10 @@ export const useTimeSelection = ({
       if (finalStartPercentage === finalEndPercentage) return;
 
       const startTime = percentageToTime(
-        Math.min(startPercentage, endPercentage), date
+        finalStartPercentage, date
       );
       const endTime = percentageToTime(
-        Math.max(startPercentage, endPercentage), date
+        finalEndPercentage, date
       );
 
       onTimeSelect?.(startTime, endTime);
@@ -83,7 +82,6 @@ export const useTimeSelection = ({
 
   return {
     selectionRef,
-    containerRef,
     handleMouseDown
   };
 };
