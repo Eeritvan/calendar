@@ -7,7 +7,9 @@ interface SelectedTimeRangeProps {
   }
 }
 
-const AddNewForm = ({ selectedTimeRange }: SelectedTimeRangeProps) => {
+const AddNewForm = (
+  { selectedTimeRange }: SelectedTimeRangeProps
+) => {
   const fetcher = useFetcher({ key: "addEvent" });
   const isSubmitting = fetcher.state === "submitting";
 

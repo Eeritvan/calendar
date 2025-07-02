@@ -116,7 +116,10 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
         );
       })}
       {showModal &&
-        <AddNewModal selectedTimeRange={ selectedTimeRange } />
+        <AddNewModal
+          selectedTimeRange={ selectedTimeRange }
+          closeModal={() => setShowModal(false)} 
+        />
       }
     </div>
   );

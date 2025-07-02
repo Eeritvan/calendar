@@ -5,12 +5,23 @@ interface SelectedTimeRangeProps {
     startTime: string;
     endTime: string;
   }
+  closeModal: () => void;
 }
 
-const AddNewModal = ({ selectedTimeRange }: SelectedTimeRangeProps) => {
+const AddNewModal = (
+  { selectedTimeRange, closeModal }: SelectedTimeRangeProps
+) => {
   return (
     <div className="fixed bg-amber-500">
-      <AddNewForm selectedTimeRange={selectedTimeRange}/>
+      <button
+        onClick={closeModal}
+        aria-label="Close"
+      >
+        x
+      </button>
+      <AddNewForm
+        selectedTimeRange={selectedTimeRange}
+      />
     </div>
   );
 };
