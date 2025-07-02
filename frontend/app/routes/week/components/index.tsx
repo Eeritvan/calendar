@@ -4,11 +4,12 @@ import dayjs from "dayjs";
 import type { Route } from "./+types";
 import { client } from "@/api/graphql";
 import { GET_EVENTS_BY_TIME_RANGE } from "../api/queries";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import type { Event } from "@/types";
 import isBetween from "dayjs/plugin/isBetween";
 import { urlDateSchema } from "../validation/dateUrl";
 import HourColumn from "./HourColumn";
+import AddNewModal from "./AddNewModal";
 
 // eslint-disable-next-line import-x/no-named-as-default-member
 dayjs.extend(isBetween);
@@ -51,8 +52,20 @@ export const loader = ({ params }: Route.LoaderArgs) => {
 const Week = ({ loaderData }: Route.ComponentProps) => {
   const { startDate } = useParams();
   const startDateObj = startDate ? dayjs(startDate) : dayjs();
-
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<{
+    startTime: string;
+    endTime: string;
+  }>({ startTime: "", endTime: "" });
   const emptyEvents: Event[] = [];
+
+  const handleSelect = (startTime: string, endTime: string) => {
+    setShowModal(true);
+    setSelectedTimeRange({
+      startTime: startTime,
+      endTime: endTime
+    });
+  };
 
   return (
     <div className={`grid grid-cols-[minmax(0,1fr)_repeat(7,_minmax(0,4fr))]
@@ -69,7 +82,13 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
             </div>
             <Suspense
               key={index}
-              fallback={<SingleDate date={currentDate} events={emptyEvents} />}
+              fallback={
+                <SingleDate
+                  date={currentDate}
+                  events={emptyEvents}
+                  handleSelect={handleSelect}
+                />
+              }
             >
               <Await resolve={loaderData.events}>
                 {(data: GetEventsResponse) => {
@@ -83,13 +102,22 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                     );
                   });
 
-                  return <SingleDate date={currentDate} events={dateEvents} />;
+                  return (
+                    <SingleDate
+                      date={currentDate}
+                      events={dateEvents}
+                      handleSelect={handleSelect}
+                    />
+                  );
                 }}
               </Await>
             </Suspense>
           </div>
         );
       })}
+      {showModal &&
+        <AddNewModal selectedTimeRange={ selectedTimeRange } />
+      }
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import { client } from "@/api/graphql";
-import { redirect } from "react-router";
 import dayjs from "dayjs";
 import { eventValidationSchema } from "../validation/schemas";
 import { ADD_EVENT } from "../api/mutations";
@@ -26,6 +25,4 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
 
   await client.mutation(ADD_EVENT, rawData).toPromise();
-
-  return redirect("/");
 };

@@ -3,17 +3,13 @@ import { useTimeSelection } from "../hooks/useTimeSelection";
 
 interface DragSelectAreaProps {
   date: dayjs.Dayjs;
-  onTimeSelect?: (startTime: string, endTime: string) => void;
+  handleSelect: (startTime: string, endTime: string) => void;
 }
 
-const onTimeSelect = (startTime: string, endTime: string) => {
-  console.log(startTime, endTime);
-};
-
-const DragSelectArea = ({ date }: DragSelectAreaProps) => {
+const DragSelectArea = ({ date, handleSelect }: DragSelectAreaProps) => {
   const { selectionRef, handleMouseDown } = useTimeSelection({
     date,
-    onTimeSelect
+    onTimeSelect: handleSelect
   });
 
   return (

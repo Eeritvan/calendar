@@ -6,16 +6,17 @@ import DragSelectArea from "./DragSelectArea";
 interface SingleDateProps {
   date: dayjs.Dayjs;
   events: Event[];
+  handleSelect: (startTime: string, endTime: string) => void;
 }
 
-const SingleDate = ({ date, events }: SingleDateProps) => {
+const SingleDate = ({ date, events, handleSelect }: SingleDateProps) => {
   return (
     <div className="row-span-24 border-x grid relative grid-rows-subgrid">
       {Array.from({ length: 24 }, (_, i) => (
         <div key={i} className="border-b border-gray-200 select-none" />
       ))}
 
-      <DragSelectArea date={date} />
+      <DragSelectArea date={date} handleSelect={ handleSelect } />
 
       {events.map((event: Event) => {
         const topPosition = timeToPercentage(event.startTime);
