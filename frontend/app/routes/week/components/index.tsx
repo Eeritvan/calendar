@@ -107,6 +107,12 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                       date={currentDate}
                       events={dateEvents}
                       handleSelect={handleSelect}
+                      showSelectedTime={
+                        showModal &&
+                        selectedTimeRange.startTime &&
+                        dayjs(currentDate)
+                          .isSame(dayjs(selectedTimeRange.startTime), "day")}
+                      selectedTimeRange={selectedTimeRange}
                     />
                   );
                 }}
