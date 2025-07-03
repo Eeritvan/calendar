@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
-import type { Event, Time } from "@/types";
-import { calculateDuration, timeToPercentage } from "../utils/timeUtils";
+import type { Event } from "@/types";
 import DragSelectArea from "./DragSelectArea";
 import SingleEvent from "./SingleEvent";
+import HighlightEvent from "./HighlightEvent";
 
 interface SingleDateProps {
   date: dayjs.Dayjs;
@@ -15,35 +15,6 @@ interface SingleDateProps {
 const SingleDate = ({
   date, events, handleSelect, showSelectedTime, selectedTimeRange
 }: SingleDateProps) => {
-  let highlight = null;
-  if (
-    showSelectedTime &&
-    selectedTimeRange &&
-    dayjs(selectedTimeRange.startTime).isSame(date, "day")
-  ) {
-    const top = timeToPercentage(selectedTimeRange.startTime as Time);
-    const height = calculateDuration(
-      selectedTimeRange.startTime as Time,
-      selectedTimeRange.endTime as Time
-    );
-
-    // todo: change this to use some better approach i guess
-    const formatStartDate = dayjs(selectedTimeRange.startTime).format("HH:mm");
-    const formatEndDate = dayjs(selectedTimeRange.endTime).format("HH:mm");
-
-    highlight = (
-      <div
-        className="absolute bg-blue-300 inset-x-0 animate-pulse"
-        style={{
-          top: `${top.toString()}%`,
-          height: `${height.toString()}%`
-        }}
-      >
-        {formatStartDate} - {formatEndDate}
-      </div>
-    );
-  }
-
   return (
     <div className="row-span-24 border-x grid relative grid-rows-subgrid">
       {Array.from({ length: 24 }, (_, i) => (
@@ -52,7 +23,9 @@ const SingleDate = ({
 
       <DragSelectArea date={date} handleSelect={handleSelect} />
 
-      {highlight}
+      { showSelectedTime &&
+        <HighlightEvent selectedTimeRange={selectedTimeRange}/>
+      }
 
       {events.map((event: Event) => (
         <SingleEvent event={event} key={event.id} />
