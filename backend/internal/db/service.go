@@ -32,25 +32,11 @@ type DBService struct {
 	Pool    *pgxpool.Pool
 }
 
-func initSchema(ctx context.Context, pool *pgxpool.Pool) error {
-	sqlFile, err := os.ReadFile("./schema.sql")
-	if err != nil {
-		return err
-	}
-	_, err = pool.Exec(ctx, string(sqlFile))
-	return err
-}
-
 func ConnectToDB(ctx context.Context) (*DBService, error) {
 	dbUrl := os.Getenv("DB_URL")
 
 	pool, err := pgxpool.New(ctx, dbUrl)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := initSchema(ctx, pool); err != nil {
-		pool.Close()
 		return nil, err
 	}
 

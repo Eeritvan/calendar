@@ -1,8 +1,11 @@
+include .env
+
 GOCMD=go
 GORUN=$(GOCMD) run
 GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 BINARY_NAME=calendar-backend
+MIGRATIONS_ORIGIN=migrations
 
 .PHONY: start build test clean generate
 
@@ -22,7 +25,7 @@ lint:
 	golangci-lint run
 
 clean:
-	rm -f $(BINARY_NAME)
+	rm -f $(BINARY_NAME) && rm -rf tmp
 
 sqlc:
 	sqlc generate
@@ -35,3 +38,18 @@ sqlc-diff:
 
 generate: sqlc
 	$(GORUN) github.com/99designs/gqlgen
+
+migrate:
+	migrate -database "$(DB_URL)" -path $(MIGRATIONS_ORIGIN) up
+
+migrate-undo:
+	migrate -database "$(DB_URL)" -path $(MIGRATIONS_ORIGIN) down 1
+
+migrate-version:
+	migrate -database "$(DB_URL)" -path $(MIGRATIONS_ORIGIN) version
+
+migrate-create:
+	migrate create -ext sql -dir $(MIGRATIONS_ORIGIN) $(name)
+
+migrate-reset:
+	migrate -database "$(DB_URL)" -path $(MIGRATIONS_ORIGIN) drop
