@@ -11,6 +11,5 @@ RUN go mod download && \
 FROM scratch
 
 COPY --from=build /build/calendar-backend /calendar-backend
-COPY --from=build /build/schema.sql /schema.sql
 
 CMD ["/calendar-backend"]
