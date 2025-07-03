@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import type { Event, Time } from "@/types";
 import { calculateDuration, timeToPercentage } from "../utils/timeUtils";
 import DragSelectArea from "./DragSelectArea";
+import SingleEvent from "./SingleEvent";
 
 interface SingleDateProps {
   date: dayjs.Dayjs;
@@ -49,27 +50,13 @@ const SingleDate = ({
         <div key={i} className="border-b border-gray-200 select-none" />
       ))}
 
-      <DragSelectArea date={date} handleSelect={ handleSelect } />
+      <DragSelectArea date={date} handleSelect={handleSelect} />
 
       {highlight}
 
-      {events.map((event: Event) => {
-        const topPosition = timeToPercentage(event.startTime);
-        const height = calculateDuration(event.startTime, event.endTime);
-
-        return (
-          <div
-            key={event.id}
-            className="absolute bg-blue-300 inset-x-0"
-            style={{
-              top: `${topPosition.toString()}%`,
-              height: `${height.toString()}%`
-            }}
-          >
-            {event.name}
-          </div>
-        );
-      })}
+      {events.map((event: Event) => (
+        <SingleEvent event={event} key={event.id} />
+      ))}
     </div>
   );
 };
