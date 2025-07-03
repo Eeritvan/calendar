@@ -1,5 +1,6 @@
 import type { Event } from "@/types";
 import { calculateDuration, timeToPercentage } from "../utils/timeUtils";
+import dayjs from "dayjs";
 
 interface SingleEventProps {
   event: Event;
@@ -8,6 +9,9 @@ interface SingleEventProps {
 const SingleEvent = ({ event }: SingleEventProps) => {
   const topPosition = timeToPercentage(event.startTime);
   const height = calculateDuration(event.startTime, event.endTime);
+
+  const formatStartTime = dayjs(event.startTime).format("HH:mm");
+  const formatEndTime = dayjs(event.endTime).format("HH:mm");
 
   return (
     <div
@@ -18,7 +22,7 @@ const SingleEvent = ({ event }: SingleEventProps) => {
         height: `${height.toString()}%`
       }}
     >
-      {event.name}
+      {event.name} ({formatStartTime} - {formatEndTime})
     </div>
   );
 };
