@@ -1,17 +1,17 @@
 import { useFetcher } from "react-router";
 import ColorSelector from "./ColorSelector";
+import type { ColorHex } from "@/types";
 
 interface SelectedTimeRangeProps {
   selectedTimeRange: {
     startTime: string;
     endTime: string;
   };
-  selectedColor: string;
-  setSelectedColor: (color: string) => void;
+  onColorChange: (color: ColorHex) => void;
 }
 
 const AddNewForm = (
-  { selectedTimeRange, selectedColor, setSelectedColor }: SelectedTimeRangeProps
+  { selectedTimeRange, onColorChange }: SelectedTimeRangeProps
 ) => {
   const fetcher = useFetcher({ key: "addEvent" });
   const isSubmitting = fetcher.state === "submitting";
@@ -44,10 +44,7 @@ const AddNewForm = (
           defaultValue={selectedTimeRange.endTime}
         />
       </div>
-      <ColorSelector
-        selected={selectedColor}
-        onChange={setSelectedColor}
-      />
+      <ColorSelector onColorChange={onColorChange} />
       <button type="submit">
         {isSubmitting ? "Creating..." : "Create"}
       </button>

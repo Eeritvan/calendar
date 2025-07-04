@@ -1,31 +1,31 @@
 import { EVENT_COLORS } from "@/constants/colors";
+import type { ColorHex } from "@/types";
 
 interface ColorSelectorProps {
-  selected: string;
-  onChange: (value: string) => void;
+  onColorChange: (color: ColorHex) => void;
 }
 
-const ColorSelector = ({ selected, onChange }: ColorSelectorProps) => {
+const ColorSelector = ({ onColorChange }: ColorSelectorProps) => {
   return (
-    <div className="flex gap-2">
+    <div className="flex">
       {EVENT_COLORS.map((color) => (
-        <label key={color.value} className="flex items-center">
+        <label key={color.value} className="flex border-2
+          has-checked:border-black"
+        >
           <input
             type="radio"
             name="color"
             value={color.value}
-            // checked={selected === color.value}
-            onChange={() => { onChange(color.value); }}
             className="hidden"
+            onChange={() => { onColorChange(color.value); }}
             aria-label={color.name || color.value}
           />
           <span className="sr-only">
             {color.name || color.value}
           </span>
           <span
-            className="size-6 border-2"
+            className="size-6"
             style={{ backgroundColor: color.value }}
-            data-selected={selected === color.value ? "true" : undefined}
           />
         </label>
       ))}

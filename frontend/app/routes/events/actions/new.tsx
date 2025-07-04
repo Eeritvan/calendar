@@ -12,7 +12,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
     name: formData.get("name") as string,
     description: formData.get("description") as string,
     startTime: dayjs(formData.get("startTime") as Time).format(),
-    endTime: dayjs(formData.get("endTime") as Time).format()
+    endTime: dayjs(formData.get("endTime") as Time).format(),
+    color: formData.get("color") as string
   };
 
   const result = eventValidationSchema.safeParse(rawData);
