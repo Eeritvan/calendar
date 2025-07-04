@@ -1,4 +1,11 @@
-import { Await, useParams, redirect, useNavigate, Outlet, useLocation } from "react-router";
+import {
+  Await,
+  useParams,
+  redirect,
+  useNavigate,
+  Outlet,
+  useLocation
+} from "react-router";
 import SingleDate from "./SingleDate";
 import dayjs from "dayjs";
 import type { Route } from "./+types";
@@ -68,10 +75,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
 
   const handleSelect = (startTime: string, endTime: string) => {
     void navigate(`add?startTime=${startTime}&endTime=${endTime}`);
-    setSelectedTimeRange({
-      startTime: startTime,
-      endTime: endTime
-    });
+    setSelectedTimeRange({ startTime, endTime });
   };
 
   return (
