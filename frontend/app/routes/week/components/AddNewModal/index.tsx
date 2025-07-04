@@ -1,4 +1,5 @@
 import AddNewForm from "./AddNewForm";
+import { useState } from "react";
 
 interface SelectedTimeRangeProps {
   selectedTimeRange: {
@@ -11,16 +12,19 @@ interface SelectedTimeRangeProps {
 const AddNewModal = (
   { selectedTimeRange, closeModal }: SelectedTimeRangeProps
 ) => {
+  const [selectedColor, setSelectedColor] = useState("#ffffff");
+
   return (
-    <div className="fixed bg-amber-500">
-      <button
-        onClick={closeModal}
-        aria-label="Close"
-      >
-        x
-      </button>
+    <div
+      className="fixed"
+      data-color={selectedColor}
+      style={{ backgroundColor: selectedColor }}
+    >
+      <button onClick={closeModal}>x</button>
       <AddNewForm
         selectedTimeRange={selectedTimeRange}
+        selectedColor={selectedColor}
+        setSelectedColor={setSelectedColor}
       />
     </div>
   );
