@@ -95,7 +95,8 @@ const Sidebar = ({ loaderData }: SidebarProps) => {
             style={widthStyle}
           >
             <NavLink to="/"> home </NavLink>
-            <NavLink to="/test"> test </NavLink>
+            <NavLink to="/test" viewTransition> test </NavLink>
+            <NavLink to="/test2" viewTransition> test2 </NavLink>
             <NavLink to="#settings"> settings </NavLink>
             <button
               onClick={toggleSidebar}

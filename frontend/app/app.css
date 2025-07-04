@@ -13,3 +13,8 @@ body {
     color-scheme: dark;
   }
 }
+
+::view-transition-old(events-box),
+::view-transition-new(events-box) {
+  height: 100%;
+}
