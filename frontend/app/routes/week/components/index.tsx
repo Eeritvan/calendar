@@ -1,15 +1,14 @@
-import { Await, useParams, redirect } from "react-router";
+import { Await, useParams, redirect, useNavigate, Outlet, useLocation } from "react-router";
 import SingleDate from "./SingleDate";
 import dayjs from "dayjs";
 import type { Route } from "./+types";
 import { client } from "@/api/graphql";
 import { GET_EVENTS_BY_TIME_RANGE } from "../api/queries";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import type { Event } from "@/types";
 import isBetween from "dayjs/plugin/isBetween";
 import { urlDateSchema } from "../validation/dateUrl";
 import HourColumn from "./HourColumn";
-import AddNewModal from "./AddNewModal";
 
 // eslint-disable-next-line import-x/no-named-as-default-member
 dayjs.extend(isBetween);
@@ -51,16 +50,24 @@ export const loader = ({ params }: Route.LoaderArgs) => {
 
 const Week = ({ loaderData }: Route.ComponentProps) => {
   const { startDate } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const startDateObj = startDate ? dayjs(startDate) : dayjs();
-  const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<{
     startTime: string;
     endTime: string;
   }>({ startTime: "", endTime: "" });
   const emptyEvents: Event[] = [];
 
+  useEffect(() => {
+    if (!location.pathname.endsWith("/add")) {
+      setSelectedTimeRange({ startTime: "", endTime: "" });
+    }
+  }, [location]);
+
   const handleSelect = (startTime: string, endTime: string) => {
-    setShowModal(true);
+    void navigate(`add?startTime=${startTime}&endTime=${endTime}`);
     setSelectedTimeRange({
       startTime: startTime,
       endTime: endTime
@@ -108,7 +115,6 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                       events={dateEvents}
                       handleSelect={handleSelect}
                       showSelectedTime={
-                        showModal &&
                         selectedTimeRange.startTime &&
                         dayjs(currentDate)
                           .isSame(dayjs(selectedTimeRange.startTime), "day")}
@@ -121,12 +127,7 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
           </div>
         );
       })}
-      {showModal &&
-        <AddNewModal
-          selectedTimeRange={ selectedTimeRange }
-          closeModal={() => { setShowModal(false); }}
-        />
-      }
+      <Outlet />
     </div>
   );
 };

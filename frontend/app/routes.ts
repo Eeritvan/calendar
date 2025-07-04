@@ -13,7 +13,9 @@ export default [
         route("delete/:eventId", "routes/events/actions/delete.tsx")
       ])
     ]),
-    route("/week/:startDate?", "routes/week/components/index.tsx"),
+    route("/week/:startDate?", "routes/week/components/index.tsx", [
+      route("add", "routes/week/components/AddNewModal/index.tsx")
+    ]),
     route("/month/:date?", "routes/month/components/index.tsx"),
     route("test", "routes/viewTransitionTest.tsx"),
     route("test2", "routes/viewTransitionTest2.tsx"),

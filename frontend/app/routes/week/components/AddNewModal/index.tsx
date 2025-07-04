@@ -1,25 +1,23 @@
 import { useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router";
 import AddNewForm from "./AddNewForm";
 import type { ColorHex } from "@/types";
 
-interface SelectedTimeRangeProps {
-  selectedTimeRange: {
-    startTime: string;
-    endTime: string;
-  }
-  closeModal: () => void;
-}
-
-const AddNewModal = (
-  { selectedTimeRange, closeModal }: SelectedTimeRangeProps
-) => {
+const AddNewModal = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const startTime = searchParams.get("startTime") || "";
+  const endTime = searchParams.get("endTime") || "";
 
   const handleColorChange = (color: ColorHex) => {
     if (modalRef.current) {
       modalRef.current.style.backgroundColor = color;
     }
   };
+
+  const closeModal = () => void navigate("..");
 
   return (
     <div
@@ -30,7 +28,7 @@ const AddNewModal = (
         x
       </button>
       <AddNewForm
-        selectedTimeRange={selectedTimeRange}
+        selectedTimeRange={{ startTime, endTime }}
         onColorChange={handleColorChange}
       />
     </div>
