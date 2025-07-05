@@ -143,7 +143,7 @@ type UpdateEventParams struct {
 	Description *string
 	StartTime   *time.Time
 	EndTime     *time.Time
-	Color       NullEventColor
+	Color       *EventColor
 }
 
 func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {

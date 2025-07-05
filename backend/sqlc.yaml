@@ -28,3 +28,8 @@ sql:
               type:  "string"
               pointer: true
             nullable: true
+          - db_type: "event_color"
+            go_type:
+              type: "EventColor"
+              pointer: true
+            nullable: true

@@ -157,6 +157,6 @@ models:
     model:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
-  EventColor:
+  EventColor: # todo: come up with better approach for the eventcolors?
     model:
       - "github.com/eeritvan/calendar/internal/sqlc.EventColor"

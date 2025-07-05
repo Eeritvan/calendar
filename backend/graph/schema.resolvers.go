@@ -32,6 +32,7 @@ func (r *mutationResolver) UpdateEvent(ctx context.Context, id uuid.UUID, input 
 		Description: input.Description,
 		StartTime:   input.StartTime,
 		EndTime:     input.EndTime,
+		Color:       input.Color,
 	})
 	if err != nil {
 		// todo: better error handling
@@ -103,6 +104,7 @@ func (r *subscriptionResolver) EventChanged(ctx context.Context) (<-chan *model.
 			Description: n.Data.Description,
 			StartTime:   n.Data.StartTime,
 			EndTime:     n.Data.EndTime,
+			Color:       n.Data.Color,
 		}
 
 		payload := &model.EventChangePayload{

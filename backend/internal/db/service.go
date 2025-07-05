@@ -13,11 +13,12 @@ import (
 )
 
 type Event struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
+	ID          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
+	StartTime   time.Time       `json:"start_time"`
+	EndTime     time.Time       `json:"end_time"`
+	Color       sqlc.EventColor `json:"color"`
 }
 
 type EventNotification struct {
