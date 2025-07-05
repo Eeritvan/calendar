@@ -5,15 +5,17 @@ package model
 import (
 	"time"
 
+	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/google/uuid"
 )
 
 type Event struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
+	ID          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
+	StartTime   time.Time       `json:"startTime"`
+	EndTime     time.Time       `json:"endTime"`
+	Color       sqlc.EventColor `json:"color"`
 }
 
 type EventChangePayload struct {
@@ -22,10 +24,11 @@ type EventChangePayload struct {
 }
 
 type EventInput struct {
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
+	StartTime   time.Time       `json:"startTime"`
+	EndTime     time.Time       `json:"endTime"`
+	Color       sqlc.EventColor `json:"color"`
 }
 
 type Mutation struct {
@@ -38,8 +41,9 @@ type Subscription struct {
 }
 
 type UpdateEventInput struct {
-	Name        *string    `json:"name,omitempty"`
-	Description *string    `json:"description,omitempty"`
-	StartTime   *time.Time `json:"startTime,omitempty"`
-	EndTime     *time.Time `json:"endTime,omitempty"`
+	Name        *string          `json:"name,omitempty"`
+	Description *string          `json:"description,omitempty"`
+	StartTime   *time.Time       `json:"startTime,omitempty"`
+	EndTime     *time.Time       `json:"endTime,omitempty"`
+	Color       *sqlc.EventColor `json:"color,omitempty"`
 }

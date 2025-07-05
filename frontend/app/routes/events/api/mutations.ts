@@ -5,18 +5,21 @@ export const ADD_EVENT = gql`
     $name: String!,
     $description: String,
     $startTime: Time!,
-    $endTime: Time!) {
+    $endTime: Time!
+    $color: EventColor!) {
     createEvent(input: {
       name: $name,
       description: $description,
       startTime: $startTime,
       endTime: $endTime,
+      color: $color
     }) {
       id
       name
       description
       startTime
       endTime
+      color
     }
   }
 `;

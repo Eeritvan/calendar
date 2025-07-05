@@ -6,8 +6,8 @@ export type EventColor = {
 };
 
 export const EVENT_COLORS: EventColor[] = [
-  { name: "Blue", value: "#3b82f6" },
-  { name: "Green", value: "#22c55e" },
-  { name: "Red", value: "#ef4444" },
-  { name: "Yellow", value: "#eab308" }
+  { name: "BLUE", value: "#3b82f6" },
+  { name: "GREEN", value: "#22c55e" },
+  { name: "RED", value: "#ef4444" },
+  { name: "YELLOW", value: "#eab308" }
 ];

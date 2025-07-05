@@ -13,9 +13,9 @@ import (
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO events (name, description, start_time, end_time)
-VALUES ($1, $2, $3, $4)
-RETURNING id, name, description, start_time, end_time
+INSERT INTO events (name, description, start_time, end_time, color)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, name, description, start_time, end_time, color
 `
 
 type CreateEventParams struct {
@@ -23,6 +23,7 @@ type CreateEventParams struct {
 	Description *string
 	StartTime   time.Time
 	EndTime     time.Time
+	Color       EventColor
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -31,6 +32,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.Description,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Color,
 	)
 	var i Event
 	err := row.Scan(
@@ -39,6 +41,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
+		&i.Color,
 	)
 	return i, err
 }
@@ -54,7 +57,7 @@ func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 }
 
 const eventsByTimeRange = `-- name: EventsByTimeRange :many
-SELECT id, name, description, start_time, end_time
+SELECT id, name, description, start_time, end_time, color
 FROM events
 WHERE start_time < $1 AND end_time > $2
 `
@@ -79,6 +82,7 @@ func (q *Queries) EventsByTimeRange(ctx context.Context, arg EventsByTimeRangePa
 			&i.Description,
 			&i.StartTime,
 			&i.EndTime,
+			&i.Color,
 		); err != nil {
 			return nil, err
 		}
@@ -91,7 +95,7 @@ func (q *Queries) EventsByTimeRange(ctx context.Context, arg EventsByTimeRangePa
 }
 
 const listEvents = `-- name: ListEvents :many
-SELECT id, name, description, start_time, end_time
+SELECT id, name, description, start_time, end_time, color
 FROM events
 `
 
@@ -110,6 +114,7 @@ func (q *Queries) ListEvents(ctx context.Context) ([]Event, error) {
 			&i.Description,
 			&i.StartTime,
 			&i.EndTime,
+			&i.Color,
 		); err != nil {
 			return nil, err
 		}
@@ -126,9 +131,10 @@ UPDATE events
 SET name = COALESCE($2, name),
     description = COALESCE($3, description),
     start_time = COALESCE($4, start_time),
-    end_time = COALESCE($5, end_time)
+    end_time = COALESCE($5, end_time),
+    color = COALESCE($6, color)
 WHERE id = $1
-RETURNING id, name, description, start_time, end_time
+RETURNING id, name, description, start_time, end_time, color
 `
 
 type UpdateEventParams struct {
@@ -137,6 +143,7 @@ type UpdateEventParams struct {
 	Description *string
 	StartTime   *time.Time
 	EndTime     *time.Time
+	Color       NullEventColor
 }
 
 func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
@@ -146,6 +153,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		arg.Description,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Color,
 	)
 	var i Event
 	err := row.Scan(
@@ -154,6 +162,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
+		&i.Color,
 	)
 	return i, err
 }

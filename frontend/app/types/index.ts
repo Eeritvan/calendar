@@ -10,4 +10,5 @@ export interface Event {
   description: string;
   startTime: Time;
   endTime: Time;
+  color: string;
 };

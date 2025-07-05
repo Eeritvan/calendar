@@ -15,6 +15,7 @@ export const GET_EVENTS_BY_TIME_RANGE = gql`
       description
       startTime
       endTime
+      color
     }
   }
 `;

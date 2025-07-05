@@ -1,12 +1,20 @@
 scalar Time
 scalar UUID
 
+enum EventColor {
+  BLUE
+  GREEN
+  RED
+  YELLOW
+}
+
 type Event {
   id: UUID!
   name: String!
   description: String
   startTime: Time!
   endTime: Time!
+  color: EventColor!
 }
 
 input EventInput {
@@ -14,6 +22,7 @@ input EventInput {
   description: String
   startTime: Time!
   endTime: Time!
+  color: EventColor!
 }
 
 input UpdateEventInput {
@@ -21,6 +30,7 @@ input UpdateEventInput {
   description: String
   startTime: Time
   endTime: Time
+  color: EventColor
 }
 
 type Query {

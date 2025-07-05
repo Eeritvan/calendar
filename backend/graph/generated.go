@@ -17,6 +17,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/eeritvan/calendar/graph/model"
+	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/google/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -52,6 +53,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Event struct {
+		Color       func(childComplexity int) int
 		Description func(childComplexity int) int
 		EndTime     func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -111,6 +113,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Event.color":
+		if e.complexity.Event.Color == nil {
+			break
+		}
+
+		return e.complexity.Event.Color(childComplexity), true
 
 	case "Event.description":
 		if e.complexity.Event.Description == nil {
@@ -834,6 +843,50 @@ func (ec *executionContext) fieldContext_Event_endTime(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Event_color(ctx context.Context, field graphql.CollectedField, obj *model.Event) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Event_color(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Color, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(sqlc.EventColor)
+	fc.Result = res
+	return ec.marshalNEventColor2githubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Event_color(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Event",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type EventColor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EventChangePayload_action(ctx context.Context, field graphql.CollectedField, obj *model.EventChangePayload) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EventChangePayload_action(ctx, field)
 	if err != nil {
@@ -927,6 +980,8 @@ func (ec *executionContext) fieldContext_EventChangePayload_event(_ context.Cont
 				return ec.fieldContext_Event_startTime(ctx, field)
 			case "endTime":
 				return ec.fieldContext_Event_endTime(ctx, field)
+			case "color":
+				return ec.fieldContext_Event_color(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
 		},
@@ -983,6 +1038,8 @@ func (ec *executionContext) fieldContext_Mutation_createEvent(ctx context.Contex
 				return ec.fieldContext_Event_startTime(ctx, field)
 			case "endTime":
 				return ec.fieldContext_Event_endTime(ctx, field)
+			case "color":
+				return ec.fieldContext_Event_color(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
 		},
@@ -1050,6 +1107,8 @@ func (ec *executionContext) fieldContext_Mutation_updateEvent(ctx context.Contex
 				return ec.fieldContext_Event_startTime(ctx, field)
 			case "endTime":
 				return ec.fieldContext_Event_endTime(ctx, field)
+			case "color":
+				return ec.fieldContext_Event_color(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
 		},
@@ -1169,6 +1228,8 @@ func (ec *executionContext) fieldContext_Query_allEvents(_ context.Context, fiel
 				return ec.fieldContext_Event_startTime(ctx, field)
 			case "endTime":
 				return ec.fieldContext_Event_endTime(ctx, field)
+			case "color":
+				return ec.fieldContext_Event_color(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
 		},
@@ -1225,6 +1286,8 @@ func (ec *executionContext) fieldContext_Query_eventsByTimeRange(ctx context.Con
 				return ec.fieldContext_Event_startTime(ctx, field)
 			case "endTime":
 				return ec.fieldContext_Event_endTime(ctx, field)
+			case "color":
+				return ec.fieldContext_Event_color(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
 		},
@@ -3396,7 +3459,7 @@ func (ec *executionContext) unmarshalInputEventInput(ctx context.Context, obj an
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "startTime", "endTime"}
+	fieldsInOrder := [...]string{"name", "description", "startTime", "endTime", "color"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3431,6 +3494,13 @@ func (ec *executionContext) unmarshalInputEventInput(ctx context.Context, obj an
 				return it, err
 			}
 			it.EndTime = data
+		case "color":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
+			data, err := ec.unmarshalNEventColor2githubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Color = data
 		}
 	}
 
@@ -3444,7 +3514,7 @@ func (ec *executionContext) unmarshalInputUpdateEventInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "startTime", "endTime"}
+	fieldsInOrder := [...]string{"name", "description", "startTime", "endTime", "color"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3479,6 +3549,13 @@ func (ec *executionContext) unmarshalInputUpdateEventInput(ctx context.Context, 
 				return it, err
 			}
 			it.EndTime = data
+		case "color":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
+			data, err := ec.unmarshalOEventColor2ᚖgithubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Color = data
 		}
 	}
 
@@ -3523,6 +3600,11 @@ func (ec *executionContext) _Event(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "endTime":
 			out.Values[i] = ec._Event_endTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "color":
+			out.Values[i] = ec._Event_color(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4190,6 +4272,23 @@ func (ec *executionContext) marshalNEventChangePayload2ᚖgithubᚗcomᚋeeritva
 	return ec._EventChangePayload(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNEventColor2githubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx context.Context, v any) (sqlc.EventColor, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := sqlc.EventColor(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNEventColor2githubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx context.Context, sel ast.SelectionSet, v sqlc.EventColor) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNEventInput2githubᚗcomᚋeeritvanᚋcalendarᚋgraphᚋmodelᚐEventInput(ctx context.Context, v any) (model.EventInput, error) {
 	res, err := ec.unmarshalInputEventInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4576,6 +4675,25 @@ func (ec *executionContext) marshalOEvent2ᚕᚖgithubᚗcomᚋeeritvanᚋcalend
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalOEventColor2ᚖgithubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx context.Context, v any) (*sqlc.EventColor, error) {
+	if v == nil {
+		return nil, nil
+	}
+	tmp, err := graphql.UnmarshalString(v)
+	res := sqlc.EventColor(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOEventColor2ᚖgithubᚗcomᚋeeritvanᚋcalendarᚋinternalᚋsqlcᚐEventColor(ctx context.Context, sel ast.SelectionSet, v *sqlc.EventColor) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalString(string(*v))
+	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

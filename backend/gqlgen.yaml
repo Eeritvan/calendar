@@ -157,3 +157,6 @@ models:
     model:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
+  EventColor:
+    model:
+      - "github.com/eeritvan/calendar/internal/sqlc.EventColor"

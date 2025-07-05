@@ -15,7 +15,7 @@ const ColorSelector = ({ onColorChange }: ColorSelectorProps) => {
           <input
             type="radio"
             name="color"
-            value={color.value}
+            value={color.name}
             className="hidden"
             onChange={() => { onColorChange(color.value); }}
             aria-label={color.name || color.value}

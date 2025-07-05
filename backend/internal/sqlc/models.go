@@ -5,10 +5,56 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type EventColor string
+
+const (
+	EventColorBLUE   EventColor = "BLUE"
+	EventColorGREEN  EventColor = "GREEN"
+	EventColorRED    EventColor = "RED"
+	EventColorYELLOW EventColor = "YELLOW"
+)
+
+func (e *EventColor) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EventColor(s)
+	case string:
+		*e = EventColor(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EventColor: %T", src)
+	}
+	return nil
+}
+
+type NullEventColor struct {
+	EventColor EventColor
+	Valid      bool // Valid is true if EventColor is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEventColor) Scan(value interface{}) error {
+	if value == nil {
+		ns.EventColor, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EventColor.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEventColor) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EventColor), nil
+}
 
 type Event struct {
 	ID          uuid.UUID
@@ -16,4 +62,5 @@ type Event struct {
 	Description *string
 	StartTime   time.Time
 	EndTime     time.Time
+	Color       EventColor
 }
