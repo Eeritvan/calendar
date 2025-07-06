@@ -62,7 +62,7 @@ const Month = ({ loaderData }: Route.ComponentProps) => {
 
         return (
           <Suspense
-            key={index}
+            key={currentDate.format("YYYY-MM-DD")}
             fallback={ <SingleDate date={currentDate} events={emptyEvents} /> }
           >
             <Await resolve={loaderData.events}>

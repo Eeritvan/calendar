@@ -86,13 +86,14 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
 
       {Array.from({ length: 7 }, (_, index) => {
         const currentDate = startDateObj.add(index, "day");
+        const dateKey = currentDate.format("YYYY-MM-DD");
         return (
-          <div key={index} className="contents">
+          <div key={dateKey} className="contents">
             <div className="border-2">
-              { currentDate.format("YYYY-MM-DD") }
+              { dateKey }
             </div>
             <Suspense
-              key={index}
+              key={dateKey}
               fallback={
                 <SingleDate
                   date={currentDate}
@@ -118,10 +119,6 @@ const Week = ({ loaderData }: Route.ComponentProps) => {
                       date={currentDate}
                       events={dateEvents}
                       handleSelect={handleSelect}
-                      showSelectedTime={
-                        selectedTimeRange.startTime &&
-                        dayjs(currentDate)
-                          .isSame(dayjs(selectedTimeRange.startTime), "day")}
                       selectedTimeRange={selectedTimeRange}
                     />
                   );

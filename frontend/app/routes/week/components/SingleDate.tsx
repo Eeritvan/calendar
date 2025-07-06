@@ -8,12 +8,11 @@ interface SingleDateProps {
   date: dayjs.Dayjs;
   events: Event[];
   handleSelect: (startTime: string, endTime: string) => void;
-  showSelectedTime?: boolean | ""; // todo: wtf
   selectedTimeRange?: { startTime: string; endTime: string };
 }
 
 const SingleDate = ({
-  date, events, handleSelect, showSelectedTime, selectedTimeRange
+  date, events, handleSelect, selectedTimeRange
 }: SingleDateProps) => {
   return (
     <div className="row-span-24 border-x grid relative grid-rows-subgrid">
@@ -23,8 +22,9 @@ const SingleDate = ({
 
       <DragSelectArea date={date} handleSelect={handleSelect} />
 
-      { showSelectedTime &&
-        <HighlightEvent selectedTimeRange={selectedTimeRange}/>
+      { selectedTimeRange?.startTime &&
+        dayjs(date).isSame(dayjs(selectedTimeRange.startTime), "day") &&
+          <HighlightEvent selectedTimeRange={selectedTimeRange} />
       }
 
       {events.map((event: Event) => (
