@@ -15,10 +15,10 @@ import (
 type EventColor string
 
 const (
-	EventColorBLUE   EventColor = "BLUE"
-	EventColorGREEN  EventColor = "GREEN"
-	EventColorRED    EventColor = "RED"
-	EventColorYELLOW EventColor = "YELLOW"
+	EventColorBlue   EventColor = "blue"
+	EventColorGreen  EventColor = "green"
+	EventColorRed    EventColor = "red"
+	EventColorYellow EventColor = "yellow"
 )
 
 func (e *EventColor) Scan(src interface{}) error {

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import AddNewForm from "./AddNewForm";
-import type { ColorHex } from "@/types";
 
 const AddNewModal = () => {
   const [searchParams] = useSearchParams();
@@ -26,9 +25,9 @@ const AddNewModal = () => {
     };
   });
 
-  const handleColorChange = (color: ColorHex) => {
+  const handleColorChange = (color: string) => {
     if (modalRef.current) {
-      modalRef.current.style.backgroundColor = color;
+      modalRef.current.style.background = `var(--color-event-${color})`;
     }
   };
 

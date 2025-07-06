@@ -5,6 +5,13 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+:root {
+  --color-event-blue: oklch(0.6231 0.188 259.81);
+  --color-event-green: oklch(0.7227 0.192 149.58);
+  --color-event-red: oklch(0.6368 0.2078 25.33);
+  --color-event-yellow: oklch(0.7952 0.1617 86.05);
+}
+
 html,
 body {
   @apply bg-white dark:bg-gray-950;

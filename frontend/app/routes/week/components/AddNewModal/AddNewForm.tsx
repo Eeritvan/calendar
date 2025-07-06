@@ -1,13 +1,12 @@
 import { useFetcher } from "react-router";
 import ColorSelector from "./ColorSelector";
-import type { ColorHex } from "@/types";
 
 interface SelectedTimeRangeProps {
   selectedTimeRange: {
     startTime: string;
     endTime: string;
   };
-  onColorChange: (color: ColorHex) => void;
+  onColorChange: (color: string) => void;
 }
 
 const AddNewForm = (

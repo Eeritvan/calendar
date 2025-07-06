@@ -1,8 +1,8 @@
 CREATE TYPE event_color AS ENUM (
-  'BLUE',
-  'GREEN',
-  'RED',
-  'YELLOW'
+  'blue',
+  'green',
+  'red',
+  'yellow'
 );
 
 ALTER TABLE events
