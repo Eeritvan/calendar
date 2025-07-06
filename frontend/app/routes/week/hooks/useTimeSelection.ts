@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import dayjs from "dayjs";
 import { percentageToTime } from "../utils/timeUtils";
 
@@ -28,13 +28,15 @@ export const useTimeSelection = ({
   date, onTimeSelect
 }: UseTimeSelectionProps) => {
   const selectionRef = useRef<HTMLDivElement>(null);
-  const [timeRange, setTimeRange] = useState({ startTime: "", endTime: "" });
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     const selectionDiv = selectionRef.current;
     const parentElement = selectionDiv?.parentElement;
     if (!selectionDiv || !parentElement) return;
+
+    const timeDisplay = selectionDiv.querySelector("span");
+    if (!timeDisplay) return;
 
     const rect = parentElement.getBoundingClientRect();
     const startPercentage = getSnappedPercentage(event.nativeEvent, rect);
@@ -62,10 +64,10 @@ export const useTimeSelection = ({
           const endTime = percentageToTime(
             topPercentage + heightPercentage, date
           );
-          setTimeRange({
-            startTime: startTime.format("HH:mm"),
-            endTime: endTime.format("HH:mm")
-          });
+          timeDisplay.textContent =
+            `${startTime.format("HH:mm")} - ${endTime.format("HH:mm")}`;
+        } else {
+          timeDisplay.textContent = "";
         }
       });
     };
@@ -80,7 +82,7 @@ export const useTimeSelection = ({
       selectionDiv.style.display = "none";
       selectionDiv.style.height = "0";
       selectionDiv.style.transform = "translateY(0)";
-      setTimeRange({ startTime: "", endTime: "" });
+      timeDisplay.textContent = "";
 
       const endPercentage = getSnappedPercentage(upEvent, rect);
       const finalStartPercentage = Math.min(startPercentage, endPercentage);
@@ -101,11 +103,8 @@ export const useTimeSelection = ({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const getTimeRange = () => timeRange;
-
   return {
     selectionRef,
-    getTimeRange,
     handleMouseDown
   };
 };
