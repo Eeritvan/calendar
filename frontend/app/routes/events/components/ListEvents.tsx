@@ -28,6 +28,7 @@ const ListEvents = ({ eventsProp }: { eventsProp: EventType[] }) => {
     const eventDesc = addFetcher.formData?.get("description");
     const startTime = addFetcher.formData?.get("startTime");
     const endTime = addFetcher.formData?.get("endTime");
+    const color = addFetcher.formData?.get("color");
 
     if (eventName) {
       setEvents(prevEvents => [
@@ -37,7 +38,8 @@ const ListEvents = ({ eventsProp }: { eventsProp: EventType[] }) => {
           name: eventName as string,
           description: eventDesc as string,
           startTime: startTime as Time,
-          endTime: endTime as Time
+          endTime: endTime as Time,
+          color: color as string
         }
       ]);
     }
