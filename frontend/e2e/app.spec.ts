@@ -10,11 +10,11 @@ test.describe("application", () => {
   test("changing views works", async ({ page }) => {
     await expect(page).toHaveURL(APP_URL);
 
-    await page.getByRole("link", { name: "test" }).click();
+    await page.getByRole("link", { name: "test", exact: true }).click();
 
     await expect(page).toHaveURL(`${APP_URL}/test`);
 
-    await expect(page.locator("text=All events")).toBeVisible();
+    await expect(page.locator("text=view transition testing")).toBeVisible();
     await expect(page.locator("text=Add event")).not.toBeVisible();
   });
 
