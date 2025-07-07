@@ -21,7 +21,5 @@ export const percentageToTime = (percentage: number, date: dayjs.Dayjs) => {
   const minutes = Math.floor(totalMinutes % 60);
   return date
     .hour(hours)
-    .minute(minutes)
-    .second(0)
-    .millisecond(0);
+    .minute(minutes);
 };
