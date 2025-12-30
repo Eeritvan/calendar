@@ -1,0 +1,7 @@
+{
+  "extends": ["expo/tsconfig.base", "@repo/typescript-config/base.json"],
+  "exclude": [
+    "eslint.config.ts",
+    "index.ts"
+  ]
+}
