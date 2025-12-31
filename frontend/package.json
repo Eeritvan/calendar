@@ -2,7 +2,7 @@
   "name": "frontend",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --filter=web-client",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types"
