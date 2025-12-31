@@ -1,0 +1,55 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title:
+paths:
+  /allEvents:
+    get:
+      summary: TODO
+      responses:
+        "200":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+  /addEvent:
+    post:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventNoId"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+components:
+  schemas:
+    Event:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 20
+        name:
+          type: string
+          example: "event 1"
+    EventNoId:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "event 1"

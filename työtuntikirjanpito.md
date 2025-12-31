@@ -1,4 +1,5 @@
 | päivä      | tehty                         | aika |
 | ---------- | ----------------------------- | ---- |
-| 30.12.2025 | monorepo setup                | 3    |
+| 31.12.2025 | backend setup                 | 2    |
+| 30.12.2025 | frontend setup                | 3    |
 | 30.12.2025 | Aloitettu projektin tekeminen | 0    |
