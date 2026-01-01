@@ -33,14 +33,14 @@ func (s *Server) PostAddEvent(c echo.Context) error {
 	}
 
 	resp := Event{
-		Id:   int(queryResp.ID),
+		Id:   queryResp.ID,
 		Name: queryResp.Name,
 	}
 
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (get /allEvents)
+// (GET /allEvents)
 func (s *Server) GetAllEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -53,7 +53,7 @@ func (s *Server) GetAllEvents(c echo.Context) error {
 	resp := make([]Event, len(queryResp))
 	for i, event := range queryResp {
 		resp[i] = Event{
-			Id:   int(event.ID),
+			Id:   event.ID,
 			Name: event.Name,
 		}
 	}

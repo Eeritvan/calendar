@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const addEvent = `-- name: AddEvent :one
@@ -15,9 +17,14 @@ VALUES ($1)
 RETURNING id, name
 `
 
-func (q *Queries) AddEvent(ctx context.Context, name string) (Event, error) {
+type AddEventRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) AddEvent(ctx context.Context, name string) (AddEventRow, error) {
 	row := q.db.QueryRow(ctx, addEvent, name)
-	var i Event
+	var i AddEventRow
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
@@ -26,20 +33,15 @@ const getEvents = `-- name: GetEvents :many
 SELECT name, id FROM Events
 `
 
-type GetEventsRow struct {
-	Name string
-	ID   int32
-}
-
-func (q *Queries) GetEvents(ctx context.Context) ([]GetEventsRow, error) {
+func (q *Queries) GetEvents(ctx context.Context) ([]Event, error) {
 	rows, err := q.db.Query(ctx, getEvents)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetEventsRow
+	var items []Event
 	for rows.Next() {
-		var i GetEventsRow
+		var i Event
 		if err := rows.Scan(&i.Name, &i.ID); err != nil {
 			return nil, err
 		}

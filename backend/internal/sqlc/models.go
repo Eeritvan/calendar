@@ -4,7 +4,11 @@
 
 package sqlc
 
+import (
+	"github.com/google/uuid"
+)
+
 type Event struct {
-	ID   int32
 	Name string
+	ID   uuid.UUID
 }

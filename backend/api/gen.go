@@ -4,13 +4,14 @@
 package api
 
 import (
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 // Event defines model for Event.
 type Event struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 // EventNoId defines model for EventNoId.
