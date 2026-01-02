@@ -9,40 +9,93 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addEvent = `-- name: AddEvent :one
-INSERT INTO Events (name)
-VALUES ($1)
-RETURNING id, name
+INSERT INTO Events (name, time)
+VALUES (
+    $1,
+    tstzrange($2, $3, '[)')
+)
+RETURNING id, name, time
 `
+
+type AddEventParams struct {
+	Name        string
+	Tstzrange   interface{}
+	Tstzrange_2 interface{}
+}
 
 type AddEventRow struct {
 	ID   uuid.UUID
 	Name string
+	Time pgtype.Range[pgtype.Timestamptz]
 }
 
-func (q *Queries) AddEvent(ctx context.Context, name string) (AddEventRow, error) {
-	row := q.db.QueryRow(ctx, addEvent, name)
+func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow, error) {
+	row := q.db.QueryRow(ctx, addEvent, arg.Name, arg.Tstzrange, arg.Tstzrange_2)
 	var i AddEventRow
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.Time)
 	return i, err
 }
 
-const getEvents = `-- name: GetEvents :many
-SELECT name, id FROM Events
+const allEvents = `-- name: AllEvents :many
+SELECT id, name, time FROM Events
 `
 
-func (q *Queries) GetEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.Query(ctx, getEvents)
+type AllEventsRow struct {
+	ID   uuid.UUID
+	Name string
+	Time pgtype.Range[pgtype.Timestamptz]
+}
+
+func (q *Queries) AllEvents(ctx context.Context) ([]AllEventsRow, error) {
+	rows, err := q.db.Query(ctx, allEvents)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Event
+	var items []AllEventsRow
 	for rows.Next() {
-		var i Event
-		if err := rows.Scan(&i.Name, &i.ID); err != nil {
+		var i AllEventsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Time); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEvents = `-- name: GetEvents :many
+SELECT id, name, time FROM Events
+WHERE time && tstzrange($1, $2, '[)')
+`
+
+type GetEventsParams struct {
+	Tstzrange   interface{}
+	Tstzrange_2 interface{}
+}
+
+type GetEventsRow struct {
+	ID   uuid.UUID
+	Name string
+	Time pgtype.Range[pgtype.Timestamptz]
+}
+
+func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEventsRow, error) {
+	rows, err := q.db.Query(ctx, getEvents, arg.Tstzrange, arg.Tstzrange_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEventsRow
+	for rows.Next() {
+		var i GetEventsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Time); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

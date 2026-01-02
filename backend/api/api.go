@@ -26,25 +26,33 @@ func (s *Server) PostAddEvent(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	queryResp, err := s.queries.AddEvent(ctx, body.Name)
+	queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
+		Name:        body.Name,
+		Tstzrange:   body.StartTime,
+		Tstzrange_2: body.EndTime,
+	})
+
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	resp := Event{
-		Id:   queryResp.ID,
-		Name: queryResp.Name,
+		Id:        queryResp.ID,
+		Name:      queryResp.Name,
+		StartTime: queryResp.Time.Lower.Time,
+		EndTime:   queryResp.Time.Upper.Time,
 	}
 
 	return c.JSON(http.StatusOK, resp)
 }
 
+// TODO: probably unsafe long-term and should be deleted
 // (GET /allEvents)
 func (s *Server) GetAllEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	queryResp, err := s.queries.GetEvents(ctx)
+	queryResp, err := s.queries.AllEvents(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -53,8 +61,39 @@ func (s *Server) GetAllEvents(c echo.Context) error {
 	resp := make([]Event, len(queryResp))
 	for i, event := range queryResp {
 		resp[i] = Event{
-			Id:   event.ID,
-			Name: event.Name,
+			Id:        event.ID,
+			Name:      event.Name,
+			StartTime: event.Time.Lower.Time,
+			EndTime:   event.Time.Upper.Time,
+		}
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// (GET /getEvents)
+func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
+	ctx := c.Request().Context()
+
+	fmt.Println(params.StartTime, params.EndTime)
+
+	queryResp, err := s.queries.GetEvents(ctx, sqlc.GetEventsParams{
+		Tstzrange:   params.StartTime,
+		Tstzrange_2: params.EndTime,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	resp := make([]Event, len(queryResp))
+	for i, event := range queryResp {
+		resp[i] = Event{
+			Id:        event.ID,
+			Name:      event.Name,
+			StartTime: event.Time.Lower.Time,
+			EndTime:   event.Time.Upper.Time,
 		}
 	}
 

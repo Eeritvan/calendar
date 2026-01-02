@@ -5,7 +5,7 @@ info:
 paths:
   /allEvents:
     get:
-      summary: TODO
+      summary: TODO - delete endpoint later
       responses:
         "200":
           description: TODO
@@ -31,6 +31,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Event"
+  /getEvents:
+    get:
+      summary: TODO
+      parameters:
+        - in: query
+          name: start_time
+          schema:
+            type: string
+            format: date-time
+            example: TODO
+          required: true
+          description: TODO
+        - in: query
+          name: end_time
+          schema:
+            type: string
+            format: date-time
+            example: TODO
+          required: true
+          description: TODO
+      responses:
+        "200":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
 components:
   schemas:
     Event:
@@ -38,6 +67,8 @@ components:
       required:
         - id
         - name
+        - start_time
+        - end_time
       properties:
         id:
           type: string
@@ -49,11 +80,29 @@ components:
         name:
           type: string
           example: "event 1"
+        start_time:
+          type: string
+          format: date-time
+          example: 2022-01-02T16:00:00+07:00
+        end_time:
+          type: string
+          format: date-time
+          example: 2022-01-02T16:00:00+07:00
     EventNoId:
       type: object
       required:
         - name
+        - start_time
+        - end_time
       properties:
         name:
           type: string
           example: "event 1"
+        start_time:
+          type: string
+          format: date-time
+          example: 2022-01-02T16:00:00+07:00
+        end_time:
+          type: string
+          format: date-time
+          example: 2022-01-02T16:00:00+07:00

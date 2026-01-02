@@ -4,19 +4,37 @@
 package api
 
 import (
+	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 )
 
 // Event defines model for Event.
 type Event struct {
-	Id   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	EndTime   time.Time `json:"end_time"`
+	Id        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	StartTime time.Time `json:"start_time"`
 }
 
 // EventNoId defines model for EventNoId.
 type EventNoId struct {
-	Name string `json:"name"`
+	EndTime   time.Time `json:"end_time"`
+	Name      string    `json:"name"`
+	StartTime time.Time `json:"start_time"`
+}
+
+// GetGetEventsParams defines parameters for GetGetEvents.
+type GetGetEventsParams struct {
+	// StartTime TODO
+	StartTime time.Time `form:"start_time" json:"start_time"`
+
+	// EndTime TODO
+	EndTime time.Time `form:"end_time" json:"end_time"`
 }
 
 // PostAddEventJSONRequestBody defines body for PostAddEvent for application/json ContentType.
@@ -27,9 +45,12 @@ type ServerInterface interface {
 	// TODO
 	// (POST /addEvent)
 	PostAddEvent(ctx echo.Context) error
-	// TODO
+	// TODO - delete endpoint later
 	// (GET /allEvents)
 	GetAllEvents(ctx echo.Context) error
+	// TODO
+	// (GET /getEvents)
+	GetGetEvents(ctx echo.Context, params GetGetEventsParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -52,6 +73,31 @@ func (w *ServerInterfaceWrapper) GetAllEvents(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetAllEvents(ctx)
+	return err
+}
+
+// GetGetEvents converts echo context to params.
+func (w *ServerInterfaceWrapper) GetGetEvents(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetGetEventsParams
+	// ------------- Required query parameter "start_time" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "start_time", ctx.QueryParams(), &params.StartTime)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter start_time: %s", err))
+	}
+
+	// ------------- Required query parameter "end_time" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "end_time", ctx.QueryParams(), &params.EndTime)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter end_time: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetGetEvents(ctx, params)
 	return err
 }
 
@@ -85,5 +131,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.POST(baseURL+"/addEvent", wrapper.PostAddEvent)
 	router.GET(baseURL+"/allEvents", wrapper.GetAllEvents)
+	router.GET(baseURL+"/getEvents", wrapper.GetGetEvents)
 
 }

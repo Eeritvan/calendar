@@ -1,25 +1,25 @@
 BEGIN;
 
-ALTER TABLE events
+ALTER TABLE IF EXISTS events
 ADD COLUMN id_uuid uuid DEFAULT uuidv7();
 
 UPDATE events
 SET id_uuid = uuidv7()
 WHERE id_uuid IS NULL;
 
-ALTER TABLE events
+ALTER TABLE IF EXISTS events
 ALTER COLUMN id_uuid SET NOT NULL;
 
-ALTER TABLE events
+ALTER TABLE IF EXISTS events
 DROP CONSTRAINT events_pkey;
 
-ALTER TABLE events
+ALTER TABLE IF EXISTS events
 DROP COLUMN id;
 
-ALTER TABLE events
+ALTER TABLE IF EXISTS events
 RENAME COLUMN id_uuid TO id;
 
-ALTER TABLE events
+ALTER TABLE IF EXISTS events
 ADD PRIMARY KEY (id);
 
 COMMIT;
