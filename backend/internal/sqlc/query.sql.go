@@ -12,42 +12,69 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addCalendar = `-- name: AddCalendar :one
+INSERT INTO Calendars (name)
+VALUES ($1)
+RETURNING id, name
+`
+
+func (q *Queries) AddCalendar(ctx context.Context, name string) (Calendar, error) {
+	row := q.db.QueryRow(ctx, addCalendar, name)
+	var i Calendar
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const addEvent = `-- name: AddEvent :one
-INSERT INTO Events (name, time)
+INSERT INTO Events (calendar_id, name, time)
 VALUES (
     $1,
-    tstzrange($2, $3, '[)')
+    $2,
+    tstzrange($3, $4, '[)')
 )
-RETURNING id, name, time
+RETURNING id, calendar_id, name, time
 `
 
 type AddEventParams struct {
+	CalendarID  uuid.UUID
 	Name        string
 	Tstzrange   interface{}
 	Tstzrange_2 interface{}
 }
 
 type AddEventRow struct {
-	ID   uuid.UUID
-	Name string
-	Time pgtype.Range[pgtype.Timestamptz]
+	ID         uuid.UUID
+	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
 }
 
 func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow, error) {
-	row := q.db.QueryRow(ctx, addEvent, arg.Name, arg.Tstzrange, arg.Tstzrange_2)
+	row := q.db.QueryRow(ctx, addEvent,
+		arg.CalendarID,
+		arg.Name,
+		arg.Tstzrange,
+		arg.Tstzrange_2,
+	)
 	var i AddEventRow
-	err := row.Scan(&i.ID, &i.Name, &i.Time)
+	err := row.Scan(
+		&i.ID,
+		&i.CalendarID,
+		&i.Name,
+		&i.Time,
+	)
 	return i, err
 }
 
 const allEvents = `-- name: AllEvents :many
-SELECT id, name, time FROM Events
+SELECT id, calendar_id, name, time FROM Events
 `
 
 type AllEventsRow struct {
-	ID   uuid.UUID
-	Name string
-	Time pgtype.Range[pgtype.Timestamptz]
+	ID         uuid.UUID
+	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
 }
 
 func (q *Queries) AllEvents(ctx context.Context) ([]AllEventsRow, error) {
@@ -59,7 +86,36 @@ func (q *Queries) AllEvents(ctx context.Context) ([]AllEventsRow, error) {
 	var items []AllEventsRow
 	for rows.Next() {
 		var i AllEventsRow
-		if err := rows.Scan(&i.ID, &i.Name, &i.Time); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.CalendarID,
+			&i.Name,
+			&i.Time,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCalendars = `-- name: GetCalendars :many
+SELECT id, name FROM Calendars
+`
+
+func (q *Queries) GetCalendars(ctx context.Context) ([]Calendar, error) {
+	rows, err := q.db.Query(ctx, getCalendars)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Calendar
+	for rows.Next() {
+		var i Calendar
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -71,7 +127,7 @@ func (q *Queries) AllEvents(ctx context.Context) ([]AllEventsRow, error) {
 }
 
 const getEvents = `-- name: GetEvents :many
-SELECT id, name, time FROM Events
+SELECT id, calendar_id, name, time FROM Events
 WHERE time && tstzrange($1, $2, '[)')
 `
 
@@ -81,9 +137,10 @@ type GetEventsParams struct {
 }
 
 type GetEventsRow struct {
-	ID   uuid.UUID
-	Name string
-	Time pgtype.Range[pgtype.Timestamptz]
+	ID         uuid.UUID
+	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
 }
 
 func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEventsRow, error) {
@@ -95,7 +152,12 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 	var items []GetEventsRow
 	for rows.Next() {
 		var i GetEventsRow
-		if err := rows.Scan(&i.ID, &i.Name, &i.Time); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.CalendarID,
+			&i.Name,
+			&i.Time,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

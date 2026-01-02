@@ -9,8 +9,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Event struct {
-	Name string
+type Calendar struct {
 	ID   uuid.UUID
-	Time pgtype.Range[pgtype.Timestamptz]
+	Name string
+}
+
+type Event struct {
+	Name       string
+	ID         uuid.UUID
+	Time       pgtype.Range[pgtype.Timestamptz]
+	CalendarID uuid.UUID
 }

@@ -13,19 +13,32 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// Event defines model for Event.
-type Event struct {
-	EndTime   time.Time `json:"end_time"`
-	Id        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	StartTime time.Time `json:"start_time"`
+// AddEvent defines model for AddEvent.
+type AddEvent struct {
+	CalendarId uuid.UUID `json:"calendar_id"`
+	EndTime    time.Time `json:"end_time"`
+	Name       string    `json:"name"`
+	StartTime  time.Time `json:"start_time"`
 }
 
-// EventNoId defines model for EventNoId.
-type EventNoId struct {
-	EndTime   time.Time `json:"end_time"`
-	Name      string    `json:"name"`
-	StartTime time.Time `json:"start_time"`
+// Calendar defines model for Calendar.
+type Calendar struct {
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+// CalendarNoId defines model for CalendarNoId.
+type CalendarNoId struct {
+	Name string `json:"name"`
+}
+
+// Event defines model for Event.
+type Event struct {
+	CalendarId uuid.UUID `json:"calendar_id"`
+	EndTime    time.Time `json:"end_time"`
+	Id         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	StartTime  time.Time `json:"start_time"`
 }
 
 // GetGetEventsParams defines parameters for GetGetEvents.
@@ -37,17 +50,26 @@ type GetGetEventsParams struct {
 	EndTime time.Time `form:"end_time" json:"end_time"`
 }
 
+// PostAddCalendarJSONRequestBody defines body for PostAddCalendar for application/json ContentType.
+type PostAddCalendarJSONRequestBody = CalendarNoId
+
 // PostAddEventJSONRequestBody defines body for PostAddEvent for application/json ContentType.
-type PostAddEventJSONRequestBody = EventNoId
+type PostAddEventJSONRequestBody = AddEvent
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// TODO
+	// (POST /addCalendar)
+	PostAddCalendar(ctx echo.Context) error
 	// TODO
 	// (POST /addEvent)
 	PostAddEvent(ctx echo.Context) error
 	// TODO - delete endpoint later
 	// (GET /allEvents)
 	GetAllEvents(ctx echo.Context) error
+	// TODO
+	// (GET /getCalendars)
+	GetGetCalendars(ctx echo.Context) error
 	// TODO
 	// (GET /getEvents)
 	GetGetEvents(ctx echo.Context, params GetGetEventsParams) error
@@ -56,6 +78,15 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// PostAddCalendar converts echo context to params.
+func (w *ServerInterfaceWrapper) PostAddCalendar(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostAddCalendar(ctx)
+	return err
 }
 
 // PostAddEvent converts echo context to params.
@@ -73,6 +104,15 @@ func (w *ServerInterfaceWrapper) GetAllEvents(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetAllEvents(ctx)
+	return err
+}
+
+// GetGetCalendars converts echo context to params.
+func (w *ServerInterfaceWrapper) GetGetCalendars(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetGetCalendars(ctx)
 	return err
 }
 
@@ -129,8 +169,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.POST(baseURL+"/addCalendar", wrapper.PostAddCalendar)
 	router.POST(baseURL+"/addEvent", wrapper.PostAddEvent)
 	router.GET(baseURL+"/allEvents", wrapper.GetAllEvents)
+	router.GET(baseURL+"/getCalendars", wrapper.GetGetCalendars)
 	router.GET(baseURL+"/getEvents", wrapper.GetGetEvents)
 
 }

@@ -1,14 +1,23 @@
 -- name: AddEvent :one
-INSERT INTO Events (name, time)
+INSERT INTO Events (calendar_id, name, time)
 VALUES (
     $1,
-    tstzrange($2, $3, '[)')
+    $2,
+    tstzrange($3, $4, '[)')
 )
-RETURNING id, name, time;
+RETURNING id, calendar_id, name, time;
 
 -- name: AllEvents :many
-SELECT id, name, time FROM Events;
+SELECT id, calendar_id, name, time FROM Events;
 
 -- name: GetEvents :many
-SELECT id, name, time FROM Events
+SELECT id, calendar_id, name, time FROM Events
 WHERE time && tstzrange($1, $2, '[)');
+
+-- name: AddCalendar :one
+INSERT INTO Calendars (name)
+VALUES ($1)
+RETURNING id, name;
+
+-- name: GetCalendars :many
+SELECT id, name FROM Calendars;
