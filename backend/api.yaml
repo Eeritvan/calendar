@@ -67,6 +67,61 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Calendar"
+  /calendar/edit/{calendar_id}:
+    patch:
+      summary: TODO
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: calendar_id
+          description: TODO
+          schema:
+            type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+            example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalendarEdit"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Calendar"
+  /calendar/delete/{calendar_id}:
+    delete:
+      summary: TODO
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: calendar_id
+          description: TODO
+          schema:
+            type: string
+            format: uuid
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+            example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
+          required: true
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
   /addEvent:
     post:
       summary: TODO
@@ -163,6 +218,12 @@ components:
           x-go-type-import:
             path: github.com/google/uuid
           example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
+    CalendarEdit:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "calendar 1"
     signup:
       type: object
       required:

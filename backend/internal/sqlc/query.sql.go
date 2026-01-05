@@ -71,6 +71,35 @@ func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow
 	return i, err
 }
 
+const deleteCalendar = `-- name: DeleteCalendar :exec
+DELETE FROM Calendars
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCalendar(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCalendar, id)
+	return err
+}
+
+const editCalendar = `-- name: EditCalendar :one
+UPDATE Calendars
+SET name = COALESCE($1, name)
+WHERE id = $2
+RETURNING id, name, owner_id
+`
+
+type EditCalendarParams struct {
+	Name string
+	ID   uuid.UUID
+}
+
+func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (Calendar, error) {
+	row := q.db.QueryRow(ctx, editCalendar, arg.Name, arg.ID)
+	var i Calendar
+	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
+	return i, err
+}
+
 const getCalendars = `-- name: GetCalendars :many
 SELECT id, name, owner_id FROM Calendars
 WHERE owner_id = $1

@@ -71,3 +71,45 @@ func (s *Server) PostAddCalendar(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
+
+// (PATCH /calendar/edit/{calendar_id})
+// TODO: this crashes if the any field is missing.
+// TODO: validate that only owner can edit calendar
+func (s *Server) PatchCalendarEditCalendarId(c echo.Context, calendarId uuid.UUID) error {
+	body := new(CalendarEdit)
+
+	if err := c.Bind(&body); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	ctx := c.Request().Context()
+	editedCalendar, err := s.queries.EditCalendar(ctx, sqlc.EditCalendarParams{
+		Name: *body.Name,
+		ID:   calendarId,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	resp := Calendar{
+		Id:      editedCalendar.ID,
+		Name:    editedCalendar.Name,
+		OwnerId: editedCalendar.OwnerID,
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// (DELETE /calendar/delete/{calendar_id})
+// TODO: validate that only owner can delete calendar
+func (s *Server) DeleteCalendarDeleteCalendarId(c echo.Context, calendarId uuid.UUID) error {
+	ctx := c.Request().Context()
+	if err := s.queries.DeleteCalendar(ctx, calendarId); err != nil {
+		return c.JSON(http.StatusInternalServerError, false)
+	}
+
+	return c.JSON(http.StatusOK, true)
+}

@@ -32,6 +32,11 @@ type Calendar struct {
 	OwnerId uuid.UUID `json:"owner_id"`
 }
 
+// CalendarEdit defines model for CalendarEdit.
+type CalendarEdit struct {
+	Name *string `json:"name,omitempty"`
+}
+
 // CalendarNoId defines model for CalendarNoId.
 type CalendarNoId struct {
 	Name    string    `json:"name"`
@@ -81,6 +86,9 @@ type PostAddCalendarJSONRequestBody = CalendarNoId
 // PostAddEventJSONRequestBody defines body for PostAddEvent for application/json ContentType.
 type PostAddEventJSONRequestBody = AddEvent
 
+// PatchCalendarEditCalendarIdJSONRequestBody defines body for PatchCalendarEditCalendarId for application/json ContentType.
+type PatchCalendarEditCalendarIdJSONRequestBody = CalendarEdit
+
 // PostLoginJSONRequestBody defines body for PostLogin for application/json ContentType.
 type PostLoginJSONRequestBody = Login
 
@@ -95,6 +103,12 @@ type ServerInterface interface {
 	// TODO
 	// (POST /addEvent)
 	PostAddEvent(ctx echo.Context) error
+	// TODO
+	// (DELETE /calendar/delete/{calendar_id})
+	DeleteCalendarDeleteCalendarId(ctx echo.Context, calendarId uuid.UUID) error
+	// TODO
+	// (PATCH /calendar/edit/{calendar_id})
+	PatchCalendarEditCalendarId(ctx echo.Context, calendarId uuid.UUID) error
 	// TODO
 	// (GET /getCalendars)
 	GetGetCalendars(ctx echo.Context) error
@@ -133,6 +147,42 @@ func (w *ServerInterfaceWrapper) PostAddEvent(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostAddEvent(ctx)
+	return err
+}
+
+// DeleteCalendarDeleteCalendarId converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteCalendarDeleteCalendarId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "calendar_id" -------------
+	var calendarId uuid.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "calendar_id", ctx.Param("calendar_id"), &calendarId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter calendar_id: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteCalendarDeleteCalendarId(ctx, calendarId)
+	return err
+}
+
+// PatchCalendarEditCalendarId converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchCalendarEditCalendarId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "calendar_id" -------------
+	var calendarId uuid.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "calendar_id", ctx.Param("calendar_id"), &calendarId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter calendar_id: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PatchCalendarEditCalendarId(ctx, calendarId)
 	return err
 }
 
@@ -222,6 +272,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.POST(baseURL+"/addCalendar", wrapper.PostAddCalendar)
 	router.POST(baseURL+"/addEvent", wrapper.PostAddEvent)
+	router.DELETE(baseURL+"/calendar/delete/:calendar_id", wrapper.DeleteCalendarDeleteCalendarId)
+	router.PATCH(baseURL+"/calendar/edit/:calendar_id", wrapper.PatchCalendarEditCalendarId)
 	router.GET(baseURL+"/getCalendars", wrapper.GetGetCalendars)
 	router.GET(baseURL+"/getEvents", wrapper.GetGetEvents)
 	router.POST(baseURL+"/login", wrapper.PostLogin)
