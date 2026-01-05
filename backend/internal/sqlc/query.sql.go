@@ -81,6 +81,16 @@ func (q *Queries) DeleteCalendar(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const deleteEvent = `-- name: DeleteEvent :exec
+DELETE FROM Events
+WHERE id = $1
+`
+
+func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteEvent, id)
+	return err
+}
+
 const editCalendar = `-- name: EditCalendar :one
 UPDATE Calendars
 SET name = COALESCE($1, name)
@@ -97,6 +107,50 @@ func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (Cal
 	row := q.db.QueryRow(ctx, editCalendar, arg.Name, arg.ID)
 	var i Calendar
 	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
+	return i, err
+}
+
+const editEvent = `-- name: EditEvent :one
+UPDATE Events
+SET
+    name = COALESCE($1, name),
+    time = tstzrange(
+        COALESCE($2, lower(time)),
+        COALESCE($3, upper(time)),
+        '[)'
+    )
+WHERE id = $4
+RETURNING id, calendar_id, name, time
+`
+
+type EditEventParams struct {
+	Name    string
+	Column2 interface{}
+	Column3 interface{}
+	ID      uuid.UUID
+}
+
+type EditEventRow struct {
+	ID         uuid.UUID
+	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
+}
+
+func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEventRow, error) {
+	row := q.db.QueryRow(ctx, editEvent,
+		arg.Name,
+		arg.Column2,
+		arg.Column3,
+		arg.ID,
+	)
+	var i EditEventRow
+	err := row.Scan(
+		&i.ID,
+		&i.CalendarID,
+		&i.Name,
+		&i.Time,
+	)
 	return i, err
 }
 
