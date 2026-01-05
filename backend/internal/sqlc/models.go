@@ -10,8 +10,9 @@ import (
 )
 
 type Calendar struct {
-	ID   uuid.UUID
-	Name string
+	ID      uuid.UUID
+	Name    string
+	OwnerID uuid.UUID
 }
 
 type Event struct {
@@ -19,4 +20,10 @@ type Event struct {
 	ID         uuid.UUID
 	Time       pgtype.Range[pgtype.Timestamptz]
 	CalendarID uuid.UUID
+}
+
+type User struct {
+	ID           uuid.UUID
+	Name         string
+	PasswordHash string
 }

@@ -13,15 +13,20 @@ import (
 )
 
 const addCalendar = `-- name: AddCalendar :one
-INSERT INTO Calendars (name)
-VALUES ($1)
-RETURNING id, name
+INSERT INTO Calendars (name, owner_id)
+VALUES ($1, $2)
+RETURNING id, name, owner_id
 `
 
-func (q *Queries) AddCalendar(ctx context.Context, name string) (Calendar, error) {
-	row := q.db.QueryRow(ctx, addCalendar, name)
+type AddCalendarParams struct {
+	Name    string
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) AddCalendar(ctx context.Context, arg AddCalendarParams) (Calendar, error) {
+	row := q.db.QueryRow(ctx, addCalendar, arg.Name, arg.OwnerID)
 	var i Calendar
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
 	return i, err
 }
 
@@ -66,48 +71,13 @@ func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow
 	return i, err
 }
 
-const allEvents = `-- name: AllEvents :many
-SELECT id, calendar_id, name, time FROM Events
-`
-
-type AllEventsRow struct {
-	ID         uuid.UUID
-	CalendarID uuid.UUID
-	Name       string
-	Time       pgtype.Range[pgtype.Timestamptz]
-}
-
-func (q *Queries) AllEvents(ctx context.Context) ([]AllEventsRow, error) {
-	rows, err := q.db.Query(ctx, allEvents)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []AllEventsRow
-	for rows.Next() {
-		var i AllEventsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.CalendarID,
-			&i.Name,
-			&i.Time,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getCalendars = `-- name: GetCalendars :many
-SELECT id, name FROM Calendars
+SELECT id, name, owner_id FROM Calendars
+WHERE owner_id = $1
 `
 
-func (q *Queries) GetCalendars(ctx context.Context) ([]Calendar, error) {
-	rows, err := q.db.Query(ctx, getCalendars)
+func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]Calendar, error) {
+	rows, err := q.db.Query(ctx, getCalendars, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +85,7 @@ func (q *Queries) GetCalendars(ctx context.Context) ([]Calendar, error) {
 	var items []Calendar
 	for rows.Next() {
 		var i Calendar
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.OwnerID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -166,4 +136,39 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 		return nil, err
 	}
 	return items, nil
+}
+
+const login = `-- name: Login :one
+SELECT id, name, password_hash FROM Users
+WHERE name = $1
+`
+
+func (q *Queries) Login(ctx context.Context, name string) (User, error) {
+	row := q.db.QueryRow(ctx, login, name)
+	var i User
+	err := row.Scan(&i.ID, &i.Name, &i.PasswordHash)
+	return i, err
+}
+
+const signup = `-- name: Signup :one
+INSERT INTO Users (name, password_hash)
+VALUES ($1, $2)
+RETURNING id, name
+`
+
+type SignupParams struct {
+	Name         string
+	PasswordHash string
+}
+
+type SignupRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) Signup(ctx context.Context, arg SignupParams) (SignupRow, error) {
+	row := q.db.QueryRow(ctx, signup, arg.Name, arg.PasswordHash)
+	var i SignupRow
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
 }

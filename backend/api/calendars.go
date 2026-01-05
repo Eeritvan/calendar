@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -11,17 +13,24 @@ import (
 func (s *Server) GetGetCalendars(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	queryResp, err := s.queries.GetCalendars(ctx)
+	userIdStr := c.Get("userId").(string)
+	userUUID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		fmt.Printf("Invalid UUID format: %v\n", err)
+	}
+
+	queryResp, err := s.queries.GetCalendars(ctx, userUUID)
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	resp := make([]Calendar, len(queryResp))
-	for i, event := range queryResp {
+	for i, calendar := range queryResp {
 		resp[i] = Calendar{
-			Id:   event.ID,
-			Name: event.Name,
+			Id:      calendar.ID,
+			Name:    calendar.Name,
+			OwnerId: calendar.OwnerID,
 		}
 	}
 
@@ -37,8 +46,17 @@ func (s *Server) PostAddCalendar(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
+	userIdStr := c.Get("userId").(string)
+	userUUID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		fmt.Printf("Invalid UUID format: %v\n", err)
+	}
+
 	ctx := c.Request().Context()
-	queryResp, err := s.queries.AddCalendar(ctx, body.Name)
+	queryResp, err := s.queries.AddCalendar(ctx, sqlc.AddCalendarParams{
+		Name:    body.Name,
+		OwnerID: userUUID,
+	})
 
 	if err != nil {
 		fmt.Println(err)
@@ -46,8 +64,9 @@ func (s *Server) PostAddCalendar(c echo.Context) error {
 	}
 
 	resp := Calendar{
-		Id:   queryResp.ID,
-		Name: queryResp.Name,
+		Id:      queryResp.ID,
+		Name:    queryResp.Name,
+		OwnerId: queryResp.OwnerID,
 	}
 
 	return c.JSON(http.StatusOK, resp)

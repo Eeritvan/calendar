@@ -3,9 +3,43 @@ info:
   version: 1.0.0
   title: TODO
 paths:
+  /signup:
+    post:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/signup"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/postLogin"
+  /login:
+    post:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/login"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/postLogin"
   /getCalendars:
     get:
       summary: TODO
+      security:
+        - BearerAuth: []
       responses:
         "200":
           description: TODO
@@ -18,6 +52,8 @@ paths:
   /addCalendar:
     post:
       summary: TODO
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -31,21 +67,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Calendar"
-  /allEvents:
-    get:
-      summary: TODO - delete endpoint later
-      responses:
-        "200":
-          description: TODO
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Event"
   /addEvent:
     post:
       summary: TODO
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -62,6 +88,8 @@ paths:
   /getEvents:
     get:
       summary: TODO
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: start_time
@@ -89,12 +117,18 @@ paths:
                 items:
                   $ref: "#/components/schemas/Event"
 components:
+  securitySchemas:
+    BearerAuth:
+      type: http
+      schema: bearer
+      bearerFormat: JWT
   schemas:
     Calendar:
       type: object
       required:
         - id
         - name
+        - owner_id
       properties:
         id:
           type: string
@@ -106,14 +140,64 @@ components:
         name:
           type: string
           example: "calendar 1"
+        owner_id:
+          type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+          example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
     CalendarNoId:
       type: object
       required:
         - name
+        - owner_id
       properties:
         name:
           type: string
           example: "calendar 1"
+        owner_id:
+          type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+          example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
+    signup:
+      type: object
+      required:
+        - name
+        - password
+        - password_confirmation
+      properties:
+        name:
+          type: string
+          example: "calendar 1"
+        password:
+          type: string
+        password_confirmation:
+          type: string
+    login:
+      type: object
+      required:
+        - name
+        - password
+      properties:
+        name:
+          type: string
+          example: "calendar 1"
+        password:
+          type: string
+    postLogin:
+      type: object
+      required:
+        - name
+        - JWT
+      properties:
+        name:
+          type: string
+        JWT:
+          type: string
     Event:
       type: object
       required:

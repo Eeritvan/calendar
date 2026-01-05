@@ -9,6 +9,7 @@ import (
 )
 
 // (POST /addEvent)
+// -- TODO: users can add events to calendars they dont own
 func (s *Server) PostAddEvent(c echo.Context) error {
 	body := new(AddEvent)
 
@@ -41,32 +42,8 @@ func (s *Server) PostAddEvent(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// TODO: probably unsafe long-term and should be deleted
-// (GET /allEvents)
-func (s *Server) GetAllEvents(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	queryResp, err := s.queries.AllEvents(ctx)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
-	resp := make([]Event, len(queryResp))
-	for i, event := range queryResp {
-		resp[i] = Event{
-			Id:         event.ID,
-			CalendarId: event.CalendarID,
-			Name:       event.Name,
-			StartTime:  event.Time.Lower.Time,
-			EndTime:    event.Time.Upper.Time,
-		}
-	}
-
-	return c.JSON(http.StatusOK, resp)
-}
-
 // (GET /getEvents)
+// TODO: get only own events
 func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
 	ctx := c.Request().Context()
 

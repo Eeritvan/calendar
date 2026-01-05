@@ -13,6 +13,10 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
 // AddEvent defines model for AddEvent.
 type AddEvent struct {
 	CalendarId uuid.UUID `json:"calendar_id"`
@@ -23,13 +27,15 @@ type AddEvent struct {
 
 // Calendar defines model for Calendar.
 type Calendar struct {
-	Id   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	Id      uuid.UUID `json:"id"`
+	Name    string    `json:"name"`
+	OwnerId uuid.UUID `json:"owner_id"`
 }
 
 // CalendarNoId defines model for CalendarNoId.
 type CalendarNoId struct {
-	Name string `json:"name"`
+	Name    string    `json:"name"`
+	OwnerId uuid.UUID `json:"owner_id"`
 }
 
 // Event defines model for Event.
@@ -39,6 +45,25 @@ type Event struct {
 	Id         uuid.UUID `json:"id"`
 	Name       string    `json:"name"`
 	StartTime  time.Time `json:"start_time"`
+}
+
+// Login defines model for login.
+type Login struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+// PostLogin defines model for postLogin.
+type PostLogin struct {
+	JWT  string `json:"JWT"`
+	Name string `json:"name"`
+}
+
+// Signup defines model for signup.
+type Signup struct {
+	Name                 string `json:"name"`
+	Password             string `json:"password"`
+	PasswordConfirmation string `json:"password_confirmation"`
 }
 
 // GetGetEventsParams defines parameters for GetGetEvents.
@@ -56,6 +81,12 @@ type PostAddCalendarJSONRequestBody = CalendarNoId
 // PostAddEventJSONRequestBody defines body for PostAddEvent for application/json ContentType.
 type PostAddEventJSONRequestBody = AddEvent
 
+// PostLoginJSONRequestBody defines body for PostLogin for application/json ContentType.
+type PostLoginJSONRequestBody = Login
+
+// PostSignupJSONRequestBody defines body for PostSignup for application/json ContentType.
+type PostSignupJSONRequestBody = Signup
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// TODO
@@ -64,15 +95,18 @@ type ServerInterface interface {
 	// TODO
 	// (POST /addEvent)
 	PostAddEvent(ctx echo.Context) error
-	// TODO - delete endpoint later
-	// (GET /allEvents)
-	GetAllEvents(ctx echo.Context) error
 	// TODO
 	// (GET /getCalendars)
 	GetGetCalendars(ctx echo.Context) error
 	// TODO
 	// (GET /getEvents)
 	GetGetEvents(ctx echo.Context, params GetGetEventsParams) error
+	// TODO
+	// (POST /login)
+	PostLogin(ctx echo.Context) error
+	// TODO
+	// (POST /signup)
+	PostSignup(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -84,6 +118,8 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) PostAddCalendar(ctx echo.Context) error {
 	var err error
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostAddCalendar(ctx)
 	return err
@@ -93,23 +129,18 @@ func (w *ServerInterfaceWrapper) PostAddCalendar(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostAddEvent(ctx echo.Context) error {
 	var err error
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostAddEvent(ctx)
-	return err
-}
-
-// GetAllEvents converts echo context to params.
-func (w *ServerInterfaceWrapper) GetAllEvents(ctx echo.Context) error {
-	var err error
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetAllEvents(ctx)
 	return err
 }
 
 // GetGetCalendars converts echo context to params.
 func (w *ServerInterfaceWrapper) GetGetCalendars(ctx echo.Context) error {
 	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetGetCalendars(ctx)
@@ -119,6 +150,8 @@ func (w *ServerInterfaceWrapper) GetGetCalendars(ctx echo.Context) error {
 // GetGetEvents converts echo context to params.
 func (w *ServerInterfaceWrapper) GetGetEvents(ctx echo.Context) error {
 	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetGetEventsParams
@@ -138,6 +171,24 @@ func (w *ServerInterfaceWrapper) GetGetEvents(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetGetEvents(ctx, params)
+	return err
+}
+
+// PostLogin converts echo context to params.
+func (w *ServerInterfaceWrapper) PostLogin(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostLogin(ctx)
+	return err
+}
+
+// PostSignup converts echo context to params.
+func (w *ServerInterfaceWrapper) PostSignup(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostSignup(ctx)
 	return err
 }
 
@@ -171,8 +222,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.POST(baseURL+"/addCalendar", wrapper.PostAddCalendar)
 	router.POST(baseURL+"/addEvent", wrapper.PostAddEvent)
-	router.GET(baseURL+"/allEvents", wrapper.GetAllEvents)
 	router.GET(baseURL+"/getCalendars", wrapper.GetGetCalendars)
 	router.GET(baseURL+"/getEvents", wrapper.GetGetEvents)
+	router.POST(baseURL+"/login", wrapper.PostLogin)
+	router.POST(baseURL+"/signup", wrapper.PostSignup)
 
 }
