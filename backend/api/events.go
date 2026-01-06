@@ -90,8 +90,8 @@ func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error 
 	ctx := c.Request().Context()
 	editedEvent, err := s.queries.EditEvent(ctx, sqlc.EditEventParams{
 		Name:    *body.Name,
-		Column2: body.StartTime,
-		Column3: body.EndTime,
+		Column2: *body.StartTime,
+		Column3: *body.EndTime,
 		ID:      eventId,
 	})
 

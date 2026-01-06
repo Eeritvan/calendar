@@ -34,6 +34,68 @@ paths:
           content:
             application/json:
               schema:
+                oneOf:
+                  - $ref: "#/components/schemas/postLogin"
+                  - $ref: "#/components/schemas/TotpRequired"
+  /totp/enable:
+    post:
+      summary: TODO
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnableTotp"
+  /totp/enable/verify:
+    patch:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnableTotpVerify"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+  /totp/disable:
+    patch:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Totp"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+  /totp/authenticate:
+    post:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnableTotpVerify"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
                 $ref: "#/components/schemas/postLogin"
   /getCalendars:
     get:
@@ -388,3 +450,39 @@ components:
           type: string
           format: date-time
           example: 2022-01-02T16:00:00+07:00
+    Totp:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: integer
+          example: 123456
+    TotpRequired:
+      type: object
+      required:
+        - verification_token
+      properties:
+        verification_token:
+          type: string
+    EnableTotp:
+      type: object
+      required:
+        - token
+        - verification_token
+      properties:
+        token:
+          type: string
+        verification_token:
+          type: string
+    EnableTotpVerify:
+      type: object
+      required:
+        - code
+        - verification_token
+      properties:
+        code:
+          type: integer
+          example: 123456
+        verification_token:
+          type: string

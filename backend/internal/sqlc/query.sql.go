@@ -91,6 +91,25 @@ func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const disableTotp = `-- name: DisableTotp :one
+UPDATE Users
+SET totp = NULL
+WHERE id = $1
+RETURNING id, name
+`
+
+type DisableTotpRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) DisableTotp(ctx context.Context, id uuid.UUID) (DisableTotpRow, error) {
+	row := q.db.QueryRow(ctx, disableTotp, id)
+	var i DisableTotpRow
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const editCalendar = `-- name: EditCalendar :one
 UPDATE Calendars
 SET name = COALESCE($1, name)
@@ -151,6 +170,30 @@ func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEvent
 		&i.Name,
 		&i.Time,
 	)
+	return i, err
+}
+
+const enableTotp = `-- name: EnableTotp :one
+UPDATE Users
+SET totp = $1
+WHERE id = $2
+RETURNING id, name
+`
+
+type EnableTotpParams struct {
+	Totp string
+	ID   uuid.UUID
+}
+
+type EnableTotpRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) (EnableTotpRow, error) {
+	row := q.db.QueryRow(ctx, enableTotp, arg.Totp, arg.ID)
+	var i EnableTotpRow
+	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
 
@@ -221,15 +264,38 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 	return items, nil
 }
 
+const getTotpSecret = `-- name: GetTotpSecret :one
+SELECT id, name, totp FROM Users
+WHERE id = $1
+`
+
+type GetTotpSecretRow struct {
+	ID   uuid.UUID
+	Name string
+	Totp string
+}
+
+func (q *Queries) GetTotpSecret(ctx context.Context, id uuid.UUID) (GetTotpSecretRow, error) {
+	row := q.db.QueryRow(ctx, getTotpSecret, id)
+	var i GetTotpSecretRow
+	err := row.Scan(&i.ID, &i.Name, &i.Totp)
+	return i, err
+}
+
 const login = `-- name: Login :one
-SELECT id, name, password_hash FROM Users
+SELECT id, name, password_hash, totp FROM Users
 WHERE name = $1
 `
 
 func (q *Queries) Login(ctx context.Context, name string) (User, error) {
 	row := q.db.QueryRow(ctx, login, name)
 	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.PasswordHash)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PasswordHash,
+		&i.Totp,
+	)
 	return i, err
 }
 

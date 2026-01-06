@@ -26,4 +26,5 @@ type User struct {
 	ID           uuid.UUID
 	Name         string
 	PasswordHash string
+	Totp         string
 }

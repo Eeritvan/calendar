@@ -43,6 +43,18 @@ type CalendarNoId struct {
 	OwnerId uuid.UUID `json:"owner_id"`
 }
 
+// EnableTotp defines model for EnableTotp.
+type EnableTotp struct {
+	Token             string `json:"token"`
+	VerificationToken string `json:"verification_token"`
+}
+
+// EnableTotpVerify defines model for EnableTotpVerify.
+type EnableTotpVerify struct {
+	Code              int    `json:"code"`
+	VerificationToken string `json:"verification_token"`
+}
+
 // Event defines model for Event.
 type Event struct {
 	CalendarId uuid.UUID `json:"calendar_id"`
@@ -57,6 +69,16 @@ type EventEdit struct {
 	EndTime   *time.Time `json:"end_time,omitempty"`
 	Name      *string    `json:"name,omitempty"`
 	StartTime *time.Time `json:"start_time,omitempty"`
+}
+
+// Totp defines model for Totp.
+type Totp struct {
+	Code int `json:"code"`
+}
+
+// TotpRequired defines model for TotpRequired.
+type TotpRequired struct {
+	VerificationToken string `json:"verification_token"`
 }
 
 // Login defines model for login.
@@ -105,6 +127,15 @@ type PostLoginJSONRequestBody = Login
 // PostSignupJSONRequestBody defines body for PostSignup for application/json ContentType.
 type PostSignupJSONRequestBody = Signup
 
+// PostTotpAuthenticateJSONRequestBody defines body for PostTotpAuthenticate for application/json ContentType.
+type PostTotpAuthenticateJSONRequestBody = EnableTotpVerify
+
+// PatchTotpDisableJSONRequestBody defines body for PatchTotpDisable for application/json ContentType.
+type PatchTotpDisableJSONRequestBody = Totp
+
+// PatchTotpEnableVerifyJSONRequestBody defines body for PatchTotpEnableVerify for application/json ContentType.
+type PatchTotpEnableVerifyJSONRequestBody = EnableTotpVerify
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// TODO
@@ -137,6 +168,18 @@ type ServerInterface interface {
 	// TODO
 	// (POST /signup)
 	PostSignup(ctx echo.Context) error
+	// TODO
+	// (POST /totp/authenticate)
+	PostTotpAuthenticate(ctx echo.Context) error
+	// TODO
+	// (PATCH /totp/disable)
+	PatchTotpDisable(ctx echo.Context) error
+	// TODO
+	// (POST /totp/enable)
+	PostTotpEnable(ctx echo.Context) error
+	// TODO
+	// (PATCH /totp/enable/verify)
+	PatchTotpEnableVerify(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -294,6 +337,42 @@ func (w *ServerInterfaceWrapper) PostSignup(ctx echo.Context) error {
 	return err
 }
 
+// PostTotpAuthenticate converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTotpAuthenticate(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostTotpAuthenticate(ctx)
+	return err
+}
+
+// PatchTotpDisable converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchTotpDisable(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PatchTotpDisable(ctx)
+	return err
+}
+
+// PostTotpEnable converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTotpEnable(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostTotpEnable(ctx)
+	return err
+}
+
+// PatchTotpEnableVerify converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchTotpEnableVerify(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PatchTotpEnableVerify(ctx)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -332,5 +411,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/getEvents", wrapper.GetGetEvents)
 	router.POST(baseURL+"/login", wrapper.PostLogin)
 	router.POST(baseURL+"/signup", wrapper.PostSignup)
+	router.POST(baseURL+"/totp/authenticate", wrapper.PostTotpAuthenticate)
+	router.PATCH(baseURL+"/totp/disable", wrapper.PatchTotpDisable)
+	router.POST(baseURL+"/totp/enable", wrapper.PostTotpEnable)
+	router.PATCH(baseURL+"/totp/enable/verify", wrapper.PatchTotpEnableVerify)
 
 }
