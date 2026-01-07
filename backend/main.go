@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/eeritvan/calendar/api"
+	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/golang-jwt/jwt/v5"
 
