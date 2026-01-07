@@ -45,7 +45,6 @@ type CalendarNoId struct {
 
 // EnableTotp defines model for EnableTotp.
 type EnableTotp struct {
-	Token             string `json:"token"`
 	VerificationToken string `json:"verification_token"`
 }
 
@@ -87,17 +86,17 @@ type Login struct {
 	Password string `json:"password"`
 }
 
-// PostLogin defines model for postLogin.
-type PostLogin struct {
-	JWT  string `json:"JWT"`
-	Name string `json:"name"`
-}
-
 // Signup defines model for signup.
 type Signup struct {
 	Name                 string `json:"name"`
 	Password             string `json:"password"`
 	PasswordConfirmation string `json:"password_confirmation"`
+}
+
+// UserCredentials defines model for userCredentials.
+type UserCredentials struct {
+	JWT  string `json:"JWT"`
+	Name string `json:"name"`
 }
 
 // GetGetEventsParams defines parameters for GetGetEvents.

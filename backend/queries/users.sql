@@ -4,7 +4,8 @@ VALUES ($1, $2)
 RETURNING id, name;
 
 -- name: Login :one
-SELECT id, name, password_hash, totp FROM Users
+SELECT id, name, password_hash, COALESCE(totp, '') AS totp
+FROM Users
 WHERE name = $1;
 
 -- name: EnableTotp :one
@@ -20,5 +21,6 @@ WHERE id = $1
 RETURNING id, name;
 
 -- name: GetTotpSecret :one
-SELECT id, name, totp FROM Users
+SELECT id, name, COALESCE(totp, '') AS totp
+FROM Users
 WHERE id = $1;

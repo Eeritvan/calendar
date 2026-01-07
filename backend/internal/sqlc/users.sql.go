@@ -55,7 +55,8 @@ func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) (EnableT
 }
 
 const getTotpSecret = `-- name: GetTotpSecret :one
-SELECT id, name, totp FROM Users
+SELECT id, name, COALESCE(totp, '') AS totp
+FROM Users
 WHERE id = $1
 `
 
@@ -73,7 +74,8 @@ func (q *Queries) GetTotpSecret(ctx context.Context, id uuid.UUID) (GetTotpSecre
 }
 
 const login = `-- name: Login :one
-SELECT id, name, password_hash, totp FROM Users
+SELECT id, name, password_hash, COALESCE(totp, '') AS totp
+FROM Users
 WHERE name = $1
 `
 

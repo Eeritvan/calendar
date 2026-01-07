@@ -18,7 +18,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/postLogin"
+                $ref: "#/components/schemas/userCredentials"
   /login:
     post:
       summary: TODO
@@ -35,7 +35,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/postLogin"
+                  - $ref: "#/components/schemas/userCredentials"
                   - $ref: "#/components/schemas/TotpRequired"
   /totp/enable:
     post:
@@ -96,7 +96,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/postLogin"
+                $ref: "#/components/schemas/userCredentials"
   /getCalendars:
     get:
       summary: TODO
@@ -297,10 +297,7 @@ components:
   schemas:
     Calendar:
       type: object
-      required:
-        - id
-        - name
-        - owner_id
+      required: [id, name, owner_id]
       properties:
         id:
           type: string
@@ -321,9 +318,7 @@ components:
           example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
     CalendarNoId:
       type: object
-      required:
-        - name
-        - owner_id
+      required: [name, owner_id]
       properties:
         name:
           type: string
@@ -340,37 +335,33 @@ components:
       properties:
         name:
           type: string
-          example: "calendar 1"
+          example: "edited calendar 1"
     signup:
       type: object
-      required:
-        - name
-        - password
-        - password_confirmation
+      required: [name, password, password_confirmation]
       properties:
         name:
           type: string
-          example: "calendar 1"
+          example: "user 1"
         password:
           type: string
+          example: "password 1"
         password_confirmation:
           type: string
+          example: "password 1"
     login:
       type: object
-      required:
-        - name
-        - password
+      required: [name, password]
       properties:
         name:
           type: string
-          example: "calendar 1"
+          example: "user1"
         password:
           type: string
-    postLogin:
+          example: "password1"
+    userCredentials:
       type: object
-      required:
-        - name
-        - JWT
+      required: [name, JWT]
       properties:
         name:
           type: string
@@ -378,12 +369,7 @@ components:
           type: string
     Event:
       type: object
-      required:
-        - id
-        - name
-        - calendar_id
-        - start_time
-        - end_time
+      required: [id, name, calendar_id, start_time, end_time]
       properties:
         id:
           type: string
@@ -412,11 +398,7 @@ components:
           example: 2022-01-02T16:00:00+07:00
     AddEvent:
       type: object
-      required:
-        - name
-        - calendar_id
-        - start_time
-        - end_time
+      required: [name, calendar_id, start_time, end_time]
       properties:
         name:
           type: string
@@ -441,7 +423,7 @@ components:
       properties:
         name:
           type: string
-          example: "event 1"
+          example: "edited event 1"
         start_time:
           type: string
           format: date-time
@@ -452,34 +434,26 @@ components:
           example: 2022-01-02T16:00:00+07:00
     Totp:
       type: object
-      required:
-        - code
+      required: [code]
       properties:
         code:
           type: integer
           example: 123456
     TotpRequired:
       type: object
-      required:
-        - verification_token
+      required: [verification_token]
       properties:
         verification_token:
           type: string
     EnableTotp:
       type: object
-      required:
-        - token
-        - verification_token
+      required: [verification_token]
       properties:
-        token:
-          type: string
         verification_token:
           type: string
     EnableTotpVerify:
       type: object
-      required:
-        - code
-        - verification_token
+      required: [code, verification_token]
       properties:
         code:
           type: integer

@@ -51,7 +51,7 @@ func (s *Server) PostSignup(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := PostLogin{
+	resp := UserCredentials{
 		Name: queryResp.Name,
 		JWT:  jwtToken,
 	}
@@ -104,7 +104,7 @@ func (s *Server) PostLogin(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := PostLogin{
+	resp := UserCredentials{
 		Name: queryResp.Name,
 		JWT:  jwtToken,
 	}
@@ -132,6 +132,7 @@ func (s *Server) PostTotpEnable(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
+	// TODO: userId or not ???
 	JWTkey := os.Getenv("JWT_KEY")
 	secretKey := []byte(JWTkey)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
@@ -148,7 +149,6 @@ func (s *Server) PostTotpEnable(c echo.Context) error {
 	}
 
 	resp := EnableTotp{
-		Token:             key.Secret(),
 		VerificationToken: returnToken,
 	}
 
@@ -250,13 +250,6 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	userIdStr := c.Get("userId").(string)
-	userUUID, err := uuid.Parse(userIdStr)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, false)
-	}
-
 	JWTkey := os.Getenv("JWT_KEY")
 	secretKey := []byte(JWTkey)
 	token, err := jwt.Parse(body.VerificationToken, func(token *jwt.Token) (any, error) {
@@ -267,7 +260,7 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 	})
 
 	if err != nil || !token.Valid {
-		fmt.Println(err)
+		fmt.Println("err", err)
 		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
@@ -276,9 +269,11 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	userId, _ := claims["userId"].(string)
+	userIdStr, _ := claims["userId"].(string)
 
-	if userId != userIdStr {
+	userUUID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
@@ -300,7 +295,7 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := PostLogin{
+	resp := UserCredentials{
 		Name: queryResp.Name,
 		JWT:  jwtToken,
 	}
