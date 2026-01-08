@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS Users (
-    id UUID PRIMARY KEY DEFAULT uuidv4(),
-    name text NOT NULL,
-    password_hash text NOT NULL
-);
-
-ALTER TABLE IF EXISTS Calendars
-ADD COLUMN IF NOT EXISTS owner_id UUID NOT NULL REFERENCES Users(id) ON DELETE CASCADE;
