@@ -30,9 +30,10 @@ func main() {
 
 	queries := sqlc.New(pool)
 
-	server := api.NewServer(queries)
+	server := api.NewServer(queries, pool)
 
 	e := echo.New()
+	basePath := e.Group("/api")
 
 	JWTkey := os.Getenv("JWT_KEY")
 	e.Use(echojwt.WithConfig(echojwt.Config{
@@ -59,7 +60,7 @@ func main() {
 		},
 	}))
 
-	api.RegisterHandlers(e, server)
+	api.RegisterHandlers(basePath, server)
 
 	port := os.Getenv("PORT")
 	log.Fatal(e.Start("0.0.0.0:" + port))

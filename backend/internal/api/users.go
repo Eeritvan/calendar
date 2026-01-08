@@ -198,7 +198,6 @@ func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 
 	hashedCodes, err := utils.HashRecoveryCodes(codes)
 
-	// TODO: transactions
 	ctx := c.Request().Context()
 	s.queries.ClearRecoveryCodes(ctx, userUUID)
 	s.queries.InsertRecoveryCodes(ctx, sqlc.InsertRecoveryCodesParams{
