@@ -19,7 +19,6 @@ import (
 // (POST /signup)
 func (s *Server) PostSignup(c echo.Context) error {
 	body := new(Signup)
-
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -46,7 +45,7 @@ func (s *Server) PostSignup(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	jwtToken, err := utils.GenerateJWT(queryResp.Name, queryResp.ID.String())
+	jwtToken, err := utils.GenerateJWT(queryResp.ID.String())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -62,7 +61,6 @@ func (s *Server) PostSignup(c echo.Context) error {
 // (POST /login)
 func (s *Server) PostLogin(c echo.Context) error {
 	body := new(Login)
-
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -99,7 +97,7 @@ func (s *Server) PostLogin(c echo.Context) error {
 		return c.JSON(http.StatusOK, resp)
 	}
 
-	jwtToken, err := utils.GenerateJWT(queryResp.Name, queryResp.ID.String())
+	jwtToken, err := utils.GenerateJWT(queryResp.ID.String())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -115,19 +113,12 @@ func (s *Server) PostLogin(c echo.Context) error {
 // (POST /totp/enable)
 // TODO: verify that totp is not enabled already
 func (s *Server) PostTotpEnable(c echo.Context) error {
-	username := c.Get("username").(string)
-	userIdStr := c.Get("userId").(string)
+	userId := c.Get("userId").(uuid.UUID)
 
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "void",
-		AccountName: username,
+		AccountName: "#TODO",
 	})
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
-	userUUID, err := uuid.Parse(userIdStr)
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -139,7 +130,7 @@ func (s *Server) PostTotpEnable(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"totpSecret": key.Secret(),
-			"userId":     userUUID,
+			"userId":     userId.String(),
 			"exp":        time.Now().Add(time.Hour * 1).Unix(),
 		})
 
@@ -159,7 +150,6 @@ func (s *Server) PostTotpEnable(c echo.Context) error {
 // (PATCH /totp/enable/verify)
 func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 	body := new(EnableTotpVerify)
-
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -187,12 +177,7 @@ func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 	totpSecret, _ := claims["totpSecret"].(string)
 	userId, _ := claims["userId"].(string)
 
-	userIdStr := c.Get("userId").(string)
-	userUUID, err := uuid.Parse(userIdStr)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
+	userUUID := c.Get("userId").(uuid.UUID)
 
 	if userId != userUUID.String() {
 		fmt.Println(err)
@@ -240,26 +225,23 @@ func (s *Server) PatchTotpDisable(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	userIdStr := c.Get("userId").(string)
-	userUUID, err := uuid.Parse(userIdStr)
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
+	userId := c.Get("userId").(uuid.UUID)
+
 	ctx := c.Request().Context()
-	queryResp, err := s.queries.GetTotpSecret(ctx, userUUID)
+	queryResp, err := s.queries.GetTotpSecret(ctx, userId)
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, false)
 	}
+
 	isValid := totp.Validate(strconv.Itoa(body.Code), queryResp.Totp)
 
 	if !isValid {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 	// todo: transactions
-	s.queries.DisableTotp(ctx, userUUID)
-	s.queries.ClearRecoveryCodes(ctx, userUUID)
+	s.queries.DisableTotp(ctx, userId)
+	s.queries.ClearRecoveryCodes(ctx, userId)
 	return c.JSON(http.StatusOK, true)
 }
 
@@ -311,7 +293,7 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	jwtToken, err := utils.GenerateJWT(queryResp.Name, queryResp.ID.String())
+	jwtToken, err := utils.GenerateJWT(queryResp.ID.String())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -379,7 +361,7 @@ func (s *Server) PostTotpRecovery(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	jwtToken, err := utils.GenerateJWT(loginQueryResp.Name, loginQueryResp.ID.String())
+	jwtToken, err := utils.GenerateJWT(loginQueryResp.ID.String())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}

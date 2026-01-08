@@ -24,7 +24,7 @@ clean:
 	rm -f $(BINARY_NAME) && rm -rf tmp
 
 # generate
-sqlc:
+sqlc: sqlc-vet
 	sqlc generate
 
 sqlc-vet:

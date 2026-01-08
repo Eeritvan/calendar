@@ -9,50 +9,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// (POST /addEvent)
-// -- TODO: users can add events to calendars they dont own
-func (s *Server) PostAddEvent(c echo.Context) error {
-	body := new(AddEvent)
-
-	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
-	ctx := c.Request().Context()
-	queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
-		CalendarID:  body.CalendarId,
-		Name:        body.Name,
-		Tstzrange:   body.StartTime,
-		Tstzrange_2: body.EndTime,
-	})
-
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
-	resp := Event{
-		Id:         queryResp.ID,
-		CalendarId: queryResp.CalendarID,
-		Name:       queryResp.Name,
-		StartTime:  queryResp.Time.Lower.Time,
-		EndTime:    queryResp.Time.Upper.Time,
-	}
-
-	return c.JSON(http.StatusOK, resp)
-}
-
 // (GET /getEvents)
-// TODO: get only own events
 func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
+	userId := c.Get("userId").(uuid.UUID)
+
 	ctx := c.Request().Context()
-
 	queryResp, err := s.queries.GetEvents(ctx, sqlc.GetEventsParams{
-		Tstzrange:   params.StartTime,
-		Tstzrange_2: params.EndTime,
+		OwnerID:   userId,
+		StartTime: params.StartTime,
+		EndTime:   params.EndTime,
 	})
-
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -72,29 +38,60 @@ func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (PATCH /event/edit/{event_id})
-// TODO: this crashes if the any field is missing.
-// TODO: validate that only owner can edit event
-// TODO: change calendar
-func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error {
-	body := new(EventEdit)
-
+// (POST /addEvent)
+func (s *Server) PostAddEvent(c echo.Context) error {
+	body := new(AddEvent)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	fmt.Println(*body.EndTime)
-	fmt.Println(*body.StartTime)
+	userId := c.Get("userId").(uuid.UUID)
+
+	ctx := c.Request().Context()
+	queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
+		CalendarID: body.CalendarId,
+		Name:       body.Name,
+		OwnerID:    userId,
+		StartTime:  body.StartTime,
+		EndTime:    body.EndTime,
+	})
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	resp := Event{
+		Id:         queryResp.ID,
+		CalendarId: queryResp.CalendarID,
+		Name:       queryResp.Name,
+		StartTime:  queryResp.Time.Lower.Time,
+		EndTime:    queryResp.Time.Upper.Time,
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// (PATCH /event/edit/{event_id})
+// TODO: this crashes if the any field is missing (CalendarID and Name).
+func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error {
+	body := new(EventEdit)
+	if err := c.Bind(&body); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
 	editedEvent, err := s.queries.EditEvent(ctx, sqlc.EditEventParams{
-		Name:    *body.Name,
-		Column2: *body.StartTime,
-		Column3: *body.EndTime,
-		ID:      eventId,
+		ID:         eventId,
+		OwnerID:    userId,
+		CalendarID: *body.CalendarId,
+		Name:       *body.Name,
+		StartTime:  body.StartTime,
+		EndTime:    body.EndTime,
 	})
-
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -112,10 +109,14 @@ func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error 
 }
 
 // (DELETE /event/delete/{event_id})
-// TODO: validate that only owner can delete event
 func (s *Server) DeleteEventDeleteEventId(c echo.Context, eventId uuid.UUID) error {
+	userId := c.Get("userId").(uuid.UUID)
+
 	ctx := c.Request().Context()
-	if err := s.queries.DeleteEvent(ctx, eventId); err != nil {
+	if err := s.queries.DeleteEvent(ctx, sqlc.DeleteEventParams{
+		ID:      eventId,
+		OwnerID: userId,
+	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 

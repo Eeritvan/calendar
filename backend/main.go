@@ -9,6 +9,7 @@ import (
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -40,11 +41,14 @@ func main() {
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(jwt.MapClaims)
 
-			userId := claims["userId"].(string)
-			username := claims["username"].(string)
+			userIdStr := claims["userId"].(string)
+			uid, err := uuid.Parse(userIdStr)
+			if err != nil {
+				// TODO: errro handling
+				return
+			}
 
-			c.Set("userId", userId)
-			c.Set("username", username)
+			c.Set("userId", uid)
 		},
 		Skipper: func(c echo.Context) bool {
 			switch c.Path() {

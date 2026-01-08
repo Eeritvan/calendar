@@ -65,9 +65,10 @@ type Event struct {
 
 // EventEdit defines model for EventEdit.
 type EventEdit struct {
-	EndTime   *time.Time `json:"end_time,omitempty"`
-	Name      *string    `json:"name,omitempty"`
-	StartTime *time.Time `json:"start_time,omitempty"`
+	CalendarId *uuid.UUID `json:"calendar_id,omitempty"`
+	EndTime    *time.Time `json:"end_time,omitempty"`
+	Name       *string    `json:"name,omitempty"`
+	StartTime  *time.Time `json:"start_time,omitempty"`
 }
 
 // RecoveryCode defines model for RecoveryCode.

@@ -13,6 +13,11 @@ sql:
             nullable: true
             go_type:
               type: "string"
+          # - db_type: "text"
+          #   nullable: true
+          #   go_type:
+          #     type: "string"
+          #     pointer: true
           - db_type: "uuid"
             go_type:
               import: "github.com/google/uuid"
@@ -22,8 +27,14 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
-          - db_type: "pg_catalog.timestamp"
+          - db_type: "timestamptz"
             nullable: false
             go_type:
               import: "time"
               type: "Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true

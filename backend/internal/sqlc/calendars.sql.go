@@ -22,38 +22,56 @@ type AddCalendarParams struct {
 	OwnerID uuid.UUID
 }
 
-func (q *Queries) AddCalendar(ctx context.Context, arg AddCalendarParams) (Calendar, error) {
+type AddCalendarRow struct {
+	ID      uuid.UUID
+	Name    string
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) AddCalendar(ctx context.Context, arg AddCalendarParams) (AddCalendarRow, error) {
 	row := q.db.QueryRow(ctx, addCalendar, arg.Name, arg.OwnerID)
-	var i Calendar
+	var i AddCalendarRow
 	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
 	return i, err
 }
 
 const deleteCalendar = `-- name: DeleteCalendar :exec
 DELETE FROM Calendars
-WHERE id = $1
+WHERE id = $1 AND owner_id = $2
 `
 
-func (q *Queries) DeleteCalendar(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteCalendar, id)
+type DeleteCalendarParams struct {
+	ID      uuid.UUID
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) DeleteCalendar(ctx context.Context, arg DeleteCalendarParams) error {
+	_, err := q.db.Exec(ctx, deleteCalendar, arg.ID, arg.OwnerID)
 	return err
 }
 
 const editCalendar = `-- name: EditCalendar :one
-UPDATE Calendars
+UPDATE Calendars c
 SET name = COALESCE($1, name)
-WHERE id = $2
+WHERE c.id = $2 AND owner_id = $3
 RETURNING id, name, owner_id
 `
 
 type EditCalendarParams struct {
-	Name string
-	ID   uuid.UUID
+	Name    string
+	ID      uuid.UUID
+	OwnerID uuid.UUID
 }
 
-func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (Calendar, error) {
-	row := q.db.QueryRow(ctx, editCalendar, arg.Name, arg.ID)
-	var i Calendar
+type EditCalendarRow struct {
+	ID      uuid.UUID
+	Name    string
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (EditCalendarRow, error) {
+	row := q.db.QueryRow(ctx, editCalendar, arg.Name, arg.ID, arg.OwnerID)
+	var i EditCalendarRow
 	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
 	return i, err
 }
@@ -63,15 +81,21 @@ SELECT id, name, owner_id FROM Calendars
 WHERE owner_id = $1
 `
 
-func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]Calendar, error) {
+type GetCalendarsRow struct {
+	ID      uuid.UUID
+	Name    string
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCalendarsRow, error) {
 	rows, err := q.db.Query(ctx, getCalendars, ownerID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Calendar
+	var items []GetCalendarsRow
 	for rows.Next() {
-		var i Calendar
+		var i GetCalendarsRow
 		if err := rows.Scan(&i.ID, &i.Name, &i.OwnerID); err != nil {
 			return nil, err
 		}

@@ -5,21 +5,23 @@
 package sqlc
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Calendar struct {
 	ID      uuid.UUID
-	Name    string
 	OwnerID uuid.UUID
+	Name    string
 }
 
 type Event struct {
-	Name       string
 	ID         uuid.UUID
-	Time       pgtype.Range[pgtype.Timestamptz]
 	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
 }
 
 type User struct {
@@ -33,5 +35,5 @@ type UserRecoveryCode struct {
 	ID       int32
 	UserID   uuid.UUID
 	CodeHash string
-	UsedAt   pgtype.Timestamptz
+	UsedAt   *time.Time
 }

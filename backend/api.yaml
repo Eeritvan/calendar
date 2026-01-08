@@ -436,6 +436,13 @@ components:
     EventEdit:
       type: object
       properties:
+        calendar_id:
+          type: string
+          format: uuid
+          x-go-type: uuid.UUID
+          x-go-type-import:
+            path: github.com/google/uuid
+          example: "019b7abf-0d2a-7240-bc33-68fc0a8a1118"
         name:
           type: string
           example: "edited event 1"

@@ -7,43 +7,36 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addEvent = `-- name: AddEvent :one
 INSERT INTO Events (calendar_id, name, time)
-VALUES (
-    $1,
-    $2,
-    tstzrange($3, $4, '[)')
-)
+SELECT $1, $2, tstzrange($4::timestamptz, $5::timestamptz, '[)')
+FROM Calendars
+WHERE id = $1 AND owner_id = $3
 RETURNING id, calendar_id, name, time
 `
 
 type AddEventParams struct {
-	CalendarID  uuid.UUID
-	Name        string
-	Tstzrange   interface{}
-	Tstzrange_2 interface{}
-}
-
-type AddEventRow struct {
-	ID         uuid.UUID
 	CalendarID uuid.UUID
 	Name       string
-	Time       pgtype.Range[pgtype.Timestamptz]
+	OwnerID    uuid.UUID
+	StartTime  time.Time
+	EndTime    time.Time
 }
 
-func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow, error) {
+func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, addEvent,
 		arg.CalendarID,
 		arg.Name,
-		arg.Tstzrange,
-		arg.Tstzrange_2,
+		arg.OwnerID,
+		arg.StartTime,
+		arg.EndTime,
 	)
-	var i AddEventRow
+	var i Event
 	err := row.Scan(
 		&i.ID,
 		&i.CalendarID,
@@ -54,50 +47,63 @@ func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow
 }
 
 const deleteEvent = `-- name: DeleteEvent :exec
-DELETE FROM Events
-WHERE id = $1
+DELETE FROM Events e
+WHERE e.id = $1
+  AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $2)
 `
 
-func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteEvent, id)
+type DeleteEventParams struct {
+	ID      uuid.UUID
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) error {
+	_, err := q.db.Exec(ctx, deleteEvent, arg.ID, arg.OwnerID)
 	return err
 }
 
 const editEvent = `-- name: EditEvent :one
-UPDATE Events
+UPDATE Events e
 SET
-    name = COALESCE($1, name),
+    calendar_id = COALESCE($3, calendar_id),
+    name = COALESCE($4, name),
     time = tstzrange(
-        COALESCE($2, lower(time)),
-        COALESCE($3, upper(time)),
+        COALESCE($5::timestamptz, lower(time)),
+        COALESCE($6::timestamptz, upper(time)),
         '[)'
     )
-WHERE id = $4
-RETURNING id, calendar_id, name, time
+WHERE e.id = $1
+    AND e.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
+    AND (
+    $3::UUID IS NULL OR
+    EXISTS (
+        SELECT 1 FROM Calendars c2
+        WHERE c2.id = $3
+        AND c2.owner_id = $2
+    )
+)
+RETURNING e.id, e.calendar_id, e.name, e.time
 `
 
 type EditEventParams struct {
-	Name    string
-	Column2 interface{}
-	Column3 interface{}
-	ID      uuid.UUID
-}
-
-type EditEventRow struct {
 	ID         uuid.UUID
+	OwnerID    uuid.UUID
 	CalendarID uuid.UUID
 	Name       string
-	Time       pgtype.Range[pgtype.Timestamptz]
+	StartTime  *time.Time
+	EndTime    *time.Time
 }
 
-func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEventRow, error) {
+func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, editEvent,
-		arg.Name,
-		arg.Column2,
-		arg.Column3,
 		arg.ID,
+		arg.OwnerID,
+		arg.CalendarID,
+		arg.Name,
+		arg.StartTime,
+		arg.EndTime,
 	)
-	var i EditEventRow
+	var i Event
 	err := row.Scan(
 		&i.ID,
 		&i.CalendarID,
@@ -108,31 +114,28 @@ func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEvent
 }
 
 const getEvents = `-- name: GetEvents :many
-SELECT id, calendar_id, name, time FROM Events
-WHERE time && tstzrange($1, $2, '[)')
+SELECT e.id, e.calendar_id, e.name, e.time
+FROM Events e
+JOIN Calendars c ON e.calendar_id = c.id
+WHERE c.owner_id = $1
+  AND time && tstzrange($2::timestamptz, $3::timestamptz, '[)')
 `
 
 type GetEventsParams struct {
-	Tstzrange   interface{}
-	Tstzrange_2 interface{}
+	OwnerID   uuid.UUID
+	StartTime time.Time
+	EndTime   time.Time
 }
 
-type GetEventsRow struct {
-	ID         uuid.UUID
-	CalendarID uuid.UUID
-	Name       string
-	Time       pgtype.Range[pgtype.Timestamptz]
-}
-
-func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEventsRow, error) {
-	rows, err := q.db.Query(ctx, getEvents, arg.Tstzrange, arg.Tstzrange_2)
+func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, error) {
+	rows, err := q.db.Query(ctx, getEvents, arg.OwnerID, arg.StartTime, arg.EndTime)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetEventsRow
+	var items []Event
 	for rows.Next() {
-		var i GetEventsRow
+		var i Event
 		if err := rows.Scan(
 			&i.ID,
 			&i.CalendarID,
