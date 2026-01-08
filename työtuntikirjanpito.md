@@ -1,5 +1,6 @@
-| päivä      | tehty                                                                                            | aika |
+| day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 08.01.2025 | added github actions ci/cd for backedn                                                           | 0.5  |
 | 08.01.2025 | did some refactoring and fixed stuff                                                             | 3    |
 | 08.01.2025 | changed db migration tool (to goose) since it is better. also squashed migrations files into one | 2    |
 | 08.01.2025 | researched and implemented recovery codes to 2fa                                                 | 3    |
