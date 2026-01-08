@@ -11,6 +11,16 @@ import (
 	"github.com/google/uuid"
 )
 
+const clearRecoveryCodes = `-- name: ClearRecoveryCodes :exec
+DELETE FROM User_recovery_codes
+WHERE user_id = $1
+`
+
+func (q *Queries) ClearRecoveryCodes(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearRecoveryCodes, userID)
+	return err
+}
+
 const disableTotp = `-- name: DisableTotp :one
 UPDATE Users
 SET totp = NULL
@@ -73,6 +83,52 @@ func (q *Queries) GetTotpSecret(ctx context.Context, id uuid.UUID) (GetTotpSecre
 	return i, err
 }
 
+const getUnusedRecoveryCodes = `-- name: GetUnusedRecoveryCodes :many
+SELECT id, code_hash
+FROM User_recovery_codes
+WHERE used_at IS NULL AND user_id = $1
+`
+
+type GetUnusedRecoveryCodesRow struct {
+	ID       int32
+	CodeHash string
+}
+
+func (q *Queries) GetUnusedRecoveryCodes(ctx context.Context, userID uuid.UUID) ([]GetUnusedRecoveryCodesRow, error) {
+	rows, err := q.db.Query(ctx, getUnusedRecoveryCodes, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUnusedRecoveryCodesRow
+	for rows.Next() {
+		var i GetUnusedRecoveryCodesRow
+		if err := rows.Scan(&i.ID, &i.CodeHash); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const insertRecoveryCodes = `-- name: InsertRecoveryCodes :exec
+INSERT INTO user_recovery_codes (user_id, code_hash)
+SELECT $1, unnest($2::text[])
+`
+
+type InsertRecoveryCodesParams struct {
+	UserID  uuid.UUID
+	Column2 []string
+}
+
+func (q *Queries) InsertRecoveryCodes(ctx context.Context, arg InsertRecoveryCodesParams) error {
+	_, err := q.db.Exec(ctx, insertRecoveryCodes, arg.UserID, arg.Column2)
+	return err
+}
+
 const login = `-- name: Login :one
 SELECT id, name, password_hash, COALESCE(totp, '') AS totp
 FROM Users
@@ -89,6 +145,17 @@ func (q *Queries) Login(ctx context.Context, name string) (User, error) {
 		&i.Totp,
 	)
 	return i, err
+}
+
+const setRecoveryCodeAsUsed = `-- name: SetRecoveryCodeAsUsed :exec
+UPDATE user_recovery_codes
+SET used_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) SetRecoveryCodeAsUsed(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, setRecoveryCodeAsUsed, id)
+	return err
 }
 
 const signup = `-- name: Signup :one

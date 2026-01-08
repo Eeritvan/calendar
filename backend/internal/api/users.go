@@ -113,6 +113,7 @@ func (s *Server) PostLogin(c echo.Context) error {
 }
 
 // (POST /totp/enable)
+// TODO: verify that totp is not enabled already
 func (s *Server) PostTotpEnable(c echo.Context) error {
 	username := c.Get("username").(string)
 	userIdStr := c.Get("userId").(string)
@@ -204,13 +205,31 @@ func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
+	codes := make([]string, 5)
+	for i := range len(codes) {
+		code := utils.GenerateRecoveryCode()
+		codes[i] = code
+	}
+
+	hashedCodes, err := utils.HashRecoveryCodes(codes)
+
+	// TODO: transactions
 	ctx := c.Request().Context()
+	s.queries.ClearRecoveryCodes(ctx, userUUID)
+	s.queries.InsertRecoveryCodes(ctx, sqlc.InsertRecoveryCodesParams{
+		UserID:  userUUID,
+		Column2: hashedCodes,
+	})
 	s.queries.EnableTotp(ctx, sqlc.EnableTotpParams{
 		Totp: totpSecret,
 		ID:   userUUID,
 	})
 
-	return c.JSON(http.StatusOK, true)
+	resp := RecoveryCodes{
+		RecoveryCodes: codes,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // (PATCH /totp/disable)
@@ -238,7 +257,9 @@ func (s *Server) PatchTotpDisable(c echo.Context) error {
 	if !isValid {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
+	// todo: transactions
 	s.queries.DisableTotp(ctx, userUUID)
+	s.queries.ClearRecoveryCodes(ctx, userUUID)
 	return c.JSON(http.StatusOK, true)
 }
 
@@ -297,6 +318,73 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 
 	resp := UserCredentials{
 		Name: queryResp.Name,
+		JWT:  jwtToken,
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// (POST /totp/recovery)
+func (s *Server) PostTotpRecovery(c echo.Context) error {
+	body := new(RecoveryCode)
+	if err := c.Bind(&body); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	JWTkey := os.Getenv("JWT_KEY")
+	secretKey := []byte(JWTkey)
+	token, err := jwt.Parse(body.VerificationToken, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secretKey), nil
+	})
+
+	if err != nil || !token.Valid {
+		fmt.Println("err", err)
+		return c.JSON(http.StatusUnauthorized, nil)
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	userIdStr, _ := claims["userId"].(string)
+	userUUID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	ctx := c.Request().Context()
+	queryResp, err := s.queries.GetUnusedRecoveryCodes(ctx, userUUID)
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	matchedId, _ := utils.VerifyRecoveryCode(body.RecoveryCode, queryResp)
+
+	if matchedId == 0 {
+		fmt.Println("invalid token")
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	s.queries.SetRecoveryCodeAsUsed(ctx, matchedId)
+	loginQueryResp, err := s.queries.GetTotpSecret(ctx, userUUID)
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	jwtToken, err := utils.GenerateJWT(loginQueryResp.Name, loginQueryResp.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+	resp := UserCredentials{
+		Name: loginQueryResp.Name,
 		JWT:  jwtToken,
 	}
 

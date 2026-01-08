@@ -70,6 +70,17 @@ type EventEdit struct {
 	StartTime *time.Time `json:"start_time,omitempty"`
 }
 
+// RecoveryCode defines model for RecoveryCode.
+type RecoveryCode struct {
+	RecoveryCode      string `json:"recovery_code"`
+	VerificationToken string `json:"verification_token"`
+}
+
+// RecoveryCodes defines model for RecoveryCodes.
+type RecoveryCodes struct {
+	RecoveryCodes []string `json:"recovery_codes"`
+}
+
 // Totp defines model for Totp.
 type Totp struct {
 	Code int `json:"code"`
@@ -135,6 +146,9 @@ type PatchTotpDisableJSONRequestBody = Totp
 // PatchTotpEnableVerifyJSONRequestBody defines body for PatchTotpEnableVerify for application/json ContentType.
 type PatchTotpEnableVerifyJSONRequestBody = EnableTotpVerify
 
+// PostTotpRecoveryJSONRequestBody defines body for PostTotpRecovery for application/json ContentType.
+type PostTotpRecoveryJSONRequestBody = RecoveryCode
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// TODO
@@ -179,6 +193,9 @@ type ServerInterface interface {
 	// TODO
 	// (PATCH /totp/enable/verify)
 	PatchTotpEnableVerify(ctx echo.Context) error
+	// TODO
+	// (POST /totp/recovery)
+	PostTotpRecovery(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -372,6 +389,15 @@ func (w *ServerInterfaceWrapper) PatchTotpEnableVerify(ctx echo.Context) error {
 	return err
 }
 
+// PostTotpRecovery converts echo context to params.
+func (w *ServerInterfaceWrapper) PostTotpRecovery(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostTotpRecovery(ctx)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -414,5 +440,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.PATCH(baseURL+"/totp/disable", wrapper.PatchTotpDisable)
 	router.POST(baseURL+"/totp/enable", wrapper.PostTotpEnable)
 	router.PATCH(baseURL+"/totp/enable/verify", wrapper.PatchTotpEnableVerify)
+	router.POST(baseURL+"/totp/recovery", wrapper.PostTotpRecovery)
 
 }

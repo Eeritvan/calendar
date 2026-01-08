@@ -28,3 +28,10 @@ type User struct {
 	PasswordHash string
 	Totp         string
 }
+
+type UserRecoveryCode struct {
+	ID       int32
+	UserID   uuid.UUID
+	CodeHash string
+	UsedAt   pgtype.Timestamptz
+}

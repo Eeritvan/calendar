@@ -62,8 +62,7 @@ paths:
           content:
             application/json:
               schema:
-                type: boolean
-                example: true
+                $ref: "#/components/schemas/RecoveryCodes"
   /totp/disable:
     patch:
       summary: TODO
@@ -90,6 +89,22 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/EnableTotpVerify"
+      responses:
+        "201":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/userCredentials"
+  /totp/recovery:
+    post:
+      summary: TODO
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecoveryCode"
       responses:
         "201":
           description: TODO
@@ -460,3 +475,23 @@ components:
           example: 123456
         verification_token:
           type: string
+    RecoveryCode:
+      type: object
+      required: [recovery_code, verification_token]
+      properties:
+        recovery_code:
+          type: string
+          example: "AAAA-BBBB-CCCC"
+        verification_token:
+          type: string
+    RecoveryCodes:
+      type: object
+      required: [recovery_codes]
+      properties:
+        recovery_codes:
+          type: array
+          minItems: 10
+          maxItems: 10
+          items:
+            type: string
+            example: "AAAA-BBBB-CCCC"
