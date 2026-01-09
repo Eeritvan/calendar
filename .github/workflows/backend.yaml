@@ -28,3 +28,11 @@ jobs:
           tags: ghcr.io/eeritvan/calendar-backend:latest
           cache-from: type=registry,ref=ghcr.io/eeritvan/calendar-backend:buildcache
           cache-to: type=registry,ref=ghcr.io/eeritvan/calendar-backend:buildcache,mode=max
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:calendar-cicd
+      - name: Push webhook
+        run: curl -sS --fail -X POST "${{ secrets.WEBHOOK_URL }}"
