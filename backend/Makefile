@@ -1,4 +1,5 @@
-include .env
+ENV?=local
+include .env.$(ENV)
 
 GOCMD=go
 GORUN=$(GOCMD) run
