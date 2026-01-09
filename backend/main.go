@@ -53,7 +53,7 @@ func main() {
 		},
 		Skipper: func(c echo.Context) bool {
 			switch c.Path() {
-			case "/signup", "/login", "/totp/authenticate", "/totp/recovery":
+			case "/api/signup", "/api/login", "/api/totp/authenticate", "/api/totp/recovery":
 				return true
 			}
 			return false
