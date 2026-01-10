@@ -8,6 +8,7 @@ GOTEST=$(GOCMD) test
 BINARY_NAME=calendar
 MIGRATIONS_ORIGIN=migrations
 DB_DRIVER=postgres
+DOCKER_IMAGE=calendar-backend
 
 .PHONY: start build test clean generate
 
@@ -19,10 +20,13 @@ start: build
 	./$(BINARY_NAME)
 
 build: clean
-	$(GOBUILD) -o $(BINARY_NAME)
+	GOEXPERIMENT=jsonv2 GOEXPERIMENT=greenteagc $(GOBUILD) -o $(BINARY_NAME)
 
 clean:
-	rm -f $(BINARY_NAME) && rm -rf tmp
+	rm -f $(binary_name) && rm -rf tmp
+
+build-docker:
+	docker buildx build -f Dockerfile . -t $(DOCKER_IMAGE)
 
 # generate
 sqlc: sqlc-vet

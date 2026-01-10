@@ -7,7 +7,7 @@ RUN adduser -D -H -g '' -u 10001 nonroot
 
 RUN go mod download && \
     go mod verify && \
-    GOOS=linux GOARCH=amd64 go build -ldflags "-w -s -extldflags '-static -Wl,--strip-all,--gc-sections'" -o server
+    GOOS=linux GOARCH=amd64 GOEXPERIMENT=jsonv2 GOEXPERIMENT=greenteagc go build -ldflags "-w -s -extldflags '-static -Wl,--strip-all,--gc-sections'" -o server
 
 
 FROM scratch

@@ -199,15 +199,29 @@ func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 	hashedCodes, err := utils.HashRecoveryCodes(codes)
 
 	ctx := c.Request().Context()
-	s.queries.ClearRecoveryCodes(ctx, userUUID)
-	s.queries.InsertRecoveryCodes(ctx, sqlc.InsertRecoveryCodesParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.queries.WithTx(tx)
+
+	if err := qtx.ClearRecoveryCodes(ctx, userUUID); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+	if err := qtx.InsertRecoveryCodes(ctx, sqlc.InsertRecoveryCodesParams{
 		UserID:  userUUID,
 		Column2: hashedCodes,
-	})
-	s.queries.EnableTotp(ctx, sqlc.EnableTotpParams{
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+	if _, err := qtx.EnableTotp(ctx, sqlc.EnableTotpParams{
 		Totp: totpSecret,
 		ID:   userUUID,
-	})
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+	tx.Commit(ctx)
 
 	resp := RecoveryCodes{
 		RecoveryCodes: codes,
@@ -238,9 +252,22 @@ func (s *Server) PatchTotpDisable(c echo.Context) error {
 	if !isValid {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
-	// todo: transactions
-	s.queries.DisableTotp(ctx, userId)
-	s.queries.ClearRecoveryCodes(ctx, userId)
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.queries.WithTx(tx)
+
+	if _, err := qtx.DisableTotp(ctx, userId); err != nil {
+		return c.JSON(http.StatusInternalServerError, false)
+	}
+	if err := qtx.ClearRecoveryCodes(ctx, userId); err != nil {
+		return c.JSON(http.StatusInternalServerError, false)
+	}
+	tx.Commit(ctx)
+
 	return c.JSON(http.StatusOK, true)
 }
 

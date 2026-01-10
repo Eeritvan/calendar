@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -33,7 +34,10 @@ func main() {
 	server := api.NewServer(queries, pool)
 
 	e := echo.New()
+
 	basePath := e.Group("/api")
+
+	e.Use(middleware.BodyLimit("500KB"))
 
 	JWTkey := os.Getenv("JWT_KEY")
 	e.Use(echojwt.WithConfig(echojwt.Config{
