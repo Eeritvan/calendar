@@ -1,5 +1,7 @@
 | day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 12.01.2025 | added endpoint to search events to backend                                                       | 0.5  |
+| 10.01.2025 | many small fixes                                                                                 | 2    |
 | 08.01.2025 | added github actions ci/cd for backedn                                                           | 0.5  |
 | 08.01.2025 | did some refactoring and fixed stuff                                                             | 3    |
 | 08.01.2025 | changed db migration tool (to goose) since it is better. also squashed migrations files into one | 2    |
