@@ -5,6 +5,13 @@ JOIN Calendars c ON e.calendar_id = c.id
 WHERE c.owner_id = $1
   AND time && tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)');
 
+-- name: SearchEvents :many
+SELECT e.id, e.calendar_id, e.name, e.time
+FROM Events e
+JOIN Calendars c ON e.calendar_id = c.id
+WHERE c.owner_id = $1
+  AND e.name LIKE '%' || sqlc.arg('name') || '%';
+
 -- name: AddEvent :one
 INSERT INTO Events (calendar_id, name, time)
 SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)')

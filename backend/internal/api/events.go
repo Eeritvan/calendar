@@ -38,6 +38,34 @@ func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// (GET /searchEvents)
+func (s *Server) GetSearchEvents(c echo.Context, params GetSearchEventsParams) error {
+	userId := c.Get("userId").(uuid.UUID)
+
+	ctx := c.Request().Context()
+	queryResp, err := s.queries.SearchEvents(ctx, sqlc.SearchEventsParams{
+		OwnerID: userId,
+		Name:    params.Name,
+	})
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	resp := make([]Event, len(queryResp))
+	for i, event := range queryResp {
+		resp[i] = Event{
+			Id:         event.ID,
+			CalendarId: event.CalendarID,
+			Name:       event.Name,
+			StartTime:  event.Time.Lower.Time,
+			EndTime:    event.Time.Upper.Time,
+		}
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
 // (POST /addEvent)
 func (s *Server) PostAddEvent(c echo.Context) error {
 	body := new(AddEvent)

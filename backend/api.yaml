@@ -251,6 +251,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Event"
+  /searchEvents:
+    get:
+      summary: TODO
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+            format: string
+            example: TODO
+          required: true
+          description: TODO
+      responses:
+        "200":
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
   /event/edit/{event_id}:
     patch:
       summary: TODO

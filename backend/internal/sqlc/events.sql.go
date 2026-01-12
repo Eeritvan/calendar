@@ -151,3 +151,41 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, 
 	}
 	return items, nil
 }
+
+const searchEvents = `-- name: SearchEvents :many
+SELECT e.id, e.calendar_id, e.name, e.time
+FROM Events e
+JOIN Calendars c ON e.calendar_id = c.id
+WHERE c.owner_id = $1
+  AND e.name LIKE '%' || $2 || '%'
+`
+
+type SearchEventsParams struct {
+	OwnerID uuid.UUID
+	Name    string
+}
+
+func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]Event, error) {
+	rows, err := q.db.Query(ctx, searchEvents, arg.OwnerID, arg.Name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.CalendarID,
+			&i.Name,
+			&i.Time,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

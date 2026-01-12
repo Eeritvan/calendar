@@ -120,6 +120,12 @@ type GetGetEventsParams struct {
 	EndTime time.Time `form:"end_time" json:"end_time"`
 }
 
+// GetSearchEventsParams defines parameters for GetSearchEvents.
+type GetSearchEventsParams struct {
+	// Name TODO
+	Name string `form:"name" json:"name"`
+}
+
 // PostAddCalendarJSONRequestBody defines body for PostAddCalendar for application/json ContentType.
 type PostAddCalendarJSONRequestBody = CalendarNoId
 
@@ -179,6 +185,9 @@ type ServerInterface interface {
 	// TODO
 	// (POST /login)
 	PostLogin(ctx echo.Context) error
+	// TODO
+	// (GET /searchEvents)
+	GetSearchEvents(ctx echo.Context, params GetSearchEventsParams) error
 	// TODO
 	// (POST /signup)
 	PostSignup(ctx echo.Context) error
@@ -345,6 +354,26 @@ func (w *ServerInterfaceWrapper) PostLogin(ctx echo.Context) error {
 	return err
 }
 
+// GetSearchEvents converts echo context to params.
+func (w *ServerInterfaceWrapper) GetSearchEvents(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSearchEventsParams
+	// ------------- Required query parameter "name" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "name", ctx.QueryParams(), &params.Name)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetSearchEvents(ctx, params)
+	return err
+}
+
 // PostSignup converts echo context to params.
 func (w *ServerInterfaceWrapper) PostSignup(ctx echo.Context) error {
 	var err error
@@ -436,6 +465,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/getCalendars", wrapper.GetGetCalendars)
 	router.GET(baseURL+"/getEvents", wrapper.GetGetEvents)
 	router.POST(baseURL+"/login", wrapper.PostLogin)
+	router.GET(baseURL+"/searchEvents", wrapper.GetSearchEvents)
 	router.POST(baseURL+"/signup", wrapper.PostSignup)
 	router.POST(baseURL+"/totp/authenticate", wrapper.PostTotpAuthenticate)
 	router.PATCH(baseURL+"/totp/disable", wrapper.PatchTotpDisable)
