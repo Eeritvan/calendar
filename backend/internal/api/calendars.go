@@ -59,6 +59,7 @@ func (s *Server) PostAddCalendar(c echo.Context) error {
 		OwnerId: queryResp.OwnerID,
 	}
 
+	s.emit(userId, "calendar/post", resp)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -90,6 +91,7 @@ func (s *Server) PatchCalendarEditCalendarId(c echo.Context, calendarId uuid.UUI
 		OwnerId: editedCalendar.OwnerID,
 	}
 
+	s.emit(userId, "calendar/edit", resp)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -105,5 +107,6 @@ func (s *Server) DeleteCalendarDeleteCalendarId(c echo.Context, calendarId uuid.
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 
+	s.emit(userId, "calendar/delete", calendarId)
 	return c.JSON(http.StatusOK, true)
 }

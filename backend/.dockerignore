@@ -2,11 +2,14 @@ cfg.yaml
 api.yaml
 sqlc.yaml
 
-query.sql
+calendar
 Makefile
 Dockerfile
 tmp/
-.env
+migrations/
+queries/
+.env.local
+.env.prod
 README.md
 
 .gitignore

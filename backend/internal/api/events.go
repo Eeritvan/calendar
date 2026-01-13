@@ -97,6 +97,7 @@ func (s *Server) PostAddEvent(c echo.Context) error {
 		EndTime:    queryResp.Time.Upper.Time,
 	}
 
+	s.emit(userId, "event/post", resp)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -133,6 +134,7 @@ func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error 
 		EndTime:    editedEvent.Time.Upper.Time,
 	}
 
+	s.emit(userId, "event/edit", resp)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -148,5 +150,6 @@ func (s *Server) DeleteEventDeleteEventId(c echo.Context, eventId uuid.UUID) err
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 
+	s.emit(userId, "event/delete", eventId)
 	return c.JSON(http.StatusOK, true)
 }

@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/stream"
 
-	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,35 +17,8 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/r3labs/sse/v2"
 )
-
-func wsHandler(c echo.Context) error {
-	conn, err := websocket.Accept(c.Response(), c.Request(), &websocket.AcceptOptions{
-		InsecureSkipVerify: true, // TODO
-	})
-	if err != nil {
-		return err
-	}
-	defer conn.CloseNow()
-
-	ctx := c.Request().Context()
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			err = wsjson.Write(ctx, conn, "testing")
-			if err != nil {
-				// TODO: error handling
-				fmt.Println(err)
-				return err
-			}
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-}
 
 func main() {
 	if err := godotenv.Load(".env.local"); err != nil {
@@ -62,11 +33,12 @@ func main() {
 
 	queries := sqlc.New(pool)
 
-	server := api.NewServer(queries, pool)
+	sseServer := sse.New()
+	sseServer.AutoReplay = false
+
+	server := api.NewServer(queries, pool, sseServer)
 
 	e := echo.New()
-
-	basePath := e.Group("/api")
 
 	e.Use(middleware.BodyLimit("500KB"))
 
@@ -88,14 +60,19 @@ func main() {
 		},
 		Skipper: func(c echo.Context) bool {
 			switch c.Path() {
-			case "/api/signup", "/api/login", "/api/totp/authenticate", "/api/totp/recovery", "/ws":
+			case "/api/signup", "/api/login", "/api/totp/authenticate", "/api/totp/recovery":
 				return true
 			}
 			return false
 		},
 	}))
 
-	e.GET("/ws", wsHandler)
+	sseHandler := &stream.SSEHandler{
+		SSEServer: sseServer,
+	}
+
+	basePath := e.Group("/api")
+	basePath.GET("/sse", sseHandler.HandleSSE)
 	api.RegisterHandlers(basePath, server)
 
 	port := os.Getenv("PORT")
