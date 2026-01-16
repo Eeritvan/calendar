@@ -13,8 +13,8 @@ type SSEHandler struct {
 }
 
 // TODO:
-// - max 5? connections per userId
-// - bug: disconnects all clients at once if one disconnects
+//   - max 5? connections per userId
+//   - bug: disconnects all clients at once if one disconnects
 func (h *SSEHandler) HandleSSE(c echo.Context) error {
 	userId, ok := c.Get("userId").(uuid.UUID)
 	if !ok {
