@@ -34,7 +34,7 @@ func (s *Server) GetGetCalendars(c echo.Context) error {
 
 // (POST /addCalendar)
 func (s *Server) PostAddCalendar(c echo.Context) error {
-	body := new(CalendarNoId)
+	body := new(AddCalendar)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)

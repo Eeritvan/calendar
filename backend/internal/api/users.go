@@ -52,9 +52,10 @@ func (s *Server) PostSignup(c echo.Context) error {
 
 	resp := UserCredentials{
 		Name: queryResp.Name,
-		JWT:  jwtToken,
 	}
 
+	jwtCookie := utils.CreateCookie(jwtToken)
+	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -104,9 +105,10 @@ func (s *Server) PostLogin(c echo.Context) error {
 
 	resp := UserCredentials{
 		Name: queryResp.Name,
-		JWT:  jwtToken,
 	}
 
+	jwtCookie := utils.CreateCookie(jwtToken)
+	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -326,9 +328,10 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 
 	resp := UserCredentials{
 		Name: queryResp.Name,
-		JWT:  jwtToken,
 	}
 
+	jwtCookie := utils.CreateCookie(jwtToken)
+	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -393,8 +396,9 @@ func (s *Server) PostTotpRecovery(c echo.Context) error {
 	}
 	resp := UserCredentials{
 		Name: loginQueryResp.Name,
-		JWT:  jwtToken,
 	}
 
+	jwtCookie := utils.CreateCookie(jwtToken)
+	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }

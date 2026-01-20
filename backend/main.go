@@ -9,9 +9,9 @@ import (
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/stream"
-
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -42,9 +42,16 @@ func main() {
 
 	e.Use(middleware.BodyLimit("500KB"))
 
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowCredentials: true,
+	}))
+
 	JWTkey := os.Getenv("JWT_KEY")
 	e.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(JWTkey),
+		SigningKey:  []byte(JWTkey),
+		TokenLookup: "cookie:access_token",
 		SuccessHandler: func(c echo.Context) {
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(jwt.MapClaims)

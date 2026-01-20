@@ -13,7 +13,7 @@ DOCKER_IMAGE=calendar-backend
 .PHONY: start build test clean generate
 
 # dev
-dev:
+dev air:
 	air
 
 start: build

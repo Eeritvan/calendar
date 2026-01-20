@@ -17,6 +17,11 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// AddCalendar defines model for AddCalendar.
+type AddCalendar struct {
+	Name string `json:"name"`
+}
+
 // AddEvent defines model for AddEvent.
 type AddEvent struct {
 	CalendarId uuid.UUID `json:"calendar_id"`
@@ -35,12 +40,6 @@ type Calendar struct {
 // CalendarEdit defines model for CalendarEdit.
 type CalendarEdit struct {
 	Name *string `json:"name,omitempty"`
-}
-
-// CalendarNoId defines model for CalendarNoId.
-type CalendarNoId struct {
-	Name    string    `json:"name"`
-	OwnerId uuid.UUID `json:"owner_id"`
 }
 
 // EnableTotp defines model for EnableTotp.
@@ -107,7 +106,6 @@ type Signup struct {
 
 // UserCredentials defines model for userCredentials.
 type UserCredentials struct {
-	JWT  string `json:"JWT"`
 	Name string `json:"name"`
 }
 
@@ -127,7 +125,7 @@ type GetSearchEventsParams struct {
 }
 
 // PostAddCalendarJSONRequestBody defines body for PostAddCalendar for application/json ContentType.
-type PostAddCalendarJSONRequestBody = CalendarNoId
+type PostAddCalendarJSONRequestBody = AddCalendar
 
 // PostAddEventJSONRequestBody defines body for PostAddEvent for application/json ContentType.
 type PostAddEventJSONRequestBody = AddEvent
