@@ -10,6 +10,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-24.04
+    env:
+      IMAGE_NAME: ghcr.io/eeritvan/calendar-backend
+      TAILSCALE_TAG: tag:calendar-cicd
     steps:
       - uses: actions/checkout@v4
       - name: Login to GitHub Container Registry
@@ -25,14 +28,14 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ghcr.io/eeritvan/calendar-backend:latest
-          cache-from: type=registry,ref=ghcr.io/eeritvan/calendar-backend:buildcache
-          cache-to: type=registry,ref=ghcr.io/eeritvan/calendar-backend:buildcache,mode=max
+          tags: ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Tailscale
         uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:calendar-cicd
+          tags: ${{ env.TAILSCALE_TAG }}
       - name: Push webhook
         run: curl -sS --fail -X POST "${{ secrets.WEBHOOK_URL }}"
