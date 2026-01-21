@@ -28,11 +28,13 @@ function RouteComponent() {
     queryFn: () => fetchCalendars()
   });
 
-  console.log(data);
-
   return (
-    <div>
-      yo
-    </div>
+    <ul>
+      {data?.map(x => (
+        <li>
+          {x.name} {x.id} {x.owner_id}
+        </li>
+      ))}
+    </ul>
   )
 }

@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EventsGetEventsRouteImport } from './routes/events/getEvents'
+import { Route as EventsAddEventRouteImport } from './routes/events/addEvent'
 import { Route as CalendarsGetCalendarsRouteImport } from './routes/calendars/getCalendars'
 import { Route as CalendarsAddCalendarRouteImport } from './routes/calendars/addCalendar'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
@@ -18,6 +20,16 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsGetEventsRoute = EventsGetEventsRouteImport.update({
+  id: '/events/getEvents',
+  path: '/events/getEvents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsAddEventRoute = EventsAddEventRouteImport.update({
+  id: '/events/addEvent',
+  path: '/events/addEvent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarsGetCalendarsRoute = CalendarsGetCalendarsRouteImport.update({
@@ -47,6 +59,8 @@ export interface FileRoutesByFullPath {
   '/auth/signup': typeof AuthSignupRoute
   '/calendars/addCalendar': typeof CalendarsAddCalendarRoute
   '/calendars/getCalendars': typeof CalendarsGetCalendarsRoute
+  '/events/addEvent': typeof EventsAddEventRoute
+  '/events/getEvents': typeof EventsGetEventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +68,8 @@ export interface FileRoutesByTo {
   '/auth/signup': typeof AuthSignupRoute
   '/calendars/addCalendar': typeof CalendarsAddCalendarRoute
   '/calendars/getCalendars': typeof CalendarsGetCalendarsRoute
+  '/events/addEvent': typeof EventsAddEventRoute
+  '/events/getEvents': typeof EventsGetEventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +78,8 @@ export interface FileRoutesById {
   '/auth/signup': typeof AuthSignupRoute
   '/calendars/addCalendar': typeof CalendarsAddCalendarRoute
   '/calendars/getCalendars': typeof CalendarsGetCalendarsRoute
+  '/events/addEvent': typeof EventsAddEventRoute
+  '/events/getEvents': typeof EventsGetEventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,6 +89,8 @@ export interface FileRouteTypes {
     | '/auth/signup'
     | '/calendars/addCalendar'
     | '/calendars/getCalendars'
+    | '/events/addEvent'
+    | '/events/getEvents'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -78,6 +98,8 @@ export interface FileRouteTypes {
     | '/auth/signup'
     | '/calendars/addCalendar'
     | '/calendars/getCalendars'
+    | '/events/addEvent'
+    | '/events/getEvents'
   id:
     | '__root__'
     | '/'
@@ -85,6 +107,8 @@ export interface FileRouteTypes {
     | '/auth/signup'
     | '/calendars/addCalendar'
     | '/calendars/getCalendars'
+    | '/events/addEvent'
+    | '/events/getEvents'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,6 +117,8 @@ export interface RootRouteChildren {
   AuthSignupRoute: typeof AuthSignupRoute
   CalendarsAddCalendarRoute: typeof CalendarsAddCalendarRoute
   CalendarsGetCalendarsRoute: typeof CalendarsGetCalendarsRoute
+  EventsAddEventRoute: typeof EventsAddEventRoute
+  EventsGetEventsRoute: typeof EventsGetEventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,6 +128,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/getEvents': {
+      id: '/events/getEvents'
+      path: '/events/getEvents'
+      fullPath: '/events/getEvents'
+      preLoaderRoute: typeof EventsGetEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/addEvent': {
+      id: '/events/addEvent'
+      path: '/events/addEvent'
+      fullPath: '/events/addEvent'
+      preLoaderRoute: typeof EventsAddEventRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendars/getCalendars': {
@@ -141,6 +181,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSignupRoute: AuthSignupRoute,
   CalendarsAddCalendarRoute: CalendarsAddCalendarRoute,
   CalendarsGetCalendarsRoute: CalendarsGetCalendarsRoute,
+  EventsAddEventRoute: EventsAddEventRoute,
+  EventsGetEventsRoute: EventsGetEventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

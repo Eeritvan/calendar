@@ -1,5 +1,6 @@
 | day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 20.01.2025 | replaced frontend setup with new improved one                                                    | 3    |
 | 13.01.2025 | replaced the websocket skeleton with server-sent-events                                          | 3    |
 | 13.01.2025 | did some research and figured that server-sent-events probably are better fit for this app       | 2    |
 | 12.01.2025 | added skeleton for websockets to backend                                                         | 1.5  |

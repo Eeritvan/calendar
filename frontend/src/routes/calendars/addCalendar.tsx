@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import type { UUID } from 'node:crypto';
 
 export const Route = createFileRoute('/calendars/addCalendar')({
@@ -26,6 +26,7 @@ const addCalendar = async (body: AddCalendar): Promise<Calendar> => {
 }
 
 function RouteComponent() {
+  const navigate = useNavigate()
   const { mutate, data } = useMutation({
     mutationFn: addCalendar
   })
@@ -37,8 +38,10 @@ function RouteComponent() {
       name: '',
     } as AddCalendar,
     onSubmit: ({ value }) => {
-      // console.log(value)
       mutate(value)
+      navigate({
+        to: '/'
+      })
     },
   })
 

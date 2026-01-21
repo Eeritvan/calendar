@@ -16,6 +16,9 @@ function App() {
       <Link to="/calendars/getCalendars">
         getCalendars
       </Link>
+      <Link to="/calendars/addCalendar">
+        addCalendar
+      </Link>
     </div>
   )
 }
