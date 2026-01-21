@@ -58,7 +58,8 @@ function RouteComponent() {
 
   const { data: calendars } = useQuery<Array<Calendar>>({
     queryKey: ['calendars'],
-    queryFn: () => fetchCalendars()
+    queryFn: () => fetchCalendars(),
+    refetchOnMount: false
   });
 
   const form = useForm({

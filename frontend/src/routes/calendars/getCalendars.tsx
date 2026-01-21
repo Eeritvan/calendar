@@ -25,7 +25,8 @@ const fetchCalendars = async (): Promise<Array<Calendar>> => {
 function RouteComponent() {
   const { data } = useQuery<Array<Calendar>>({
     queryKey: ['calendars'],
-    queryFn: () => fetchCalendars()
+    queryFn: () => fetchCalendars(),
+    refetchOnMount: false
   });
 
   return (
