@@ -1,3 +1,4 @@
+import { API_URL } from '@/constants';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -16,7 +17,7 @@ interface Calendar {
 type AddCalendar = Omit<Calendar, 'id' | 'owner_id'>
 
 const addCalendar = async (body: AddCalendar): Promise<Calendar> => {
-  const res = await fetch('http://localhost:8080/api/addCalendar', {
+  const res = await fetch(`${API_URL}/addCalendar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

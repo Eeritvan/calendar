@@ -1,6 +1,7 @@
+import { API_URL } from '@/constants';
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/auth/signup')({
   component: RouteComponent,
@@ -17,7 +18,7 @@ interface UserCredentials {
 }
 
 const signup = async (body: Signup): Promise<UserCredentials> => {
-  const res = await fetch('http://localhost:8080/api/signup', {
+  const res = await fetch(`${API_URL}/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -27,6 +28,7 @@ const signup = async (body: Signup): Promise<UserCredentials> => {
 }
 
 function RouteComponent() {
+  const navigate = useNavigate()
   const { mutate, data } = useMutation({
     mutationFn: signup
   })
@@ -41,6 +43,9 @@ function RouteComponent() {
     } as Signup,
     onSubmit: ({ value }) => {
       mutate(value)
+      navigate({
+        to: '/'
+      })
     },
   })
 

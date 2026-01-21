@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '@/constants';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import type { UUID } from 'node:crypto';
 
@@ -13,7 +14,7 @@ interface Calendar {
 }
 
 const fetchCalendars = async (): Promise<Array<Calendar>> => {
-  const res = await fetch('http://localhost:8080/api/getCalendars', {
+  const res = await fetch(`${API_URL}/getCalendars`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -22,18 +23,35 @@ const fetchCalendars = async (): Promise<Array<Calendar>> => {
   return res.json();
 };
 
+const deleteCalendar = async (calendarId: UUID): Promise<boolean> => {
+  const res = await fetch(`${API_URL}/calendar/delete/${calendarId}`, {
+    method: 'delete',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+
+  return res.json();
+};
+
 function RouteComponent() {
-  const { data } = useQuery<Array<Calendar>>({
+  const { data: calendars } = useQuery<Array<Calendar>>({
     queryKey: ['calendars'],
     queryFn: () => fetchCalendars(),
     refetchOnMount: false
   });
 
+  const { mutate } = useMutation({
+    mutationFn: deleteCalendar
+  })
+
   return (
     <ul>
-      {data?.map(x => (
+      {calendars?.map(x => (
         <li>
           {x.name} {x.id} {x.owner_id}
+          <button onClick={() => mutate(x.id)}>
+            delete
+          </button>
         </li>
       ))}
     </ul>

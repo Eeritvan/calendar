@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '@/constants';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import type { UUID } from 'node:crypto';
 
@@ -15,7 +16,7 @@ interface Event {
 }
 
 const fetchEvents = async (start_time: Date, end_time: Date): Promise<Array<Event>> => {
-  const baseUrl = 'http://localhost:8080/api/getEvents';
+  const baseUrl = `${API_URL}/getEvents`;
 
   const params = new URLSearchParams({
     start_time: start_time.toISOString(),
@@ -31,20 +32,37 @@ const fetchEvents = async (start_time: Date, end_time: Date): Promise<Array<Even
   return res.json();
 };
 
+const deleteEvent = async (eventId: UUID): Promise<boolean> => {
+  const res = await fetch(`${API_URL}/event/delete/${eventId}`, {
+    method: 'delete',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+
+  return res.json();
+};
+
 function RouteComponent() {
   const start_time = new Date(2024, 2, 10, 2, 30)
   const end_time = new Date(2026, 2, 10, 2, 30)
 
-  const { data } = useQuery<Array<Event>>({
+  const { data: events } = useQuery<Array<Event>>({
     queryKey: ['events', { start_time, end_time }],
     queryFn: () => fetchEvents(start_time, end_time)
   });
 
+  const { mutate } = useMutation({
+    mutationFn: deleteEvent
+  })
+
   return (
     <ul>
-      {data?.map(x => (
+      {events?.map(x => (
         <li>
           {x.name} {x.id} {x.start_time} {x.end_time}
+          <button onClick={() => mutate(x.id)}>
+            delete
+          </button>
         </li>
       ))}
     </ul>

@@ -1,3 +1,4 @@
+import { API_URL } from '@/constants';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -29,7 +30,7 @@ interface Calendar {
 }
 
 const addEvent = async (body: AddEvent): Promise<Event> => {
-  const res = await fetch('http://localhost:8080/api/addEvent', {
+  const res = await fetch(`${API_URL}/addEvent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -39,7 +40,7 @@ const addEvent = async (body: AddEvent): Promise<Event> => {
 }
 
 const fetchCalendars = async (): Promise<Array<Calendar>> => {
-  const res = await fetch('http://localhost:8080/api/getCalendars', {
+const res = await fetch(`${API_URL}/getCalendars`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
