@@ -2,85 +2,165 @@ package api_test
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
+	"encoding/json"
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/eeritvan/calendar/internal/api"
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v5"
-	"github.com/pressly/goose/v3"
+	"github.com/labstack/echo/v5/echotest"
 	"github.com/stretchr/testify/assert"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSignup(t *testing.T) {
+	t.Setenv("JWT_KEY", "test_secret_key")
+
 	ctx := context.Background()
-	postgresContainer, err := postgres.Run(context.Background(),
-		"postgres:18-alpine",
-		postgres.WithDatabase("postgres"),
-		postgres.WithUsername("postgres"),
-		postgres.WithPassword("postgres"),
-		testcontainers.WithWaitStrategy(
-			wait.
-				ForLog("database system is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second),
-		),
-	)
+	connURI, err := spawnPostgresContainer(t, "users")
+	require.NoError(t, err)
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	connURI, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	db, err := sql.Open("pgx", connURI)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := goose.Up(db, "../migrations"); err != nil {
-		t.Fatal(err)
-	}
+	err = runMigrations(t, connURI)
+	require.NoError(t, err)
 
 	pool, err := pgxpool.New(ctx, connURI)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer pool.Close()
+	require.NoError(t, err)
+	t.Cleanup(pool.Close)
 
 	queries := sqlc.New(pool)
 	server := api.NewServer(queries, pool, nil)
 
-	// -----
+	seedUser(t, ctx, queries, "user 3", "password 1")
 
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(`{"name":"Jon Snow","password":"1","password_confirmation":"1"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	tests := []struct {
+		name           string
+		signup         models.Signup
+		expectedStatus int
+	}{
+		{
+			name: "user signup works",
+			signup: models.Signup{
+				Name:                 "user 1",
+				Password:             "password1",
+				PasswordConfirmation: "password1",
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name: "signup fails with mismatched passwords",
+			signup: models.Signup{
+				Name:                 "user 2",
+				Password:             "password1",
+				PasswordConfirmation: "wrong",
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "signup fails with when name is already in use",
+			signup: models.Signup{
+				Name:                 "user 3",
+				Password:             "password1",
+				PasswordConfirmation: "password1",
+			},
+			expectedStatus: http.StatusConflict,
+		},
+	}
 
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	err = server.Signup(c)
-	fmt.Println(err)
+			userJSON, err := json.Marshal(tc.signup)
+			require.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, rec.Code)
+			c, rec := echotest.ContextConfig{
+				Headers: map[string][]string{
+					echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				},
+				JSONBody: userJSON,
+			}.ToContextRecorder(t)
+
+			_ = server.Signup(c)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+			if tc.expectedStatus == http.StatusOK {
+				cookies := rec.Result().Cookies()
+				assert.NotEmpty(t, cookies)
+			}
+		})
+	}
+}
+
+func TestLogin(t *testing.T) {
+	t.Setenv("JWT_KEY", "test_secret_key")
+
+	ctx := context.Background()
+	connURI, err := spawnPostgresContainer(t, "users2")
+	require.NoError(t, err)
+
+	err = runMigrations(t, connURI)
+	require.NoError(t, err)
+
+	pool, err := pgxpool.New(ctx, connURI)
+	require.NoError(t, err)
+	t.Cleanup(pool.Close)
+
+	queries := sqlc.New(pool)
+	server := api.NewServer(queries, pool, nil)
+
+	seedUser(t, ctx, queries, "user 1", "password 1")
+
+	tests := []struct {
+		name           string
+		login          models.Login
+		expectedStatus int
+	}{
+		{
+			name: "user login works",
+			login: models.Login{
+				Name:     "user 1",
+				Password: "password 1",
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name: "login fails with incorrect password",
+			login: models.Login{
+				Name:     "user 1",
+				Password: "password 2",
+			},
+			expectedStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			userJSON, err := json.Marshal(tc.login)
+			require.NoError(t, err)
+
+			c, rec := echotest.ContextConfig{
+				Headers: map[string][]string{
+					echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				},
+				JSONBody: userJSON,
+			}.ToContextRecorder(t)
+
+			_ = server.Login(c)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+			if tc.expectedStatus == http.StatusOK {
+				cookies := rec.Result().Cookies()
+				assert.NotEmpty(t, cookies)
+			}
+		})
+	}
 }
