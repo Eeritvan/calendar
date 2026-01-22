@@ -9,9 +9,9 @@ import (
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/routes"
 	"github.com/eeritvan/calendar/internal/sqlc"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	echojwt "github.com/labstack/echo-jwt/v5"

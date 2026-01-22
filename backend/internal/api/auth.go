@@ -21,13 +21,12 @@ import (
 func (s *Server) Signup(c *echo.Context) error {
 	body := new(models.Signup)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	if body.Password != body.PasswordConfirmation {
 		fmt.Println("passwords did not match")
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	hashedPW, err := bcrypt.GenerateFromPassword([]byte(body.Password), 12)
@@ -43,7 +42,7 @@ func (s *Server) Signup(c *echo.Context) error {
 
 	if err != nil {
 		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusConflict, nil) // check this out
 	}
 
 	jwtToken, err := utils.GenerateJWT(queryResp.ID.String())
@@ -64,8 +63,7 @@ func (s *Server) Signup(c *echo.Context) error {
 func (s *Server) Login(c *echo.Context) error {
 	body := new(models.Login)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	ctx := c.Request().Context()
@@ -76,7 +74,7 @@ func (s *Server) Login(c *echo.Context) error {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(queryResp.PasswordHash), []byte(body.Password)); err != nil {
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
 	if queryResp.Totp != "" {
@@ -182,13 +180,13 @@ func (s *Server) TotpEnableVerify(c *echo.Context) error {
 
 	if userId != userUUID.String() {
 		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusForbidden, nil)
 	}
 
 	isValid := totp.Validate(strconv.Itoa(body.Code), totpSecret)
 
 	if !isValid {
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
 	codes := make([]string, 5)
@@ -235,8 +233,7 @@ func (s *Server) TotpEnableVerify(c *echo.Context) error {
 func (s *Server) TotpDisable(c *echo.Context) error {
 	body := new(models.Totp)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -251,7 +248,7 @@ func (s *Server) TotpDisable(c *echo.Context) error {
 	isValid := totp.Validate(strconv.Itoa(body.Code), queryResp.Totp)
 
 	if !isValid {
-		return c.JSON(http.StatusInternalServerError, false)
+		return c.JSON(http.StatusUnauthorized, false)
 	}
 
 	tx, err := s.pool.Begin(ctx)
@@ -276,8 +273,7 @@ func (s *Server) TotpDisable(c *echo.Context) error {
 func (s *Server) TotpAuthenticate(c *echo.Context) error {
 	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	JWTkey := os.Getenv("JWT_KEY")
@@ -290,7 +286,6 @@ func (s *Server) TotpAuthenticate(c *echo.Context) error {
 	})
 
 	if err != nil || !token.Valid {
-		fmt.Println("err", err)
 		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
@@ -317,7 +312,7 @@ func (s *Server) TotpAuthenticate(c *echo.Context) error {
 	isValid := totp.Validate(strconv.Itoa(body.Code), queryResp.Totp)
 
 	if !isValid {
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
 	jwtToken, err := utils.GenerateJWT(queryResp.ID.String())
@@ -352,7 +347,6 @@ func (s *Server) TotpRecovery(c *echo.Context) error {
 	})
 
 	if err != nil || !token.Valid {
-		fmt.Println("err", err)
 		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
@@ -364,22 +358,20 @@ func (s *Server) TotpRecovery(c *echo.Context) error {
 	userIdStr, _ := claims["userId"].(string)
 	userUUID, err := uuid.Parse(userIdStr)
 	if err != nil {
-		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.GetUnusedRecoveryCodes(ctx, userUUID)
 	if err != nil {
-		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
+	// TODO: error handling
 	matchedId, _ := utils.VerifyRecoveryCode(body.RecoveryCode, queryResp)
 
 	if matchedId == 0 {
-		fmt.Println("invalid token")
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusUnauthorized, nil)
 	}
 
 	s.queries.SetRecoveryCodeAsUsed(ctx, matchedId)

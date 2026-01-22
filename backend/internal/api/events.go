@@ -12,10 +12,9 @@ import (
 
 // (GET /getEvents?startTime=<END_TIME>&endTime=<START_TIME>)
 func (s *Server) GetEvents(c *echo.Context) error {
-	params := new(models.GetGetEventsParams)
+	params := new(models.GetEventsParams)
 	if err := c.Bind(params); err != nil {
-		// TODO: error handling
-		return nil
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -47,10 +46,9 @@ func (s *Server) GetEvents(c *echo.Context) error {
 
 // (GET /searchEvents?name=<NAME>)
 func (s *Server) SearchEvents(c *echo.Context) error {
-	params := new(models.GetSearchEventsParams)
+	params := new(models.SearchEventsParams)
 	if err := c.Bind(params); err != nil {
-		// TODO: error handling
-		return nil
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -83,8 +81,7 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 func (s *Server) AddEvent(c *echo.Context) error {
 	body := new(models.AddEvent)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -117,11 +114,13 @@ func (s *Server) AddEvent(c *echo.Context) error {
 // (PATCH /event/edit/:eventId)
 // TODO: this crashes if the any field is missing (CalendarID and Name).
 func (s *Server) EventEdit(c *echo.Context) error {
-	eventId, _ := echo.PathParam[uuid.UUID](c, "eventID")
+	eventId, err := echo.PathParam[uuid.UUID](c, "eventID")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
 	body := new(models.EventEdit)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -154,7 +153,10 @@ func (s *Server) EventEdit(c *echo.Context) error {
 
 // (DELETE /event/delete/:eventId)
 func (s *Server) EventDelete(c *echo.Context) error {
-	eventId, _ := echo.PathParam[uuid.UUID](c, "eventID")
+	eventId, err := echo.PathParam[uuid.UUID](c, "eventID")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, false)
+	}
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -162,6 +164,7 @@ func (s *Server) EventDelete(c *echo.Context) error {
 		ID:      eventId,
 		OwnerID: userId,
 	}); err != nil {
+		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 

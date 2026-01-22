@@ -28,11 +28,11 @@ type EventEdit struct {
 	StartTime  *time.Time `json:"startTime,omitempty"`
 }
 
-type GetGetEventsParams struct {
+type GetEventsParams struct {
 	StartTime time.Time `query:"startTime"`
 	EndTime   time.Time `query:"endTime"`
 }
 
-type GetSearchEventsParams struct {
+type SearchEventsParams struct {
 	Name string `query:"name"`
 }

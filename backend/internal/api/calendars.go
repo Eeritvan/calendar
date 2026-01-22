@@ -37,8 +37,7 @@ func (s *Server) GetCalendars(c *echo.Context) error {
 func (s *Server) AddCalendar(c *echo.Context) error {
 	body := new(models.AddCalendar)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -70,8 +69,7 @@ func (s *Server) CalendarEdit(c *echo.Context) error {
 	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
 	body := new(models.CalendarEdit)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
@@ -99,7 +97,10 @@ func (s *Server) CalendarEdit(c *echo.Context) error {
 
 // (DELETE /calendar/delete/:calendarId)
 func (s *Server) CalendarDelete(c *echo.Context) error {
-	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -107,6 +108,7 @@ func (s *Server) CalendarDelete(c *echo.Context) error {
 		ID:      calendarId,
 		OwnerID: userId,
 	}); err != nil {
+		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 
