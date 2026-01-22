@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // (GET /getCalendars)
-func (s *Server) GetGetCalendars(c echo.Context) error {
+func (s *Server) GetGetCalendars(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -20,9 +21,9 @@ func (s *Server) GetGetCalendars(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := make([]Calendar, len(queryResp))
+	resp := make([]models.Calendar, len(queryResp))
 	for i, calendar := range queryResp {
-		resp[i] = Calendar{
+		resp[i] = models.Calendar{
 			Id:      calendar.ID,
 			Name:    calendar.Name,
 			OwnerId: calendar.OwnerID,
@@ -33,8 +34,8 @@ func (s *Server) GetGetCalendars(c echo.Context) error {
 }
 
 // (POST /addCalendar)
-func (s *Server) PostAddCalendar(c echo.Context) error {
-	body := new(AddCalendar)
+func (s *Server) PostAddCalendar(c *echo.Context) error {
+	body := new(models.AddCalendar)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -53,7 +54,7 @@ func (s *Server) PostAddCalendar(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := Calendar{
+	resp := models.Calendar{
 		Id:      queryResp.ID,
 		Name:    queryResp.Name,
 		OwnerId: queryResp.OwnerID,
@@ -63,10 +64,11 @@ func (s *Server) PostAddCalendar(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (PATCH /calendar/edit/{calendar_id})
+// (PATCH /calendar/edit/:calendarId)
 // TODO: this crashes if the any field is missing (Name).
-func (s *Server) PatchCalendarEditCalendarId(c echo.Context, calendarId uuid.UUID) error {
-	body := new(CalendarEdit)
+func (s *Server) PatchCalendarEditCalendarId(c *echo.Context) error {
+	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
+	body := new(models.CalendarEdit)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -85,7 +87,7 @@ func (s *Server) PatchCalendarEditCalendarId(c echo.Context, calendarId uuid.UUI
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := Calendar{
+	resp := models.Calendar{
 		Id:      editedCalendar.ID,
 		Name:    editedCalendar.Name,
 		OwnerId: editedCalendar.OwnerID,
@@ -95,8 +97,9 @@ func (s *Server) PatchCalendarEditCalendarId(c echo.Context, calendarId uuid.UUI
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (DELETE /calendar/delete/{calendar_id})
-func (s *Server) DeleteCalendarDeleteCalendarId(c echo.Context, calendarId uuid.UUID) error {
+// (DELETE /calendar/delete/:calendarId)
+func (s *Server) DeleteCalendarDeleteCalendarId(c *echo.Context) error {
+	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()

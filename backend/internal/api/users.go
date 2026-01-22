@@ -7,18 +7,19 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // (POST /signup)
-func (s *Server) PostSignup(c echo.Context) error {
-	body := new(Signup)
+func (s *Server) PostSignup(c *echo.Context) error {
+	body := new(models.Signup)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -50,7 +51,7 @@ func (s *Server) PostSignup(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := UserCredentials{
+	resp := models.UserCredentials{
 		Name: queryResp.Name,
 	}
 
@@ -60,8 +61,8 @@ func (s *Server) PostSignup(c echo.Context) error {
 }
 
 // (POST /login)
-func (s *Server) PostLogin(c echo.Context) error {
-	body := new(Login)
+func (s *Server) PostLogin(c *echo.Context) error {
+	body := new(models.Login)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -91,9 +92,7 @@ func (s *Server) PostLogin(c echo.Context) error {
 			fmt.Println(err)
 			return c.JSON(http.StatusInternalServerError, nil)
 		}
-		resp := TotpRequired{
-			VerificationToken: returnToken,
-		}
+		resp := models.TotpRequired{VerificationToken: returnToken}
 
 		return c.JSON(http.StatusOK, resp)
 	}
@@ -103,7 +102,7 @@ func (s *Server) PostLogin(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := UserCredentials{
+	resp := models.UserCredentials{
 		Name: queryResp.Name,
 	}
 
@@ -114,7 +113,7 @@ func (s *Server) PostLogin(c echo.Context) error {
 
 // (POST /totp/enable)
 // TODO: verify that totp is not enabled already
-func (s *Server) PostTotpEnable(c echo.Context) error {
+func (s *Server) PostTotpEnable(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	key, err := totp.Generate(totp.GenerateOpts{
@@ -142,7 +141,7 @@ func (s *Server) PostTotpEnable(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := EnableTotp{
+	resp := models.EnableTotp{
 		VerificationToken: returnToken,
 	}
 
@@ -150,8 +149,8 @@ func (s *Server) PostTotpEnable(c echo.Context) error {
 }
 
 // (PATCH /totp/enable/verify)
-func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
-	body := new(EnableTotpVerify)
+func (s *Server) PatchTotpEnableVerify(c *echo.Context) error {
+	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -225,7 +224,7 @@ func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 	}
 	tx.Commit(ctx)
 
-	resp := RecoveryCodes{
+	resp := models.RecoveryCodes{
 		RecoveryCodes: codes,
 	}
 
@@ -233,8 +232,8 @@ func (s *Server) PatchTotpEnableVerify(c echo.Context) error {
 }
 
 // (PATCH /totp/disable)
-func (s *Server) PatchTotpDisable(c echo.Context) error {
-	body := new(Totp)
+func (s *Server) PatchTotpDisable(c *echo.Context) error {
+	body := new(models.Totp)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -274,8 +273,8 @@ func (s *Server) PatchTotpDisable(c echo.Context) error {
 }
 
 // (POST /totp/authenticate)
-func (s *Server) PostTotpAuthenticate(c echo.Context) error {
-	body := new(EnableTotpVerify)
+func (s *Server) PostTotpAuthenticate(c *echo.Context) error {
+	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -326,7 +325,7 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := UserCredentials{
+	resp := models.UserCredentials{
 		Name: queryResp.Name,
 	}
 
@@ -336,8 +335,8 @@ func (s *Server) PostTotpAuthenticate(c echo.Context) error {
 }
 
 // (POST /totp/recovery)
-func (s *Server) PostTotpRecovery(c echo.Context) error {
-	body := new(RecoveryCode)
+func (s *Server) PostTotpRecovery(c *echo.Context) error {
+	body := new(models.RecoveryCode)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -394,7 +393,7 @@ func (s *Server) PostTotpRecovery(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
-	resp := UserCredentials{
+	resp := models.UserCredentials{
 		Name: loginQueryResp.Name,
 	}
 

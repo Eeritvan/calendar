@@ -28,7 +28,7 @@ clean:
 build-docker:
 	docker buildx build -f Dockerfile . -t $(DOCKER_IMAGE)
 
-# generate
+# sqlc
 sqlc: sqlc-vet
 	sqlc generate
 
@@ -37,9 +37,6 @@ sqlc-vet:
 
 sqlc-diff:
 	sqlc diff
-
-generate: sqlc
-	$(GORUN) github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config=cfg.yaml api.yaml
 
 # migrations
 migrate-create:

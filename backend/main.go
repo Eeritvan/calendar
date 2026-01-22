@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/eeritvan/calendar/internal/api"
+	"github.com/eeritvan/calendar/internal/routes"
 	"github.com/eeritvan/calendar/internal/sqlc"
-	"github.com/eeritvan/calendar/internal/stream"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/r3labs/sse/v2"
 )
 
@@ -40,7 +41,7 @@ func main() {
 
 	e := echo.New()
 
-	e.Use(middleware.BodyLimit("500KB"))
+	e.Use(middleware.BodyLimit(524_288)) // 500kb
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000"},
@@ -50,37 +51,40 @@ func main() {
 
 	JWTkey := os.Getenv("JWT_KEY")
 	e.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey:  []byte(JWTkey),
+		SigningKey:  JWTkey,
 		TokenLookup: "cookie:access_token",
-		SuccessHandler: func(c echo.Context) {
+		SuccessHandler: func(c *echo.Context) error {
+			fmt.Println("härhär")
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(jwt.MapClaims)
-
 			userIdStr := claims["userId"].(string)
+			fmt.Println("middleware", userIdStr)
+
 			uid, err := uuid.Parse(userIdStr)
 			if err != nil {
 				// TODO: errro handling
-				return
-			}
+				return echo.NewHTTPError(http.StatusUnauthorized, "Please provide valid credentials")
 
+			}
 			c.Set("userId", uid)
+
+			return nil
 		},
-		Skipper: func(c echo.Context) bool {
+		Skipper: func(c *echo.Context) bool {
 			switch c.Path() {
-			case "/api/signup", "/api/login", "/api/totp/authenticate", "/api/totp/recovery":
+			case "/api/auth/signup", "/api/auth/login", "/api/auth/totp/authenticate", "/api/auth/totp/recovery":
 				return true
 			}
 			return false
 		},
 	}))
 
-	sseHandler := &stream.SSEHandler{
-		SSEServer: sseServer,
-	}
+	// sseHandler := &stream.SSEHandler{
+	// 	SSEServer: sseServer,
+	// }
 
-	basePath := e.Group("/api")
-	basePath.GET("/sse", sseHandler.HandleSSE)
-	api.RegisterHandlers(basePath, server)
+	// e.GET("/api/sse", sseHandler.HandleSSE)
+	routes.RegisterRoutes(e, server)
 
 	port := os.Getenv("PORT")
 	log.Fatal(e.Start("0.0.0.0:" + port))

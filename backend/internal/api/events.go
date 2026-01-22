@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
-// (GET /getEvents)
-func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
+// (GET /getEvents?startTime=<END_TIME>&endTime=<START_TIME>)
+func (s *Server) GetGetEvents(c *echo.Context) error {
+	params := new(models.GetGetEventsParams)
+	if err := c.Bind(params); err != nil {
+		// TODO: error handling
+		return nil
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
+	fmt.Println("userId", userId)
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.GetEvents(ctx, sqlc.GetEventsParams{
@@ -24,9 +32,9 @@ func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := make([]Event, len(queryResp))
+	resp := make([]models.Event, len(queryResp))
 	for i, event := range queryResp {
-		resp[i] = Event{
+		resp[i] = models.Event{
 			Id:         event.ID,
 			CalendarId: event.CalendarID,
 			Name:       event.Name,
@@ -38,8 +46,14 @@ func (s *Server) GetGetEvents(c echo.Context, params GetGetEventsParams) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (GET /searchEvents)
-func (s *Server) GetSearchEvents(c echo.Context, params GetSearchEventsParams) error {
+// (GET /searchEvents?name=<NAME>)
+func (s *Server) GetSearchEvents(c *echo.Context) error {
+	params := new(models.GetSearchEventsParams)
+	if err := c.Bind(params); err != nil {
+		// TODO: error handling
+		return nil
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -52,9 +66,9 @@ func (s *Server) GetSearchEvents(c echo.Context, params GetSearchEventsParams) e
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := make([]Event, len(queryResp))
+	resp := make([]models.Event, len(queryResp))
 	for i, event := range queryResp {
-		resp[i] = Event{
+		resp[i] = models.Event{
 			Id:         event.ID,
 			CalendarId: event.CalendarID,
 			Name:       event.Name,
@@ -67,8 +81,8 @@ func (s *Server) GetSearchEvents(c echo.Context, params GetSearchEventsParams) e
 }
 
 // (POST /addEvent)
-func (s *Server) PostAddEvent(c echo.Context) error {
-	body := new(AddEvent)
+func (s *Server) PostAddEvent(c *echo.Context) error {
+	body := new(models.AddEvent)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -89,7 +103,7 @@ func (s *Server) PostAddEvent(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := Event{
+	resp := models.Event{
 		Id:         queryResp.ID,
 		CalendarId: queryResp.CalendarID,
 		Name:       queryResp.Name,
@@ -103,8 +117,9 @@ func (s *Server) PostAddEvent(c echo.Context) error {
 
 // (PATCH /event/edit/{event_id})
 // TODO: this crashes if the any field is missing (CalendarID and Name).
-func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error {
-	body := new(EventEdit)
+func (s *Server) PatchEventEditEventId(c *echo.Context) error {
+	eventId, _ := echo.PathParam[uuid.UUID](c, "eventID")
+	body := new(models.EventEdit)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -126,7 +141,7 @@ func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error 
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := Event{
+	resp := models.Event{
 		Id:         editedEvent.ID,
 		CalendarId: editedEvent.CalendarID,
 		Name:       editedEvent.Name,
@@ -139,7 +154,8 @@ func (s *Server) PatchEventEditEventId(c echo.Context, eventId uuid.UUID) error 
 }
 
 // (DELETE /event/delete/{event_id})
-func (s *Server) DeleteEventDeleteEventId(c echo.Context, eventId uuid.UUID) error {
+func (s *Server) DeleteEventDeleteEventId(c *echo.Context) error {
+	eventId, _ := echo.PathParam[uuid.UUID](c, "eventID")
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()

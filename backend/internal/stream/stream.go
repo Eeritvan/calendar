@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/r3labs/sse/v2"
 )
 
@@ -15,7 +15,7 @@ type SSEHandler struct {
 // TODO:
 // - max 5? connections per userId
 // - bug: disconnects all clients at once if one disconnects
-func (h *SSEHandler) HandleSSE(c echo.Context) error {
+func (h *SSEHandler) HandleSSE(c *echo.Context) error {
 	userId, ok := c.Get("userId").(uuid.UUID)
 	if !ok {
 		return nil // TODO: error handling i guess
