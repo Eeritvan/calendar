@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/eeritvan/calendar/internal/api"
@@ -51,20 +50,17 @@ func main() {
 
 	JWTkey := os.Getenv("JWT_KEY")
 	e.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey:  JWTkey,
+		SigningKey:  []byte(JWTkey),
 		TokenLookup: "cookie:access_token",
 		SuccessHandler: func(c *echo.Context) error {
-			fmt.Println("härhär")
 			token := c.Get("user").(*jwt.Token)
 			claims := token.Claims.(jwt.MapClaims)
 			userIdStr := claims["userId"].(string)
-			fmt.Println("middleware", userIdStr)
 
 			uid, err := uuid.Parse(userIdStr)
 			if err != nil {
 				// TODO: errro handling
-				return echo.NewHTTPError(http.StatusUnauthorized, "Please provide valid credentials")
-
+				return nil
 			}
 			c.Set("userId", uid)
 

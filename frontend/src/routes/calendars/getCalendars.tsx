@@ -10,11 +10,11 @@ export const Route = createFileRoute('/calendars/getCalendars')({
 interface Calendar {
   id: UUID;
   name: string;
-  owner_id: UUID;
+  ownerId: UUID;
 }
 
 const fetchCalendars = async (): Promise<Array<Calendar>> => {
-  const res = await fetch(`${API_URL}/getCalendars`, {
+  const res = await fetch(`${API_URL}/calendar/getCalendars`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -48,7 +48,7 @@ function RouteComponent() {
     <ul>
       {calendars?.map(x => (
         <li>
-          {x.name} {x.id} {x.owner_id}
+          {x.name} {x.id} {x.ownerId}
           <button onClick={() => mutate(x.id)}>
             delete
           </button>

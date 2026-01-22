@@ -11,7 +11,7 @@ import (
 )
 
 // (GET /getCalendars)
-func (s *Server) GetGetCalendars(c *echo.Context) error {
+func (s *Server) GetCalendars(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -34,7 +34,7 @@ func (s *Server) GetGetCalendars(c *echo.Context) error {
 }
 
 // (POST /addCalendar)
-func (s *Server) PostAddCalendar(c *echo.Context) error {
+func (s *Server) AddCalendar(c *echo.Context) error {
 	body := new(models.AddCalendar)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -66,7 +66,7 @@ func (s *Server) PostAddCalendar(c *echo.Context) error {
 
 // (PATCH /calendar/edit/:calendarId)
 // TODO: this crashes if the any field is missing (Name).
-func (s *Server) PatchCalendarEditCalendarId(c *echo.Context) error {
+func (s *Server) CalendarEdit(c *echo.Context) error {
 	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
 	body := new(models.CalendarEdit)
 	if err := c.Bind(&body); err != nil {
@@ -98,7 +98,7 @@ func (s *Server) PatchCalendarEditCalendarId(c *echo.Context) error {
 }
 
 // (DELETE /calendar/delete/:calendarId)
-func (s *Server) DeleteCalendarDeleteCalendarId(c *echo.Context) error {
+func (s *Server) CalendarDelete(c *echo.Context) error {
 	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
 	userId := c.Get("userId").(uuid.UUID)
 

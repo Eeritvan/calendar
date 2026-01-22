@@ -10,27 +10,27 @@ export const Route = createFileRoute('/events/addEvent')({
 
 interface AddEvent {
   name: string;
-  calendar_id: UUID;
-  start_time: Date;
-  end_time: Date;
+  calendarId: UUID;
+  startTime: Date;
+  endTime: Date;
 }
 
 interface Event {
   id: UUID;
   name: string;
-  calendar_id: UUID;
-  start_time: Date;
-  end_time: Date;
+  calendarId: UUID;
+  startTime: Date;
+  endTime: Date;
 }
 
 interface Calendar {
   id: UUID;
   name: string;
-  owner_id: UUID;
+  ownerId: UUID;
 }
 
 const addEvent = async (body: AddEvent): Promise<Event> => {
-  const res = await fetch(`${API_URL}/addEvent`, {
+  const res = await fetch(`${API_URL}/event/addEvent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -40,7 +40,7 @@ const addEvent = async (body: AddEvent): Promise<Event> => {
 }
 
 const fetchCalendars = async (): Promise<Array<Calendar>> => {
-const res = await fetch(`${API_URL}/getCalendars`, {
+const res = await fetch(`${API_URL}/calendar/getCalendars`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -66,9 +66,9 @@ function RouteComponent() {
   const form = useForm({
     defaultValues: {
       name: '',
-      calendar_id: '' as UUID,
-      start_time: new Date,
-      end_time: new Date,
+      calendarId: '' as UUID,
+      startTime: new Date,
+      endTime: new Date,
     } as AddEvent,
     onSubmit: ({ value }) => {
       mutate(value)
@@ -102,7 +102,7 @@ function RouteComponent() {
         )}
       />
       <form.Field
-        name="calendar_id"
+        name="calendarId"
         children={(field) => (
           <>
             <label htmlFor={field.name}>calendarId:</label>
@@ -122,7 +122,7 @@ function RouteComponent() {
         )}
       />
       <form.Field
-        name="start_time"
+        name="startTime"
         children={(field) => (
           <>
             <label htmlFor={field.name}>startTime:</label>
@@ -138,7 +138,7 @@ function RouteComponent() {
         )}
       />
       <form.Field
-        name="end_time"
+        name="endTime"
         children={(field) => (
           <>
             <label htmlFor={field.name}>endTime:</label>

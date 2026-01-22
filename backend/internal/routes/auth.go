@@ -8,12 +8,12 @@ import (
 func authRoutes(e *echo.Group, s *api.Server) {
 	g := e.Group("/auth")
 
-	g.POST("/signup", s.PostSignup)
-	g.POST("/login", s.PostLogin)
+	g.POST("/signup", s.Signup)
+	g.POST("/login", s.Login)
 
-	g.POST("/totp/enable", s.PostTotpEnable)
-	g.PATCH("/totp/enable/verify", s.PatchTotpEnableVerify)
-	g.PATCH("/totp/disable", s.PatchTotpDisable)
-	g.POST("/totp/authenticate", s.PostTotpAuthenticate)
-	g.POST("/totp/recovery", s.PostTotpRecovery)
+	g.POST("/totp/enable", s.TotpEnable)
+	g.PATCH("/totp/enable/verify", s.TotpEnableVerify)
+	g.PATCH("/totp/disable", s.TotpDisable)
+	g.POST("/totp/authenticate", s.TotpAuthenticate)
+	g.POST("/totp/recovery", s.TotpRecovery)
 }

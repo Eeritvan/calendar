@@ -17,7 +17,7 @@ interface UserCredentials {
 }
 
 const login = async (body: Login): Promise<UserCredentials> => {
-  const res = await fetch(`${API_URL}/login`, {
+  const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

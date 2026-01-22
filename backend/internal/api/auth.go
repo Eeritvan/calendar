@@ -18,7 +18,7 @@ import (
 )
 
 // (POST /signup)
-func (s *Server) PostSignup(c *echo.Context) error {
+func (s *Server) Signup(c *echo.Context) error {
 	body := new(models.Signup)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -61,7 +61,7 @@ func (s *Server) PostSignup(c *echo.Context) error {
 }
 
 // (POST /login)
-func (s *Server) PostLogin(c *echo.Context) error {
+func (s *Server) Login(c *echo.Context) error {
 	body := new(models.Login)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -113,7 +113,7 @@ func (s *Server) PostLogin(c *echo.Context) error {
 
 // (POST /totp/enable)
 // TODO: verify that totp is not enabled already
-func (s *Server) PostTotpEnable(c *echo.Context) error {
+func (s *Server) TotpEnable(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	key, err := totp.Generate(totp.GenerateOpts{
@@ -149,7 +149,7 @@ func (s *Server) PostTotpEnable(c *echo.Context) error {
 }
 
 // (PATCH /totp/enable/verify)
-func (s *Server) PatchTotpEnableVerify(c *echo.Context) error {
+func (s *Server) TotpEnableVerify(c *echo.Context) error {
 	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -232,7 +232,7 @@ func (s *Server) PatchTotpEnableVerify(c *echo.Context) error {
 }
 
 // (PATCH /totp/disable)
-func (s *Server) PatchTotpDisable(c *echo.Context) error {
+func (s *Server) TotpDisable(c *echo.Context) error {
 	body := new(models.Totp)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -273,7 +273,7 @@ func (s *Server) PatchTotpDisable(c *echo.Context) error {
 }
 
 // (POST /totp/authenticate)
-func (s *Server) PostTotpAuthenticate(c *echo.Context) error {
+func (s *Server) TotpAuthenticate(c *echo.Context) error {
 	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -335,7 +335,7 @@ func (s *Server) PostTotpAuthenticate(c *echo.Context) error {
 }
 
 // (POST /totp/recovery)
-func (s *Server) PostTotpRecovery(c *echo.Context) error {
+func (s *Server) TotpRecovery(c *echo.Context) error {
 	body := new(models.RecoveryCode)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)

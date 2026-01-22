@@ -8,8 +8,8 @@ import (
 func calendarRoutes(e *echo.Group, s *api.Server) {
 	g := e.Group("/calendar")
 
-	g.GET("/getCalendars", s.GetGetCalendars)
-	g.POST("/addCalendar", s.PostAddCalendar)
-	g.PATCH("/edit/:calendarId", s.PatchCalendarEditCalendarId)
-	g.DELETE("/delete/:calendarId", s.DeleteCalendarDeleteCalendarId)
+	g.GET("/getCalendars", s.GetCalendars)
+	g.POST("/addCalendar", s.AddCalendar)
+	g.PATCH("/edit/:calendarId", s.CalendarEdit)
+	g.DELETE("/delete/:calendarId", s.CalendarDelete)
 }

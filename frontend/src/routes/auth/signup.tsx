@@ -10,7 +10,7 @@ export const Route = createFileRoute('/auth/signup')({
 interface Signup {
   name: string;
   password: string;
-  password_confirmation: string;
+  passwordConfirmation: string;
 }
 
 interface UserCredentials {
@@ -18,7 +18,7 @@ interface UserCredentials {
 }
 
 const signup = async (body: Signup): Promise<UserCredentials> => {
-  const res = await fetch(`${API_URL}/signup`, {
+  const res = await fetch(`${API_URL}/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -39,7 +39,7 @@ function RouteComponent() {
     defaultValues: {
       name: "",
       password: "",
-      password_confirmation: ""
+      passwordConfirmation: ""
     } as Signup,
     onSubmit: ({ value }) => {
       mutate(value)
@@ -89,7 +89,7 @@ function RouteComponent() {
         )}
       />
       <form.Field
-        name="password_confirmation"
+        name="passwordConfirmation"
         children={(field) => (
           <>
             <label htmlFor={field.name}>confirm password</label>

@@ -10,17 +10,17 @@ export const Route = createFileRoute('/events/getEvents')({
 interface Event {
   id: UUID
   name: string
-  calendar_id: UUID
-  start_time: Date
-  end_time: Date
+  calendarId: UUID
+  startTime: Date
+  endTime: Date
 }
 
-const fetchEvents = async (start_time: Date, end_time: Date): Promise<Array<Event>> => {
+const fetchEvents = async (startTime: Date, endTime: Date): Promise<Array<Event>> => {
   const baseUrl = `${API_URL}/getEvents`;
 
   const params = new URLSearchParams({
-    start_time: start_time.toISOString(),
-    end_time: end_time.toISOString(),
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
   });
 
   const res = await fetch(`${baseUrl}?${params.toString()}`, {
@@ -59,9 +59,9 @@ function RouteComponent() {
     <ul>
       {events?.map(x => (
         <li>
-          {x.name} {x.id} {x.start_time} {x.end_time}
+          {x.name} {x.id} {x.startTime} {x.endTime}
           <button onClick={() => mutate(x.id)}>
-            delete
+            delet
           </button>
         </li>
       ))}

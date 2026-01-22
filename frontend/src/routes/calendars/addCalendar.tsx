@@ -11,13 +11,13 @@ export const Route = createFileRoute('/calendars/addCalendar')({
 interface Calendar {
   id: UUID;
   name: string;
-  owner_id: UUID;
+  ownerId: UUID;
 }
 
-type AddCalendar = Omit<Calendar, 'id' | 'owner_id'>
+type AddCalendar = Omit<Calendar, 'id' | 'ownerId'>
 
 const addCalendar = async (body: AddCalendar): Promise<Calendar> => {
-  const res = await fetch(`${API_URL}/addCalendar`, {
+  const res = await fetch(`${API_URL}/calendar/addCalendar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

@@ -8,9 +8,9 @@ import (
 func eventRoutes(e *echo.Group, s *api.Server) {
 	g := e.Group("/event")
 
-	g.GET("/getEvents", s.GetGetEvents)
-	g.GET("/searchEvents", s.GetSearchEvents)
-	g.POST("/addEvent", s.PostAddEvent)
-	g.PATCH("/edit/:eventId", s.PatchEventEditEventId)
-	g.DELETE("/delete/:eventId", s.DeleteEventDeleteEventId)
+	g.GET("/getEvents", s.GetEvents)
+	g.GET("/searchEvents", s.SearchEvents)
+	g.POST("/addEvent", s.AddEvent)
+	g.PATCH("/edit/:eventId", s.EventEdit)
+	g.DELETE("/delete/:eventId", s.EventDelete)
 }

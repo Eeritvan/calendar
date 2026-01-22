@@ -79,7 +79,7 @@ func TestSignup(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	err = server.PostSignup(c)
+	err = server.Signup(c)
 	fmt.Println(err)
 
 	assert.Equal(t, http.StatusOK, rec.Code)

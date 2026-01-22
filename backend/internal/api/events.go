@@ -11,7 +11,7 @@ import (
 )
 
 // (GET /getEvents?startTime=<END_TIME>&endTime=<START_TIME>)
-func (s *Server) GetGetEvents(c *echo.Context) error {
+func (s *Server) GetEvents(c *echo.Context) error {
 	params := new(models.GetGetEventsParams)
 	if err := c.Bind(params); err != nil {
 		// TODO: error handling
@@ -19,7 +19,6 @@ func (s *Server) GetGetEvents(c *echo.Context) error {
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
-	fmt.Println("userId", userId)
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.GetEvents(ctx, sqlc.GetEventsParams{
@@ -47,7 +46,7 @@ func (s *Server) GetGetEvents(c *echo.Context) error {
 }
 
 // (GET /searchEvents?name=<NAME>)
-func (s *Server) GetSearchEvents(c *echo.Context) error {
+func (s *Server) SearchEvents(c *echo.Context) error {
 	params := new(models.GetSearchEventsParams)
 	if err := c.Bind(params); err != nil {
 		// TODO: error handling
@@ -81,7 +80,7 @@ func (s *Server) GetSearchEvents(c *echo.Context) error {
 }
 
 // (POST /addEvent)
-func (s *Server) PostAddEvent(c *echo.Context) error {
+func (s *Server) AddEvent(c *echo.Context) error {
 	body := new(models.AddEvent)
 	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
@@ -115,9 +114,9 @@ func (s *Server) PostAddEvent(c *echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (PATCH /event/edit/{event_id})
+// (PATCH /event/edit/:eventId)
 // TODO: this crashes if the any field is missing (CalendarID and Name).
-func (s *Server) PatchEventEditEventId(c *echo.Context) error {
+func (s *Server) EventEdit(c *echo.Context) error {
 	eventId, _ := echo.PathParam[uuid.UUID](c, "eventID")
 	body := new(models.EventEdit)
 	if err := c.Bind(&body); err != nil {
@@ -153,8 +152,8 @@ func (s *Server) PatchEventEditEventId(c *echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// (DELETE /event/delete/{event_id})
-func (s *Server) DeleteEventDeleteEventId(c *echo.Context) error {
+// (DELETE /event/delete/:eventId)
+func (s *Server) EventDelete(c *echo.Context) error {
 	eventId, _ := echo.PathParam[uuid.UUID](c, "eventID")
 	userId := c.Get("userId").(uuid.UUID)
 
