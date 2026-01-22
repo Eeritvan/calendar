@@ -1,10 +1,25 @@
+import { API_URL } from '@/constants'
+import { useMutation } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   component: App,
 })
 
+const logout = async () => {
+  const res = await fetch(`${API_URL}/auth/logout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  })
+  return res.json()
+}
+
 function App() {
+  const { mutate } = useMutation({
+    mutationFn: logout
+  })
+
   return (
     <div>
       <Link to="/auth/login">
@@ -30,6 +45,10 @@ function App() {
       <Link to="/events/addEvent">
         addEvent
       </Link>
+      <br />
+      <button onClick={() => mutate()}>
+        logout
+      </button>
     </div>
   )
 }

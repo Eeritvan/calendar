@@ -9,6 +9,7 @@ import (
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/routes"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/stream"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -75,11 +76,11 @@ func main() {
 		},
 	}))
 
-	// sseHandler := &stream.SSEHandler{
-	// 	SSEServer: sseServer,
-	// }
+	sseHandler := &stream.SSEHandler{
+		SSEServer: sseServer,
+	}
 
-	// e.GET("/api/sse", sseHandler.HandleSSE)
+	e.GET("/api/sse", sseHandler.HandleSSE)
 	routes.RegisterRoutes(e, server)
 
 	port := os.Getenv("PORT")

@@ -10,6 +10,7 @@ func authRoutes(e *echo.Group, s *api.Server) {
 
 	g.POST("/signup", s.Signup)
 	g.POST("/login", s.Login)
+	g.POST("/logout", s.Logout)
 
 	g.POST("/totp/enable", s.TotpEnable)
 	g.PATCH("/totp/enable/verify", s.TotpEnableVerify)

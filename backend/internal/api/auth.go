@@ -54,7 +54,7 @@ func (s *Server) Signup(c *echo.Context) error {
 		Name: queryResp.Name,
 	}
 
-	jwtCookie := utils.CreateCookie(jwtToken)
+	jwtCookie := utils.CreateJWTCookie(jwtToken)
 	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }
@@ -104,7 +104,7 @@ func (s *Server) Login(c *echo.Context) error {
 		Name: queryResp.Name,
 	}
 
-	jwtCookie := utils.CreateCookie(jwtToken)
+	jwtCookie := utils.CreateJWTCookie(jwtToken)
 	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }
@@ -324,7 +324,7 @@ func (s *Server) TotpAuthenticate(c *echo.Context) error {
 		Name: queryResp.Name,
 	}
 
-	jwtCookie := utils.CreateCookie(jwtToken)
+	jwtCookie := utils.CreateJWTCookie(jwtToken)
 	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
 }
@@ -389,7 +389,14 @@ func (s *Server) TotpRecovery(c *echo.Context) error {
 		Name: loginQueryResp.Name,
 	}
 
-	jwtCookie := utils.CreateCookie(jwtToken)
+	jwtCookie := utils.CreateJWTCookie(jwtToken)
 	c.SetCookie(jwtCookie)
 	return c.JSON(http.StatusOK, resp)
+}
+
+// (POST /logout)
+func (s *Server) Logout(c *echo.Context) error {
+	cookie := utils.DeleteJWTCookie()
+	c.SetCookie(cookie)
+	return c.NoContent(http.StatusOK)
 }
