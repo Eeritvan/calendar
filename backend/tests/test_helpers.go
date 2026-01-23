@@ -1,15 +1,14 @@
-package api_test
+package tests
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/eeritvan/calendar/internal/sqlc"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
+
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -17,6 +16,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func Ptr[T any](v T) *T {
+	return &v
+}
 
 func spawnPostgresContainer(t *testing.T, reuseName string) (string, error) {
 	t.Helper()
@@ -67,43 +70,44 @@ func runMigrations(t *testing.T, connURI string) error {
 	return nil
 }
 
-func seedUser(t *testing.T, ctx context.Context, queries *sqlc.Queries, name, password string) {
+func seedUser(t *testing.T, ctx context.Context, queries *sqlc.Queries, name, password string) uuid.UUID {
 	t.Helper()
 
 	hashedPW, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	require.NoError(t, err)
 
-	_, err = queries.Signup(ctx, sqlc.SignupParams{
+	user, err := queries.Signup(ctx, sqlc.SignupParams{
 		Name:         name,
 		PasswordHash: string(hashedPW),
 	})
 	require.NoError(t, err)
+
+	return user.ID
 }
 
-func clearDatabase(t *testing.T, pool *pgxpool.Pool) {
+func seedCalendar(t *testing.T, ctx context.Context, queries *sqlc.Queries, name string, userId uuid.UUID) uuid.UUID {
 	t.Helper()
 
-	query := `
-		SELECT table_name
-		FROM information_schema.tables
-		WHERE table_schema = 'public'
-		AND table_name != 'goose_db_version';`
-
-	rows, err := pool.Query(context.Background(), query)
+	calendar, err := queries.AddCalendar(ctx, sqlc.AddCalendarParams{
+		Name:    name,
+		OwnerID: userId,
+	})
 	require.NoError(t, err)
-	defer rows.Close()
 
-	var tables []string
-	for rows.Next() {
-		var table string
-		err := rows.Scan(&table)
-		require.NoError(t, err)
-		tables = append(tables, table)
-	}
+	return calendar.ID
+}
 
-	if len(tables) > 0 {
-		truncateQuery := fmt.Sprintf("TRUNCATE TABLE %s CASCADE;", strings.Join(tables, ", "))
-		_, err := pool.Exec(context.Background(), truncateQuery)
-		require.NoError(t, err)
-	}
+func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name, password string) uuid.UUID {
+	t.Helper()
+
+	hashedPW, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	require.NoError(t, err)
+
+	user, err := queries.Signup(ctx, sqlc.SignupParams{
+		Name:         name,
+		PasswordHash: string(hashedPW),
+	})
+	require.NoError(t, err)
+
+	return user.ID
 }

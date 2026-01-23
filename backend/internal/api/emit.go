@@ -9,6 +9,9 @@ import (
 )
 
 func (s *Server) emit(userID uuid.UUID, action string, data any) {
+	if s.sse == nil {
+		return
+	}
 	var payload []byte
 	var err error
 

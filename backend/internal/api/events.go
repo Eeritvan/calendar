@@ -113,7 +113,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 
 // (PATCH /event/edit/:eventId)
 // TODO: this crashes if the any field is missing (CalendarID and Name).
-func (s *Server) EventEdit(c *echo.Context) error {
+func (s *Server) EditEvent(c *echo.Context) error {
 	eventId, err := echo.PathParam[uuid.UUID](c, "eventID")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
@@ -152,7 +152,7 @@ func (s *Server) EventEdit(c *echo.Context) error {
 }
 
 // (DELETE /event/delete/:eventId)
-func (s *Server) EventDelete(c *echo.Context) error {
+func (s *Server) DeleteEvent(c *echo.Context) error {
 	eventId, err := echo.PathParam[uuid.UUID](c, "eventID")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, false)

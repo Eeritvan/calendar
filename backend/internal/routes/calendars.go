@@ -10,6 +10,6 @@ func calendarRoutes(e *echo.Group, s *api.Server) {
 
 	g.GET("/getCalendars", s.GetCalendars)
 	g.POST("/addCalendar", s.AddCalendar)
-	g.PATCH("/edit/:calendarId", s.CalendarEdit)
-	g.DELETE("/delete/:calendarId", s.CalendarDelete)
+	g.PATCH("/edit/:calendarId", s.EditCalendar)
+	g.DELETE("/delete/:calendarId", s.DeleteCalendar)
 }

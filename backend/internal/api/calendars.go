@@ -65,7 +65,7 @@ func (s *Server) AddCalendar(c *echo.Context) error {
 
 // (PATCH /calendar/edit/:calendarId)
 // TODO: this crashes if the any field is missing (Name).
-func (s *Server) CalendarEdit(c *echo.Context) error {
+func (s *Server) EditCalendar(c *echo.Context) error {
 	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
 	body := new(models.CalendarEdit)
 	if err := c.Bind(&body); err != nil {
@@ -96,7 +96,7 @@ func (s *Server) CalendarEdit(c *echo.Context) error {
 }
 
 // (DELETE /calendar/delete/:calendarId)
-func (s *Server) CalendarDelete(c *echo.Context) error {
+func (s *Server) DeleteCalendar(c *echo.Context) error {
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
