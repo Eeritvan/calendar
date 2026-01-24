@@ -18,7 +18,7 @@ import (
 )
 
 func TestGetCalendars(t *testing.T) {
-	t.Setenv("JWT_KEY", "test_secret_key")
+	t.Parallel()
 
 	ctx := context.Background()
 	connURI, err := spawnPostgresContainer(t, "calendars0")
@@ -95,7 +95,7 @@ func TestGetCalendars(t *testing.T) {
 }
 
 func TestAddCalendar(t *testing.T) {
-	t.Setenv("JWT_KEY", "test_secret_key")
+	t.Parallel()
 
 	ctx := context.Background()
 	connURI, err := spawnPostgresContainer(t, "calendars")
@@ -162,6 +162,7 @@ func TestAddCalendar(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &got)
 			require.NoError(t, err)
 
+			assert.NotNil(t, got.Id)
 			assert.Equal(t, tc.expectedRespData.Name, got.Name)
 			assert.Equal(t, tc.expectedRespData.OwnerId, got.OwnerId)
 		})
@@ -169,7 +170,7 @@ func TestAddCalendar(t *testing.T) {
 }
 
 func TestEditCalendar(t *testing.T) {
-	t.Setenv("JWT_KEY", "test_secret_key")
+	t.Parallel()
 
 	ctx := context.Background()
 	connURI, err := spawnPostgresContainer(t, "calendars2")
@@ -187,6 +188,12 @@ func TestEditCalendar(t *testing.T) {
 
 	userId := seedUser(t, ctx, queries, "calendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
+
+	userId2 := seedUser(t, ctx, queries, "calendarUser2", "password")
+	calendarId2 := seedCalendar(t, ctx, queries, "meetings", userId2)
+
+	randomUUID, err := uuid.NewRandom()
+	require.NoError(t, err)
 
 	tests := []struct {
 		name             string
@@ -208,17 +215,22 @@ func TestEditCalendar(t *testing.T) {
 				OwnerId: userId,
 			},
 		},
-		// {
-		// 	name:           "editing calendars works with missing name",
-		// 	calendarId:     calendarId,
-		// 	body:           models.CalendarEdit{},
-		// 	expectedStatus: http.StatusOK,
-		// 	expectedRespData: models.Calendar{
-		// 		Id:      calendarId,
-		// 		Name:    "meetings",
-		// 		OwnerId: userId,
-		// 	},
-		// },
+		{
+			name:       "editing non-existent calendars fails",
+			calendarId: randomUUID,
+			body: models.CalendarEdit{
+				Name: Ptr("daily"),
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:       "editing other users calendars fails",
+			calendarId: calendarId2,
+			body: models.CalendarEdit{
+				Name: Ptr("daily"),
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
 	}
 
 	for _, tc := range tests {
@@ -253,10 +265,10 @@ func TestEditCalendar(t *testing.T) {
 }
 
 func TestDeleteCalendar(t *testing.T) {
-	t.Setenv("JWT_KEY", "test_secret_key")
+	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "calendar3")
+	connURI, err := spawnPostgresContainer(t, "deleteCalendar")
 	require.NoError(t, err)
 
 	err = runMigrations(t, connURI)

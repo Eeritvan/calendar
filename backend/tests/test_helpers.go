@@ -97,17 +97,17 @@ func seedCalendar(t *testing.T, ctx context.Context, queries *sqlc.Queries, name
 	return calendar.ID
 }
 
-func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name, password string) uuid.UUID {
+func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name string, ownerID, calendarId uuid.UUID, startTime, endTime time.Time) uuid.UUID {
 	t.Helper()
 
-	hashedPW, err := bcrypt.GenerateFromPassword([]byte(password), 12)
-	require.NoError(t, err)
-
-	user, err := queries.Signup(ctx, sqlc.SignupParams{
-		Name:         name,
-		PasswordHash: string(hashedPW),
+	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{
+		Name:       name,
+		OwnerID:    ownerID,
+		CalendarID: calendarId,
+		StartTime:  startTime,
+		EndTime:    endTime,
 	})
 	require.NoError(t, err)
 
-	return user.ID
+	return event.ID
 }

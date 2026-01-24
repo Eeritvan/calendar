@@ -27,6 +27,7 @@ func (s *Server) GetEvents(c *echo.Context) error {
 	})
 	if err != nil {
 		fmt.Println(err)
+		// TODO: startTime param before endTime params
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
@@ -96,6 +97,8 @@ func (s *Server) AddEvent(c *echo.Context) error {
 	})
 	if err != nil {
 		fmt.Println(err)
+		// TODO: endTime before startTime error message
+		// TODO: non-existent calendar error message
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
@@ -114,7 +117,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 // (PATCH /event/edit/:eventId)
 // TODO: this crashes if the any field is missing (CalendarID and Name).
 func (s *Server) EditEvent(c *echo.Context) error {
-	eventId, err := echo.PathParam[uuid.UUID](c, "eventID")
+	eventId, err := echo.PathParam[uuid.UUID](c, "eventId")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
@@ -153,7 +156,7 @@ func (s *Server) EditEvent(c *echo.Context) error {
 
 // (DELETE /event/delete/:eventId)
 func (s *Server) DeleteEvent(c *echo.Context) error {
-	eventId, err := echo.PathParam[uuid.UUID](c, "eventID")
+	eventId, err := echo.PathParam[uuid.UUID](c, "eventId")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, false)
 	}
