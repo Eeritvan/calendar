@@ -30,8 +30,6 @@ func (s *Server) GetEvents(c *echo.Context) error {
 		EndTime:   params.EndTime,
 	})
 	if err != nil {
-		fmt.Println(err)
-		// TODO: startTime param before endTime params
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
