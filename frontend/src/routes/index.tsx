@@ -1,6 +1,7 @@
 import { API_URL } from '@/constants'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { Activity } from 'react'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -15,20 +16,37 @@ const logout = async () => {
   return res.json()
 }
 
+const fetchMe = async () => {
+  const res = await fetch(`${API_URL}/auth/me`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  })
+  return res.json()
+}
+
 function App() {
+  const { data } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: fetchMe,
+    enabled: false
+  });
+
   const { mutate } = useMutation({
     mutationFn: logout
   })
 
   return (
     <div>
-      <Link to="/auth/login">
-        login
-      </Link>
-      <br />
-      <Link to="/auth/signup">
-        signup
-      </Link>
+      <Activity mode={data ? "hidden" : "visible"}>
+        <Link to="/auth/login">
+          login
+        </Link>
+        <br />
+        <Link to="/auth/signup">
+          signup
+        </Link>
+      </Activity>
       <br />
       <Link to="/calendars/getCalendars">
         getCalendars

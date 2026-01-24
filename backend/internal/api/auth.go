@@ -16,6 +16,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// (GET /me)
+func (s *Server) Me(c *echo.Context) error {
+	// userId := c.Get("userId").(uuid.UUID)
+
+	uuid, _ := uuid.NewRandom()
+	return c.JSON(http.StatusOK, map[string]any{"id": uuid})
+}
+
 // (POST /signup)
 func (s *Server) Signup(c *echo.Context) error {
 	body := new(models.Signup)

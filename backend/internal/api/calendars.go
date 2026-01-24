@@ -63,7 +63,7 @@ func (s *Server) AddCalendar(c *echo.Context) error {
 		OwnerId: queryResp.OwnerID,
 	}
 
-	s.emit(userId, "calendar/post", resp)
+	s.sse.Emit(userId, "calendar/post", resp)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -99,7 +99,7 @@ func (s *Server) EditCalendar(c *echo.Context) error {
 		OwnerId: editedCalendar.OwnerID,
 	}
 
-	s.emit(userId, "calendar/edit", resp)
+	s.sse.Emit(userId, "calendar/edit", resp)
 	return c.JSON(http.StatusOK, resp)
 }
 
@@ -120,6 +120,6 @@ func (s *Server) DeleteCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 
-	s.emit(userId, "calendar/delete", calendarId)
+	s.sse.Emit(userId, "calendar/delete", calendarId)
 	return c.JSON(http.StatusOK, true)
 }

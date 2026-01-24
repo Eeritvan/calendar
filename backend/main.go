@@ -39,14 +39,19 @@ func main() {
 	sseServer := sse.New()
 	sseServer.AutoReplay = false
 
-	server := api.NewServer(queries, pool, sseServer)
+	sseHandler := &stream.SSEHandler{
+		SSEServer:   sseServer,
+		UserClients: make(map[uuid.UUID]map[string]struct{}),
+	}
+
+	server := api.NewServer(queries, pool, sseHandler)
 
 	e := echo.New()
-
-	e.Use(middleware.BodyLimit(524_288)) // 500kb
 	e.Validator = &utils.CustomValidator{
 		Validator: validator.New(validator.WithRequiredStructEnabled()),
 	}
+
+	e.Use(middleware.BodyLimit(524_288)) // 500kb
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000"},
@@ -80,10 +85,6 @@ func main() {
 			return false
 		},
 	}))
-
-	sseHandler := &stream.SSEHandler{
-		SSEServer: sseServer,
-	}
 
 	e.GET("/api/sse", sseHandler.HandleSSE)
 	routes.RegisterRoutes(e, server)

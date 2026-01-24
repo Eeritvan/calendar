@@ -8,6 +8,7 @@ import (
 func authRoutes(e *echo.Group, s *api.Server) {
 	g := e.Group("/auth")
 
+	g.GET("/me", s.Me)
 	g.POST("/signup", s.Signup)
 	g.POST("/login", s.Login)
 	g.POST("/logout", s.Logout)
