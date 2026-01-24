@@ -9,6 +9,8 @@ import (
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
@@ -152,6 +154,9 @@ func TestAddCalendar(t *testing.T) {
 				},
 				JSONBody: bodyJSON,
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 			c.Set("userId", userId)
 
 			_ = server.AddCalendar(c)
@@ -198,14 +203,14 @@ func TestEditCalendar(t *testing.T) {
 	tests := []struct {
 		name             string
 		calendarId       uuid.UUID
-		body             models.CalendarEdit
+		body             models.EditCalendar
 		expectedStatus   int
 		expectedRespData models.Calendar
 	}{
 		{
 			name:       "editing calendar works",
 			calendarId: calendarId,
-			body: models.CalendarEdit{
+			body: models.EditCalendar{
 				Name: Ptr("daily"),
 			},
 			expectedStatus: http.StatusOK,
@@ -218,7 +223,7 @@ func TestEditCalendar(t *testing.T) {
 		{
 			name:       "editing non-existent calendars fails",
 			calendarId: randomUUID,
-			body: models.CalendarEdit{
+			body: models.EditCalendar{
 				Name: Ptr("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -226,7 +231,7 @@ func TestEditCalendar(t *testing.T) {
 		{
 			name:       "editing other users calendars fails",
 			calendarId: calendarId2,
-			body: models.CalendarEdit{
+			body: models.EditCalendar{
 				Name: Ptr("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -249,6 +254,9 @@ func TestEditCalendar(t *testing.T) {
 				},
 				JSONBody: bodyJSON,
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 			c.Set("userId", userId)
 
 			_ = server.EditCalendar(c)

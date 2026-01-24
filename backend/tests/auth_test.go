@@ -3,13 +3,16 @@ package tests
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/utils"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v5"
@@ -46,8 +49,8 @@ func TestSignup(t *testing.T) {
 			name: "user signup works",
 			signup: models.Signup{
 				Name:                 "user 1",
-				Password:             "password1",
-				PasswordConfirmation: "password1",
+				Password:             "password",
+				PasswordConfirmation: "password",
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -69,6 +72,24 @@ func TestSignup(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 		},
+		{
+			name: "signup fails with too short password (< 8 characters)",
+			signup: models.Signup{
+				Name:                 "user 4",
+				Password:             "secret1",
+				PasswordConfirmation: "secret1",
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "signup fails with missing username",
+			signup: models.Signup{
+				Name:                 "",
+				Password:             "password1",
+				PasswordConfirmation: "password1",
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, tc := range tests {
@@ -84,8 +105,12 @@ func TestSignup(t *testing.T) {
 				},
 				JSONBody: userJSON,
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 
 			_ = server.Signup(c)
+			fmt.Println(rec.Body)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
@@ -152,6 +177,9 @@ func TestLogin(t *testing.T) {
 				},
 				JSONBody: userJSON,
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 
 			_ = server.Login(c)
 

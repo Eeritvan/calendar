@@ -17,6 +17,10 @@ func (s *Server) GetEvents(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
+	if err := c.Validate(params); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -49,6 +53,10 @@ func (s *Server) GetEvents(c *echo.Context) error {
 func (s *Server) SearchEvents(c *echo.Context) error {
 	params := new(models.SearchEventsParams)
 	if err := c.Bind(params); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(params); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
@@ -85,6 +93,10 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -96,9 +108,6 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		EndTime:    body.EndTime,
 	})
 	if err != nil {
-		fmt.Println(err)
-		// TODO: endTime before startTime error message
-		// TODO: non-existent calendar error message
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
@@ -123,6 +132,10 @@ func (s *Server) EditEvent(c *echo.Context) error {
 	}
 	body := new(models.EventEdit)
 	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 

@@ -9,9 +9,9 @@ type Calendar struct {
 }
 
 type AddCalendar struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required,max=100"`
 }
 
-type CalendarEdit struct {
-	Name *string `json:"name,omitempty"`
+type EditCalendar struct {
+	Name *string `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
 }

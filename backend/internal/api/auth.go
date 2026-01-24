@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/eeritvan/calendar/internal/models"
@@ -24,8 +23,7 @@ func (s *Server) Signup(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	if body.Password != body.PasswordConfirmation {
-		fmt.Println("passwords did not match")
+	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
@@ -63,6 +61,10 @@ func (s *Server) Signup(c *echo.Context) error {
 func (s *Server) Login(c *echo.Context) error {
 	body := new(models.Login)
 	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
@@ -150,8 +152,11 @@ func (s *Server) TotpEnable(c *echo.Context) error {
 func (s *Server) TotpEnableVerify(c *echo.Context) error {
 	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	JWTkey := os.Getenv("JWT_KEY")
@@ -183,7 +188,7 @@ func (s *Server) TotpEnableVerify(c *echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	isValid := totp.Validate(strconv.Itoa(body.Code), totpSecret)
+	isValid := totp.Validate(body.Code, totpSecret)
 
 	if !isValid {
 		return c.JSON(http.StatusUnauthorized, nil)
@@ -236,6 +241,10 @@ func (s *Server) TotpDisable(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -245,7 +254,7 @@ func (s *Server) TotpDisable(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 
-	isValid := totp.Validate(strconv.Itoa(body.Code), queryResp.Totp)
+	isValid := totp.Validate(body.Code, queryResp.Totp)
 
 	if !isValid {
 		return c.JSON(http.StatusUnauthorized, false)
@@ -273,6 +282,10 @@ func (s *Server) TotpDisable(c *echo.Context) error {
 func (s *Server) TotpAuthenticate(c *echo.Context) error {
 	body := new(models.EnableTotpVerify)
 	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
@@ -309,7 +322,7 @@ func (s *Server) TotpAuthenticate(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, false)
 	}
 
-	isValid := totp.Validate(strconv.Itoa(body.Code), queryResp.Totp)
+	isValid := totp.Validate(body.Code, queryResp.Totp)
 
 	if !isValid {
 		return c.JSON(http.StatusUnauthorized, nil)
@@ -333,8 +346,11 @@ func (s *Server) TotpAuthenticate(c *echo.Context) error {
 func (s *Server) TotpRecovery(c *echo.Context) error {
 	body := new(models.RecoveryCode)
 	if err := c.Bind(&body); err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	JWTkey := os.Getenv("JWT_KEY")

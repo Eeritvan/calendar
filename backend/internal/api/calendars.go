@@ -40,6 +40,10 @@ func (s *Server) AddCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
@@ -67,8 +71,12 @@ func (s *Server) AddCalendar(c *echo.Context) error {
 // TODO: this crashes if the any field is missing (Name).
 func (s *Server) EditCalendar(c *echo.Context) error {
 	calendarId, _ := echo.PathParam[uuid.UUID](c, "calendarId")
-	body := new(models.CalendarEdit)
+	body := new(models.EditCalendar)
 	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 

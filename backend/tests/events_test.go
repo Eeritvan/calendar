@@ -11,6 +11,8 @@ import (
 	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
@@ -114,11 +116,11 @@ func TestGetEvents(t *testing.T) {
 			},
 		},
 		{
-			name:           "error if startTime is after endTime",
+			name:           "return error if startTime is after endTime",
 			userId:         userId1,
 			queryStartTime: timePlusHour.Format(time.RFC3339),
 			queryEndTime:   timeMinusHour.Format(time.RFC3339),
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -135,6 +137,9 @@ func TestGetEvents(t *testing.T) {
 					echo.HeaderContentType: {echo.MIMEApplicationJSON},
 				},
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 			c.Set("userId", tc.userId)
 
 			_ = server.GetEvents(c)
@@ -253,6 +258,9 @@ func TestSearchEvents(t *testing.T) {
 					echo.HeaderContentType: {echo.MIMEApplicationJSON},
 				},
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 			c.Set("userId", tc.userId)
 
 			_ = server.SearchEvents(c)
@@ -339,7 +347,7 @@ func TestAddEvent(t *testing.T) {
 				StartTime:  endTime,
 				EndTime:    startTime,
 			},
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -356,6 +364,9 @@ func TestAddEvent(t *testing.T) {
 				},
 				JSONBody: bodyJSON,
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 			c.Set("userId", userId)
 
 			_ = server.AddEvent(c)
@@ -487,6 +498,9 @@ func TestEditEvent(t *testing.T) {
 				},
 				JSONBody: bodyJSON,
 			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
 			c.Set("userId", userId)
 
 			_ = server.EditEvent(c)

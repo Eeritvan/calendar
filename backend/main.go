@@ -10,7 +10,9 @@ import (
 	"github.com/eeritvan/calendar/internal/routes"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/stream"
+	"github.com/eeritvan/calendar/internal/utils"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -42,6 +44,9 @@ func main() {
 	e := echo.New()
 
 	e.Use(middleware.BodyLimit(524_288)) // 500kb
+	e.Validator = &utils.CustomValidator{
+		Validator: validator.New(validator.WithRequiredStructEnabled()),
+	}
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000"},

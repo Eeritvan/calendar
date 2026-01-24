@@ -5,14 +5,14 @@ type UserCredentials struct {
 }
 
 type Signup struct {
-	Name                 string `json:"name"`
-	Password             string `json:"password"`
-	PasswordConfirmation string `json:"passwordConfirmation"`
+	Name                 string `json:"name" validate:"required,max=100"`
+	Password             string `json:"password" validate:"required,min=8,max=100"`
+	PasswordConfirmation string `json:"passwordConfirmation" validate:"required,eqfield=Password,min=8,max=100"`
 }
 
 type Login struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name     string `json:"name" validate:"required,max=100"`
+	Password string `json:"password" validate:"required,max=100"`
 }
 
 type TotpRequired struct {
@@ -24,8 +24,8 @@ type EnableTotp struct {
 }
 
 type EnableTotpVerify struct {
-	Code              int    `json:"code"`
-	VerificationToken string `json:"verificationToken"`
+	Code              string `json:"code" validate:"required,numeric,len=6"`
+	VerificationToken string `json:"verificationToken" validate:"required,jwt"`
 }
 
 type RecoveryCodes struct {
@@ -33,10 +33,10 @@ type RecoveryCodes struct {
 }
 
 type Totp struct {
-	Code int `json:"code"`
+	Code string `json:"code" validate:"required,numeric,len=6"`
 }
 
 type RecoveryCode struct {
-	RecoveryCode      string `json:"recoveryCode"`
-	VerificationToken string `json:"verificationToken"`
+	RecoveryCode      string `json:"recoveryCode" validate:"required,len=14"`
+	VerificationToken string `json:"verificationToken" validate:"required,jwt"`
 }
