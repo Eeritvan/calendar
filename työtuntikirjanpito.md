@@ -1,5 +1,12 @@
 | day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 24.01.2025 | improved SSE, added SSE to frontend and other fixes                                              | 3    |
+| 24.01.2025 | studied go-playground/validator and added validation for backend endpoints                       | 3    |
+| 23.01.2025 | added tests for calendars, events and auth in backend using testcontainers                       | 5    |
+| 22.01.2025 | moved backend from oapi-codegen to echo v5 + lots of fixes                                       | 4    |
+| 22.01.2025 | studied testcontainers and added skeleton for backend tests                                      | 3    |
+| 21.01.2025 | small fixes and improvements                                                                     | 0.5  |
+| 21.01.2025 | added calendars and events to frontend.                                                          | 2.5  |
 | 20.01.2025 | replaced frontend setup with new improved one                                                    | 3    |
 | 13.01.2025 | replaced the websocket skeleton with server-sent-events                                          | 3    |
 | 13.01.2025 | did some research and figured that server-sent-events probably are better fit for this app       | 2    |

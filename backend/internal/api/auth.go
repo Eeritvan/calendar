@@ -48,7 +48,7 @@ func (s *Server) Signup(c *echo.Context) error {
 
 	if err != nil {
 		fmt.Println(err)
-		return c.JSON(http.StatusConflict, nil) // check this out
+		return c.JSON(http.StatusConflict, nil) // TODO: checking
 	}
 
 	jwtToken, err := utils.GenerateJWT(queryResp.ID.String())
