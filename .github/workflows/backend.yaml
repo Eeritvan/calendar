@@ -8,7 +8,22 @@ on:
       - backend/**
 
 jobs:
+  test:
+    defaults:
+      run:
+        working-directory: ./backend
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.6
+      - name: run tests
+        run: go test ./tests
+
   build-and-push:
+    needs: [test]
     runs-on: ubuntu-24.04
     env:
       IMAGE_NAME: ghcr.io/eeritvan/calendar-backend
