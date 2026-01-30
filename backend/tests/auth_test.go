@@ -7,13 +7,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/models"
-	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/utils"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/echotest"
@@ -31,12 +28,7 @@ func TestSignup(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	seedUser(t, ctx, queries, "user 3", "password 1")
 
@@ -132,12 +124,7 @@ func TestLogin(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	seedUser(t, ctx, queries, "user 1", "password 1")
 

@@ -49,9 +49,6 @@ func (h *SSEHandler) HandleSSE(c *echo.Context) error {
 }
 
 func (h *SSEHandler) Emit(userID uuid.UUID, action string, data any) {
-	if h.SSEServer == nil || h.UserClients == nil {
-		return
-	}
 	var payload []byte
 	var err error
 

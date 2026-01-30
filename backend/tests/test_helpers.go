@@ -6,8 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/stream"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
@@ -110,4 +113,23 @@ func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name st
 	require.NoError(t, err)
 
 	return event.ID
+}
+
+func setupTestServer(t *testing.T, ctx context.Context, connURI string) (*api.Server, *sqlc.Queries) {
+	t.Helper()
+
+	pool, err := pgxpool.New(ctx, connURI)
+	require.NoError(t, err)
+	t.Cleanup(pool.Close)
+
+	queries := sqlc.New(pool)
+
+	sseHandler := &stream.SSEHandler{
+		SSEServer:   nil,
+		UserClients: make(map[uuid.UUID]map[string]struct{}),
+	}
+
+	server := api.NewServer(queries, pool, sseHandler)
+
+	return server, queries
 }

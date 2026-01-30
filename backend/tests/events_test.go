@@ -8,13 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/models"
-	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/echotest"
 	"github.com/stretchr/testify/assert"
@@ -31,12 +28,7 @@ func TestGetEvents(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	timeNow := time.Now().Truncate(time.Microsecond)
 	timePlusHour := time.Now().Add(time.Hour).Truncate(time.Microsecond)
@@ -173,12 +165,7 @@ func TestSearchEvents(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().Truncate(time.Microsecond)
 	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)
@@ -290,12 +277,7 @@ func TestAddEvent(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	userId := seedUser(t, ctx, queries, "eventUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
@@ -396,12 +378,7 @@ func TestEditEvent(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().Truncate(time.Microsecond)
 	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)
@@ -526,12 +503,7 @@ func TestDeleteEvent(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().Truncate(time.Microsecond)
 	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)

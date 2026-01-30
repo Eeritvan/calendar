@@ -6,13 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/eeritvan/calendar/internal/api"
 	"github.com/eeritvan/calendar/internal/models"
-	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/echotest"
 	"github.com/stretchr/testify/assert"
@@ -29,12 +26,7 @@ func TestGetCalendars(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	userId1 := seedUser(t, ctx, queries, "calendarUser", "password")
 	seedCalendar(t, ctx, queries, "meetings", userId1)
@@ -106,12 +98,7 @@ func TestAddCalendar(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	userId := seedUser(t, ctx, queries, "calendarUser", "password")
 
@@ -184,12 +171,7 @@ func TestEditCalendar(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	userId := seedUser(t, ctx, queries, "calendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
@@ -282,12 +264,7 @@ func TestDeleteCalendar(t *testing.T) {
 	err = runMigrations(t, connURI)
 	require.NoError(t, err)
 
-	pool, err := pgxpool.New(ctx, connURI)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
-
-	queries := sqlc.New(pool)
-	server := api.NewServer(queries, pool, nil)
+	server, queries := setupTestServer(t, ctx, connURI)
 
 	userId := seedUser(t, ctx, queries, "calendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
