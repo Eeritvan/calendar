@@ -104,6 +104,7 @@ func (s *Server) EditCalendar(c *echo.Context) error {
 }
 
 // (DELETE /calendar/delete/:calendarId)
+
 func (s *Server) DeleteCalendar(c *echo.Context) error {
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
@@ -117,9 +118,9 @@ func (s *Server) DeleteCalendar(c *echo.Context) error {
 		OwnerID: userId,
 	}); err != nil {
 		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, false)
+		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	s.sse.Emit(userId, "calendar/delete", calendarId)
-	return c.JSON(http.StatusOK, true)
+	return c.JSON(http.StatusOK, nil)
 }

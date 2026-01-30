@@ -179,9 +179,9 @@ func (s *Server) DeleteEvent(c *echo.Context) error {
 		OwnerID: userId,
 	}); err != nil {
 		fmt.Println(err)
-		return c.JSON(http.StatusInternalServerError, false)
+		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	s.sse.Emit(userId, "event/delete", eventId)
-	return c.JSON(http.StatusOK, true)
+	return c.JSON(http.StatusOK, nil)
 }
