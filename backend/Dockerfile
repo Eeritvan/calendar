@@ -1,13 +1,18 @@
-FROM golang:1.25.6-alpine3.23 AS build
+ARG GO_VERSION=1.25.6
+ARG ALPINE_VERSION=3.23
+
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS build
 
 WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
 COPY . .
 
 RUN adduser -D -H -g '' -u 10001 nonroot
 
-RUN go mod download && \
-    go mod verify && \
-    GOOS=linux GOARCH=amd64 GOEXPERIMENT=jsonv2 GOEXPERIMENT=greenteagc go build -ldflags "-w -s -extldflags '-static -Wl,--strip-all,--gc-sections'" -o server
+RUN GOOS=linux GOARCH=amd64 GOEXPERIMENT=jsonv2 GOEXPERIMENT=greenteagc go build -ldflags "-w -s -extldflags '-static -Wl,--strip-all,--gc-sections'" -o server
 
 
 FROM scratch
