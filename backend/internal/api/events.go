@@ -39,8 +39,8 @@ func (s *Server) GetEvents(c *echo.Context) error {
 			Id:         event.ID,
 			CalendarId: event.CalendarID,
 			Name:       event.Name,
-			StartTime:  event.Time.Lower.Time,
-			EndTime:    event.Time.Upper.Time,
+			StartTime:  event.Time.Lower.Time.UTC(),
+			EndTime:    event.Time.Upper.Time.UTC(),
 		}
 	}
 
@@ -76,8 +76,8 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 			Id:         event.ID,
 			CalendarId: event.CalendarID,
 			Name:       event.Name,
-			StartTime:  event.Time.Lower.Time,
-			EndTime:    event.Time.Upper.Time,
+			StartTime:  event.Time.Lower.Time.UTC(),
+			EndTime:    event.Time.Upper.Time.UTC(),
 		}
 	}
 
@@ -113,8 +113,8 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		Id:         queryResp.ID,
 		CalendarId: queryResp.CalendarID,
 		Name:       queryResp.Name,
-		StartTime:  queryResp.Time.Lower.Time,
-		EndTime:    queryResp.Time.Upper.Time,
+		StartTime:  queryResp.Time.Lower.Time.UTC(),
+		EndTime:    queryResp.Time.Upper.Time.UTC(),
 	}
 
 	s.sse.Emit(userId, "event/post", resp)
@@ -157,8 +157,8 @@ func (s *Server) EditEvent(c *echo.Context) error {
 		Id:         editedEvent.ID,
 		CalendarId: editedEvent.CalendarID,
 		Name:       editedEvent.Name,
-		StartTime:  editedEvent.Time.Lower.Time,
-		EndTime:    editedEvent.Time.Upper.Time,
+		StartTime:  editedEvent.Time.Lower.Time.UTC(),
+		EndTime:    editedEvent.Time.Upper.Time.UTC(),
 	}
 
 	s.sse.Emit(userId, "event/edit", resp)

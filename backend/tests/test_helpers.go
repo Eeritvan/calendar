@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"database/sql"
+	"os"
 	"testing"
 	"time"
 
@@ -19,6 +20,12 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func TestMain(m *testing.M) {
+	os.Setenv("TZ", "UTC")
+	os.Setenv("JWT_KEY", "test_secret")
+	os.Exit(m.Run())
+}
 
 func Ptr[T any](v T) *T {
 	return &v

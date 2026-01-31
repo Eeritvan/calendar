@@ -30,9 +30,9 @@ func TestGetEvents(t *testing.T) {
 
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	timeNow := time.Now().Truncate(time.Microsecond)
-	timePlusHour := time.Now().Add(time.Hour).Truncate(time.Microsecond)
-	timeMinusHour := time.Now().Add(-1 * time.Hour).Truncate(time.Microsecond)
+	timeNow := time.Now().UTC().Truncate(time.Microsecond)
+	timePlusHour := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
+	timeMinusHour := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Microsecond)
 
 	userId1 := seedUser(t, ctx, queries, "user1", "password1")
 	calendarId1 := seedCalendar(t, ctx, queries, "meetings", userId1)
@@ -167,8 +167,8 @@ func TestSearchEvents(t *testing.T) {
 
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	startTime := time.Now().Truncate(time.Microsecond)
-	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)
+	startTime := time.Now().UTC().Truncate(time.Microsecond)
+	endTime := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
 
 	userId1 := seedUser(t, ctx, queries, "user1", "password1")
 	calendarId1 := seedCalendar(t, ctx, queries, "meetings", userId1)
@@ -282,8 +282,8 @@ func TestAddEvent(t *testing.T) {
 	userId := seedUser(t, ctx, queries, "eventUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
 
-	startTime := time.Now().Truncate(time.Microsecond)
-	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)
+	startTime := time.Now().UTC().Truncate(time.Microsecond)
+	endTime := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
 
 	randomUUID, err := uuid.NewRandom()
 	require.NoError(t, err)
@@ -380,11 +380,11 @@ func TestEditEvent(t *testing.T) {
 
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	startTime := time.Now().Truncate(time.Microsecond)
-	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)
+	startTime := time.Now().UTC().Truncate(time.Microsecond)
+	endTime := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
 
-	editedStartTime := time.Now().Add(time.Hour * 24).Truncate(time.Microsecond)
-	editedEndTime := time.Now().Add(time.Hour * 48).Truncate(time.Microsecond)
+	editedStartTime := time.Now().UTC().Add(time.Hour * 24).Truncate(time.Microsecond)
+	editedEndTime := time.Now().UTC().Add(time.Hour * 48).Truncate(time.Microsecond)
 
 	userId := seedUser(t, ctx, queries, "editEventUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
@@ -461,7 +461,7 @@ func TestEditEvent(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+			// t.Parallel()
 
 			bodyJSON, err := json.Marshal(tc.body)
 			require.NoError(t, err)
@@ -505,8 +505,8 @@ func TestDeleteEvent(t *testing.T) {
 
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	startTime := time.Now().Truncate(time.Microsecond)
-	endTime := time.Now().Add(time.Hour).Truncate(time.Microsecond)
+	startTime := time.Now().UTC().Truncate(time.Microsecond)
+	endTime := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
 
 	userId := seedUser(t, ctx, queries, "deleteCalendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)

@@ -19,7 +19,7 @@ import (
 )
 
 func TestSignup(t *testing.T) {
-	t.Setenv("JWT_KEY", "test_secret_key")
+	t.Parallel()
 
 	ctx := context.Background()
 	connURI, err := spawnPostgresContainer(t, "users")
@@ -115,7 +115,7 @@ func TestSignup(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	t.Setenv("JWT_KEY", "test_secret_key")
+	t.Parallel()
 
 	ctx := context.Background()
 	connURI, err := spawnPostgresContainer(t, "users2")
