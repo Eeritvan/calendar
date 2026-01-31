@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/utils"
@@ -30,7 +31,7 @@ func TestSignup(t *testing.T) {
 
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	seedUser(t, ctx, queries, "user 3", "password 1")
+	seedUser(t, ctx, queries, "signupUser 3", "password 1")
 
 	tests := []struct {
 		name           string
@@ -40,7 +41,7 @@ func TestSignup(t *testing.T) {
 		{
 			name: "user signup works",
 			signup: models.Signup{
-				Name:                 "user 1",
+				Name:                 "signupUser 1",
 				Password:             "password",
 				PasswordConfirmation: "password",
 			},
@@ -49,8 +50,8 @@ func TestSignup(t *testing.T) {
 		{
 			name: "signup fails with mismatched passwords",
 			signup: models.Signup{
-				Name:                 "user 2",
-				Password:             "password1",
+				Name:                 "signupUser 2",
+				Password:             "password",
 				PasswordConfirmation: "wrong",
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -58,16 +59,16 @@ func TestSignup(t *testing.T) {
 		{
 			name: "signup fails with when name is already in use",
 			signup: models.Signup{
-				Name:                 "user 3",
-				Password:             "password1",
-				PasswordConfirmation: "password1",
+				Name:                 "signupUser 3",
+				Password:             "password",
+				PasswordConfirmation: "password",
 			},
 			expectedStatus: http.StatusConflict,
 		},
 		{
 			name: "signup fails with too short password (< 8 characters)",
 			signup: models.Signup{
-				Name:                 "user 4",
+				Name:                 "signupUser 4",
 				Password:             "secret1",
 				PasswordConfirmation: "secret1",
 			},
@@ -77,8 +78,8 @@ func TestSignup(t *testing.T) {
 			name: "signup fails with missing username",
 			signup: models.Signup{
 				Name:                 "",
-				Password:             "password1",
-				PasswordConfirmation: "password1",
+				Password:             "password",
+				PasswordConfirmation: "password",
 			},
 			expectedStatus: http.StatusBadRequest,
 		},
@@ -118,7 +119,7 @@ func TestLogin(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "users2")
+	connURI, err := spawnPostgresContainer(t, "users")
 	require.NoError(t, err)
 
 	err = runMigrations(t, connURI)
@@ -126,7 +127,7 @@ func TestLogin(t *testing.T) {
 
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	seedUser(t, ctx, queries, "user 1", "password 1")
+	seedUser(t, ctx, queries, "loginUser1", "password 1")
 
 	tests := []struct {
 		name           string
@@ -136,7 +137,7 @@ func TestLogin(t *testing.T) {
 		{
 			name: "user login works",
 			login: models.Login{
-				Name:     "user 1",
+				Name:     "loginUser1",
 				Password: "password 1",
 			},
 			expectedStatus: http.StatusOK,
@@ -144,7 +145,7 @@ func TestLogin(t *testing.T) {
 		{
 			name: "login fails with incorrect password",
 			login: models.Login{
-				Name:     "user 1",
+				Name:     "loginUser1",
 				Password: "password 2",
 			},
 			expectedStatus: http.StatusUnauthorized,
@@ -175,6 +176,66 @@ func TestLogin(t *testing.T) {
 			if tc.expectedStatus == http.StatusOK {
 				cookies := rec.Result().Cookies()
 				assert.NotEmpty(t, cookies)
+			}
+		})
+	}
+}
+
+func TestLogout(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	connURI, err := spawnPostgresContainer(t, "users")
+	require.NoError(t, err)
+
+	err = runMigrations(t, connURI)
+	require.NoError(t, err)
+
+	server, _ := setupTestServer(t, ctx, connURI)
+
+	tests := []struct {
+		name           string
+		expectedStatus int
+	}{
+		{
+			name:           "logout works and clears the cookie",
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			c, rec := echotest.ContextConfig{
+				Headers: map[string][]string{
+					echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				},
+			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
+
+			_ = server.Logout(c)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+			if tc.expectedStatus == http.StatusOK {
+				cookies := rec.Result().Cookies()
+				assert.NotEmpty(t, cookies)
+
+				var accessTokenCookie *http.Cookie
+				for _, cookie := range cookies {
+					if cookie.Name == "access_token" {
+						accessTokenCookie = cookie
+						break
+					}
+				}
+
+				require.NotNil(t, accessTokenCookie, "access_token cookie should be present")
+				assert.Equal(t, "", accessTokenCookie.Value, "cookie value should be empty")
+				assert.Equal(t, -1, accessTokenCookie.MaxAge, "MaxAge should be -1")
+				assert.True(t, accessTokenCookie.Expires.Before(time.Now().UTC()), "Expires should be in the past")
 			}
 		})
 	}
