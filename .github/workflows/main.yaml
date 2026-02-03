@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - backend/**
+      - frontend/**
 
 env:
   GO_VERSION: 1.25.6

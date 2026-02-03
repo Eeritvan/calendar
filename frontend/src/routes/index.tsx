@@ -1,7 +1,9 @@
+import { API_URL } from '@/constants'
+import Calendar from '@/features/calendar/calendar'
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Activity } from 'react'
-import { API_URL } from '@/constants'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -26,19 +28,27 @@ const fetchMe = async () => {
 }
 
 function App() {
-  const { data } = useQuery({
+  const { isLoading, data } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: fetchMe,
     enabled: false
   });
 
+  console.log(data)
+
   const { mutate } = useMutation({
     mutationFn: logout
   })
 
+  useKeyboardShortcut({
+    key: "i",
+    ctrl: true,
+    onKeyPressed: () => console.log("Enter was pressed!"),
+  })
+
   return (
     <div>
-      <Activity mode={data ? "hidden" : "visible"}>
+      <Activity mode={isLoading ? "hidden" : "visible"}>
         <Link to="/auth/login">
           login
         </Link>
@@ -67,6 +77,7 @@ function App() {
       <button onClick={() => mutate()}>
         logout
       </button>
+      <Calendar />
     </div>
   )
 }
