@@ -23,13 +23,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: 1.25.6
+          go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: backend/go.sum
       - name: run tests
         run: go test ./tests
 
   build-and-push:
-    needs: [test]
+    needs: [test-backend]
     runs-on: ubuntu-24.04
     env:
       IMAGE_NAME: ghcr.io/eeritvan/calendar
