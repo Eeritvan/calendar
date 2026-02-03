@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"log"
+	"mime"
 	"os"
 
 	"github.com/eeritvan/calendar/internal/api"
@@ -26,6 +27,12 @@ import (
 
 //go:embed "dist"
 var dist embed.FS
+
+func init() {
+	_ = mime.AddExtensionType(".css", "text/css; charset=utf-8")
+	_ = mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
+	_ = mime.AddExtensionType(".html", "text/html; charset=utf-8")
+}
 
 func main() {
 	if err := godotenv.Load(".env.local"); err != nil {
