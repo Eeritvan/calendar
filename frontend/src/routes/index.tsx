@@ -1,7 +1,7 @@
-import { API_URL } from '@/constants'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Activity } from 'react'
+import { API_URL } from '@/constants'
 
 export const Route = createFileRoute('/')({
   component: App,

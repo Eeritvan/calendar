@@ -1,7 +1,7 @@
-import { API_URL } from '@/constants';
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/auth/signup')({
   component: RouteComponent,

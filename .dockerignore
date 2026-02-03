@@ -1,0 +1,23 @@
+# frontend
+frontend/eslint.config.js
+frontend/.cta.json
+frontend/node_modules/
+frontend/.tanstack/
+
+# backend
+backend/Makefile
+backend/sqlc.yaml
+backend/calendar
+backend/tmp/
+backend/migrations/
+backend/queries/
+backend/tests/
+
+# shared
+työtuntikirjanpito.md
+.dockerignore
+Dockerfile
+**/README.md
+**/.gitignore
+**/.env*
+**/dist/

@@ -2,9 +2,10 @@ import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
+import {  useQuery } from '@tanstack/react-query'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+import type {QueryClient} from '@tanstack/react-query';
 
-import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { useSse } from '@/hooks/useSse'
 import { API_URL } from '@/constants'
 

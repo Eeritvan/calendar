@@ -1,5 +1,5 @@
-import { API_URL } from "@/constants";
 import { useEffect } from "react"
+import { API_URL } from "@/constants";
 
 export const useSse = (connId: string) => {
   useEffect(() => {
@@ -19,33 +19,33 @@ export const useSse = (connId: string) => {
 
     // calendars
     eventSource.addEventListener("calendar/post", (e) => {
-      const data = JSON.parse((e as MessageEvent).data)
+      const data = JSON.parse((e).data)
       console.log("calendar/post", data);
     });
 
     eventSource.addEventListener("calendar/edit", (e) => {
-      const data = JSON.parse((e as MessageEvent).data)
+      const data = JSON.parse((e).data)
       console.log("calendar/edit", data);
     });
 
     eventSource.addEventListener("calendar/delete", (e) => {
-      const data = (e as MessageEvent).data
+      const data = (e).data
       console.log("calendar/delete", data);
     });
 
     // events
     eventSource.addEventListener("event/post", (e) => {
-      const data = JSON.parse((e as MessageEvent).data)
+      const data = JSON.parse((e).data)
       console.log("event/post", data);
     });
 
     eventSource.addEventListener("event/edit", (e) => {
-      const data = JSON.parse((e as MessageEvent).data)
+      const data = JSON.parse((e).data)
       console.log("event/edit", data);
     });
 
     eventSource.addEventListener("event/delete", (e) => {
-      const data = (e as MessageEvent).data
+      const data = (e).data
       console.log("event/delete", data);
     });
 

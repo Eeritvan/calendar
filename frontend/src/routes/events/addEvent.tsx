@@ -1,8 +1,8 @@
-import { API_URL } from '@/constants';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import type {UUID} from 'node:crypto';
+import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/events/addEvent')({
   component: RouteComponent,

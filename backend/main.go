@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"log"
 	"os"
@@ -22,6 +23,9 @@ import (
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/r3labs/sse/v2"
 )
+
+//go:embed "dist"
+var dist embed.FS
 
 func main() {
 	if err := godotenv.Load(".env.local"); err != nil {
@@ -79,7 +83,7 @@ func main() {
 		},
 		Skipper: func(c *echo.Context) bool {
 			switch c.Path() {
-			case "/api/auth/signup", "/api/auth/login", "/api/auth/totp/authenticate", "/api/auth/totp/recovery":
+			case "/*", "/api/auth/signup", "/api/auth/login", "/api/auth/totp/authenticate", "/api/auth/totp/recovery":
 				return true
 			}
 			return false
@@ -88,6 +92,13 @@ func main() {
 
 	e.GET("/api/sse", sseHandler.HandleSSE)
 	routes.RegisterRoutes(e, server)
+
+	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		HTML5:      true,
+		Root:       "dist",
+		Filesystem: dist,
+	}))
+	e.StaticFS("/", echo.MustSubFS(dist, "dist"))
 
 	port := os.Getenv("PORT")
 	log.Fatal(e.Start("0.0.0.0:" + port))

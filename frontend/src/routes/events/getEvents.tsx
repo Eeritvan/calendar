@@ -1,7 +1,7 @@
-import { API_URL } from '@/constants';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import type { UUID } from 'node:crypto';
+import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/events/getEvents')({
   component: RouteComponent,
@@ -59,7 +59,7 @@ function RouteComponent() {
     <ul>
       {events?.map(x => (
         <li>
-          {x.name} {x.id} {x.startTime} {x.endTime}
+          {x.name} {x.id} {x.startTime.toString()} {x.endTime.toString()}
           <button onClick={() => mutate(x.id)}>
             delet
           </button>
