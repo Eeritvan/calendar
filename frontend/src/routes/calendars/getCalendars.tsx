@@ -1,17 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import type { UUID } from 'node:crypto';
+import type { Calendar } from '@/types';
 import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/calendars/getCalendars')({
   component: RouteComponent,
 })
-
-interface Calendar {
-  id: UUID;
-  name: string;
-  ownerId: UUID;
-}
 
 const fetchCalendars = async (): Promise<Array<Calendar>> => {
   const res = await fetch(`${API_URL}/calendar/getCalendars`, {

@@ -1,20 +1,12 @@
 import { useForm } from '@tanstack/react-form'
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import type { Login, UserCredentials } from '@/types';
 import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/auth/login')({
   component: RouteComponent,
 })
-
-interface Login {
-  name: string;
-  password: string;
-}
-
-interface UserCredentials {
-  name: string;
-}
 
 const login = async (body: Login): Promise<UserCredentials> => {
   const res = await fetch(`${API_URL}/auth/login`, {

@@ -1,18 +1,12 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import type { UUID } from 'node:crypto';
+import type { Calendar } from '@/types';
 import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/calendars/addCalendar')({
   component: RouteComponent,
 })
-
-interface Calendar {
-  id: UUID;
-  name: string;
-  ownerId: UUID;
-}
 
 type AddCalendar = Omit<Calendar, 'id' | 'ownerId'>
 

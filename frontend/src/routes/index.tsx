@@ -1,9 +1,9 @@
+import { Activity } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { API_URL } from '@/constants'
 import Calendar from '@/features/calendar/calendar'
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { Activity } from 'react'
 
 export const Route = createFileRoute('/')({
   component: App,

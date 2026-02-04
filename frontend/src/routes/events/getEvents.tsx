@@ -1,19 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import type { UUID } from 'node:crypto';
+import type { Event } from '@/types';
 import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/events/getEvents')({
   component: RouteComponent,
 })
-
-interface Event {
-  id: UUID
-  name: string
-  calendarId: UUID
-  startTime: Date
-  endTime: Date
-}
 
 const fetchEvents = async (startTime: Date, endTime: Date): Promise<Array<Event>> => {
   const baseUrl = `${API_URL}/getEvents`;

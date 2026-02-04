@@ -1,33 +1,15 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import type {UUID} from 'node:crypto';
+import type { UUID } from 'node:crypto';
+import type { Calendar, Event } from '@/types';
 import { API_URL } from '@/constants';
 
 export const Route = createFileRoute('/events/addEvent')({
   component: RouteComponent,
 })
 
-interface AddEvent {
-  name: string;
-  calendarId: UUID;
-  startTime: Date;
-  endTime: Date;
-}
-
-interface Event {
-  id: UUID;
-  name: string;
-  calendarId: UUID;
-  startTime: Date;
-  endTime: Date;
-}
-
-interface Calendar {
-  id: UUID;
-  name: string;
-  ownerId: UUID;
-}
+type AddEvent = Omit<Event, 'id'>
 
 const addEvent = async (body: AddEvent): Promise<Event> => {
   const res = await fetch(`${API_URL}/event/addEvent`, {
@@ -40,7 +22,7 @@ const addEvent = async (body: AddEvent): Promise<Event> => {
 }
 
 const fetchCalendars = async (): Promise<Array<Calendar>> => {
-const res = await fetch(`${API_URL}/calendar/getCalendars`, {
+  const res = await fetch(`${API_URL}/calendar/getCalendars`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
