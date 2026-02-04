@@ -8,25 +8,24 @@ GOTEST=$(GOCMD) test
 BINARY_NAME=calendar
 MIGRATIONS_ORIGIN=migrations
 DB_DRIVER=postgres
-DOCKER_IMAGE=calendar-backend
 
 .PHONY: start build test clean generate
 
 # dev
-dev air:
+dev air: frontend_build
 	air
 
 start: build
 	./$(BINARY_NAME)
 
-build: clean
+build: clean frontend_build
 	GOEXPERIMENT=jsonv2 GOEXPERIMENT=greenteagc $(GOBUILD) -o $(BINARY_NAME)
 
 clean:
-	rm -f $(binary_name) && rm -rf tmp
+	rm -f $(binary_name) && rm -rf tmp && rm -rf dist
 
-build-docker:
-	docker buildx build -f Dockerfile . -t $(DOCKER_IMAGE)
+frontend_build:
+	cd ../frontend && npm run build && rm -rf ../dist && mv dist ../backend/dist
 
 # sqlc
 sqlc: sqlc-vet
