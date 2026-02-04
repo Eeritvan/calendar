@@ -2,8 +2,12 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
+	"time"
 
+	ics "github.com/arran4/golang-ical"
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/google/uuid"
@@ -183,5 +187,72 @@ func (s *Server) DeleteEvent(c *echo.Context) error {
 	}
 
 	s.sse.Emit(userId, "event/delete", eventId)
+	return c.JSON(http.StatusOK, nil)
+}
+
+func parseDate(dateStr string, layouts []string) (time.Time, error) {
+	for _, layout := range layouts {
+		t, err := time.Parse(layout, dateStr)
+		if err == nil {
+			return t, nil
+		}
+		fmt.Printf("errr parsing time %q as %q: %v\n", dateStr, layout, err)
+	}
+	return time.Time{}, fmt.Errorf("unsupported date format: %s", dateStr)
+}
+
+// (POST /event/import)
+func (s *Server) ImportEvents(c *echo.Context) error {
+	layouts := []string{
+		"20060102T150405Z", // 20201217T111500Z
+		"20060102T150405",  // 20260206T140000
+		"20060102T1504",    // 20240118T0930
+		"20060102",         // 20210920
+		"2006-01-02 15:04:05",
+	}
+
+	contentType := c.Request().Header.Get(echo.HeaderContentType)
+	if !strings.HasPrefix(contentType, "text/calendar") {
+		return c.JSON(http.StatusUnsupportedMediaType, nil)
+	}
+
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	icsContent := string(body)
+
+	cal, err := ics.ParseCalendar(strings.NewReader(icsContent))
+	ruuid, _ := uuid.NewRandom()
+
+	events := make([]models.AddEvent, len(cal.Events()))
+	for i, ev := range cal.Events() {
+		startStr := ev.GetProperty(ics.ComponentPropertyDtStart).Value
+		parsedStart, err := parseDate(startStr, layouts)
+		if err != nil {
+			fmt.Println(err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+
+		endStr := ev.GetProperty(ics.ComponentPropertyDtEnd).Value
+		parsedEnd, err := parseDate(endStr, layouts)
+		if err != nil {
+			fmt.Println(err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+
+		event := models.AddEvent{
+			CalendarId: ruuid,
+			Name:       ev.GetProperty(ics.ComponentPropertySummary).Value,
+			StartTime:  parsedStart,
+			EndTime:    parsedEnd,
+		}
+
+		events[i] = event
+	}
+
+	fmt.Println(events)
+
 	return c.JSON(http.StatusOK, nil)
 }

@@ -13,4 +13,5 @@ func eventRoutes(e *echo.Group, s *api.Server) {
 	g.POST("/addEvent", s.AddEvent)
 	g.PATCH("/edit/:eventId", s.EditEvent)
 	g.DELETE("/delete/:eventId", s.DeleteEvent)
+	g.POST("/import", s.ImportEvents)
 }
