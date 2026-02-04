@@ -25,7 +25,7 @@ clean:
 	rm -f $(binary_name) && rm -rf tmp && rm -rf dist
 
 frontend_build:
-	cd ../frontend && npm run build && rm -rf ../dist && mv dist ../backend/dist
+	cd ../frontend && npm run build && rm -rf ../backend/dist && mv dist ../backend/dist
 
 # sqlc
 sqlc: sqlc-vet
