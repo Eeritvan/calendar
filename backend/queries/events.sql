@@ -1,23 +1,36 @@
 -- name: GetEvents :many
-SELECT e.id, e.calendar_id, e.name, e.time
+SELECT e.id, e.calendar_id, e.name, e.time, l.name as location_name, l.address as address, l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
+JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
   AND time && tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)');
 
 -- name: SearchEvents :many
-SELECT e.id, e.calendar_id, e.name, e.time
+SELECT e.id, e.calendar_id, e.name, e.time, l.name as location_name, l.address as address, l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
+JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
   AND e.name LIKE '%' || sqlc.arg('name') || '%';
 
 -- name: AddEvent :one
-INSERT INTO Events (calendar_id, name, time)
-SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)')
-FROM Calendars
-WHERE id = $1 AND owner_id = $3
-RETURNING id, calendar_id, name, time;
+WITH location_insert AS (
+    INSERT INTO Locations (name, address, point)
+    VALUES (@location_name::text, @address::text, POINT(@longitude, @latitude))
+    ON CONFLICT(name, address) DO UPDATE SET name = EXCLUDED.name
+    RETURNING id, name, address, point
+),
+event_insert AS (
+    INSERT INTO Events (calendar_id, name, time, location_id)
+    SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)'), (SELECT id FROM location_insert)
+    FROM Calendars
+    WHERE id = $1 AND owner_id = $3
+    RETURNING id, calendar_id, name, time, location_id
+)
+SELECT e.id, e.calendar_id, e.name, e.time, e.location_id, l.name as location_name, l.address as address, l.point as point
+FROM event_insert e
+JOIN location_insert l ON e.location_id = l.id;
 
 -- name: EditEvent :one
 UPDATE Events e

@@ -6,19 +6,35 @@ import (
 	"github.com/google/uuid"
 )
 
+type Location struct {
+	Name      string  `json:"name"`
+	Address   string  `json:"address"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
 type Event struct {
 	Id         uuid.UUID `json:"id"`
 	CalendarId uuid.UUID `json:"calendarId"`
 	Name       string    `json:"name"`
 	StartTime  time.Time `json:"startTime"`
 	EndTime    time.Time `json:"endTime"`
+	Location   *Location `json:"location"`
+}
+
+type LocationInput struct {
+	Name      string  `json:"name" validate:"max=100"`
+	Address   string  `json:"address" validate:"max=100"`
+	Latitude  float64 `json:"latitude" validate:"latitude"`
+	Longitude float64 `json:"longitude" validate:"longitude"`
 }
 
 type AddEvent struct {
-	Name       string    `json:"name" validate:"required,max=100"`
-	CalendarId uuid.UUID `json:"calendarId" validate:"required,uuid"`
-	StartTime  time.Time `json:"startTime" validate:"required"`
-	EndTime    time.Time `json:"endTime" validate:"required,gtfield=StartTime"`
+	CalendarId uuid.UUID     `json:"calendarId" validate:"required,uuid"`
+	Name       string        `json:"name" validate:"required,max=100"`
+	StartTime  time.Time     `json:"startTime" validate:"required"`
+	EndTime    time.Time     `json:"endTime" validate:"required,gtfield=StartTime"`
+	Location   LocationInput `json:"location" validate:"required"`
 }
 
 type EventEdit struct {

@@ -10,38 +10,73 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addEvent = `-- name: AddEvent :one
-INSERT INTO Events (calendar_id, name, time)
-SELECT $1, $2, tstzrange($4::timestamptz, $5::timestamptz, '[)')
-FROM Calendars
-WHERE id = $1 AND owner_id = $3
-RETURNING id, calendar_id, name, time
+WITH location_insert AS (
+    INSERT INTO Locations (name, address, point)
+    VALUES ($4::text, $5::text, POINT($6, $7))
+    ON CONFLICT(name, address) DO UPDATE SET name = EXCLUDED.name
+    RETURNING id, name, address, point
+),
+event_insert AS (
+    INSERT INTO Events (calendar_id, name, time, location_id)
+    SELECT $1, $2, tstzrange($8::timestamptz, $9::timestamptz, '[)'), (SELECT id FROM location_insert)
+    FROM Calendars
+    WHERE id = $1 AND owner_id = $3
+    RETURNING id, calendar_id, name, time, location_id
+)
+SELECT e.id, e.calendar_id, e.name, e.time, e.location_id, l.name as location_name, l.address as address, l.point as point
+FROM event_insert e
+JOIN location_insert l ON e.location_id = l.id
 `
 
 type AddEventParams struct {
-	CalendarID uuid.UUID
-	Name       string
-	OwnerID    uuid.UUID
-	StartTime  time.Time
-	EndTime    time.Time
+	CalendarID   uuid.UUID
+	Name         string
+	OwnerID      uuid.UUID
+	LocationName string
+	Address      string
+	Longitude    float64
+	Latitude     float64
+	StartTime    time.Time
+	EndTime      time.Time
 }
 
-func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (Event, error) {
+type AddEventRow struct {
+	ID           uuid.UUID
+	CalendarID   uuid.UUID
+	Name         string
+	Time         pgtype.Range[pgtype.Timestamptz]
+	LocationID   uuid.UUID
+	LocationName string
+	Address      string
+	Point        pgtype.Point
+}
+
+func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow, error) {
 	row := q.db.QueryRow(ctx, addEvent,
 		arg.CalendarID,
 		arg.Name,
 		arg.OwnerID,
+		arg.LocationName,
+		arg.Address,
+		arg.Longitude,
+		arg.Latitude,
 		arg.StartTime,
 		arg.EndTime,
 	)
-	var i Event
+	var i AddEventRow
 	err := row.Scan(
 		&i.ID,
 		&i.CalendarID,
 		&i.Name,
 		&i.Time,
+		&i.LocationID,
+		&i.LocationName,
+		&i.Address,
+		&i.Point,
 	)
 	return i, err
 }
@@ -94,7 +129,14 @@ type EditEventParams struct {
 	EndTime    *time.Time
 }
 
-func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (Event, error) {
+type EditEventRow struct {
+	ID         uuid.UUID
+	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
+}
+
+func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEventRow, error) {
 	row := q.db.QueryRow(ctx, editEvent,
 		arg.ID,
 		arg.OwnerID,
@@ -103,7 +145,7 @@ func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (Event, er
 		arg.StartTime,
 		arg.EndTime,
 	)
-	var i Event
+	var i EditEventRow
 	err := row.Scan(
 		&i.ID,
 		&i.CalendarID,
@@ -125,15 +167,22 @@ type ExportCalendarEventsParams struct {
 	CalendarID uuid.UUID
 }
 
-func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEventsParams) ([]Event, error) {
+type ExportCalendarEventsRow struct {
+	ID         uuid.UUID
+	CalendarID uuid.UUID
+	Name       string
+	Time       pgtype.Range[pgtype.Timestamptz]
+}
+
+func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEventsParams) ([]ExportCalendarEventsRow, error) {
 	rows, err := q.db.Query(ctx, exportCalendarEvents, arg.OwnerID, arg.CalendarID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Event
+	var items []ExportCalendarEventsRow
 	for rows.Next() {
-		var i Event
+		var i ExportCalendarEventsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CalendarID,
@@ -151,9 +200,10 @@ func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEv
 }
 
 const getEvents = `-- name: GetEvents :many
-SELECT e.id, e.calendar_id, e.name, e.time
+SELECT e.id, e.calendar_id, e.name, e.time, l.name as location_name, l.address as address, l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
+JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
   AND time && tstzrange($2::timestamptz, $3::timestamptz, '[)')
 `
@@ -164,20 +214,33 @@ type GetEventsParams struct {
 	EndTime   time.Time
 }
 
-func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, error) {
+type GetEventsRow struct {
+	ID           uuid.UUID
+	CalendarID   uuid.UUID
+	Name         string
+	Time         pgtype.Range[pgtype.Timestamptz]
+	LocationName string
+	Address      string
+	Point        pgtype.Point
+}
+
+func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEventsRow, error) {
 	rows, err := q.db.Query(ctx, getEvents, arg.OwnerID, arg.StartTime, arg.EndTime)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Event
+	var items []GetEventsRow
 	for rows.Next() {
-		var i Event
+		var i GetEventsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CalendarID,
 			&i.Name,
 			&i.Time,
+			&i.LocationName,
+			&i.Address,
+			&i.Point,
 		); err != nil {
 			return nil, err
 		}
@@ -190,9 +253,10 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, 
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT e.id, e.calendar_id, e.name, e.time
+SELECT e.id, e.calendar_id, e.name, e.time, l.name as location_name, l.address as address, l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
+JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
   AND e.name LIKE '%' || $2 || '%'
 `
@@ -202,20 +266,33 @@ type SearchEventsParams struct {
 	Name    string
 }
 
-func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]Event, error) {
+type SearchEventsRow struct {
+	ID           uuid.UUID
+	CalendarID   uuid.UUID
+	Name         string
+	Time         pgtype.Range[pgtype.Timestamptz]
+	LocationName string
+	Address      string
+	Point        pgtype.Point
+}
+
+func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]SearchEventsRow, error) {
 	rows, err := q.db.Query(ctx, searchEvents, arg.OwnerID, arg.Name)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Event
+	var items []SearchEventsRow
 	for rows.Next() {
-		var i Event
+		var i SearchEventsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CalendarID,
 			&i.Name,
 			&i.Time,
+			&i.LocationName,
+			&i.Address,
+			&i.Point,
 		); err != nil {
 			return nil, err
 		}

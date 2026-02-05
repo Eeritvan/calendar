@@ -41,6 +41,12 @@ func (s *Server) GetEvents(c *echo.Context) error {
 			Name:       event.Name,
 			StartTime:  event.Time.Lower.Time.UTC(),
 			EndTime:    event.Time.Upper.Time.UTC(),
+			Location: &models.Location{
+				Name:      event.LocationName,
+				Address:   event.Address,
+				Latitude:  event.Point.P.Y,
+				Longitude: event.Point.P.X,
+			},
 		}
 	}
 
@@ -78,6 +84,12 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 			Name:       event.Name,
 			StartTime:  event.Time.Lower.Time.UTC(),
 			EndTime:    event.Time.Upper.Time.UTC(),
+			Location: &models.Location{
+				Name:      event.LocationName,
+				Address:   event.Address,
+				Latitude:  event.Point.P.Y,
+				Longitude: event.Point.P.X,
+			},
 		}
 	}
 
@@ -99,11 +111,15 @@ func (s *Server) AddEvent(c *echo.Context) error {
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
-		CalendarID: body.CalendarId,
-		Name:       body.Name,
-		OwnerID:    userId,
-		StartTime:  body.StartTime,
-		EndTime:    body.EndTime,
+		CalendarID:   body.CalendarId,
+		Name:         body.Name,
+		OwnerID:      userId,
+		StartTime:    body.StartTime,
+		EndTime:      body.EndTime,
+		LocationName: body.Location.Name,
+		Address:      body.Location.Address,
+		Latitude:     body.Location.Latitude,
+		Longitude:    body.Location.Longitude,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -115,6 +131,12 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		Name:       queryResp.Name,
 		StartTime:  queryResp.Time.Lower.Time.UTC(),
 		EndTime:    queryResp.Time.Upper.Time.UTC(),
+		Location: &models.Location{
+			Name:      queryResp.LocationName,
+			Address:   queryResp.Address,
+			Latitude:  queryResp.Point.P.Y,
+			Longitude: queryResp.Point.P.X,
+		},
 	}
 
 	s.sse.Emit(userId, "event/post", resp)

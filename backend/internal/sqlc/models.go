@@ -22,6 +22,14 @@ type Event struct {
 	CalendarID uuid.UUID
 	Name       string
 	Time       pgtype.Range[pgtype.Timestamptz]
+	LocationID uuid.UUID
+}
+
+type Location struct {
+	ID      uuid.UUID
+	Name    string
+	Address string
+	Point   pgtype.Point
 }
 
 type User struct {
