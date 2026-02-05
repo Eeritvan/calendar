@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
@@ -185,15 +184,4 @@ func (s *Server) DeleteEvent(c *echo.Context) error {
 
 	s.sse.Emit(userId, "event/delete", eventId)
 	return c.JSON(http.StatusOK, nil)
-}
-
-func parseDate(dateStr string, layouts []string) (time.Time, error) {
-	for _, layout := range layouts {
-		t, err := time.Parse(layout, dateStr)
-		if err == nil {
-			return t, nil
-		}
-		fmt.Printf("errr parsing time %q as %q: %v\n", dateStr, layout, err)
-	}
-	return time.Time{}, fmt.Errorf("unsupported date format: %s", dateStr)
 }

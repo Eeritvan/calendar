@@ -13,4 +13,5 @@ func calendarRoutes(e *echo.Group, s *api.Server) {
 	g.PATCH("/edit/:calendarId", s.EditCalendar)
 	g.DELETE("/delete/:calendarId", s.DeleteCalendar)
 	g.POST("/:calendarId/event/import", s.ImportEvents)
+	g.GET("/:calendarId/event/export", s.ExportEvents)
 }

@@ -113,6 +113,43 @@ func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (Event, er
 	return i, err
 }
 
+const exportCalendarEvents = `-- name: ExportCalendarEvents :many
+SELECT e.id, e.calendar_id, e.name, e.time
+FROM Events e
+JOIN Calendars c ON e.calendar_id = c.id
+WHERE c.owner_id = $1 AND c.id = $2
+`
+
+type ExportCalendarEventsParams struct {
+	OwnerID    uuid.UUID
+	CalendarID uuid.UUID
+}
+
+func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEventsParams) ([]Event, error) {
+	rows, err := q.db.Query(ctx, exportCalendarEvents, arg.OwnerID, arg.CalendarID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.CalendarID,
+			&i.Name,
+			&i.Time,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEvents = `-- name: GetEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time
 FROM Events e

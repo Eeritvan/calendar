@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/eeritvan/calendar/internal/models"
@@ -128,6 +129,17 @@ func (s *Server) DeleteCalendar(c *echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
+func parseDate(dateStr string, layouts []string) (time.Time, error) {
+	for _, layout := range layouts {
+		t, err := time.Parse(layout, dateStr)
+		if err == nil {
+			return t, nil
+		}
+		fmt.Printf("errr parsing time %q as %q: %v\n", dateStr, layout, err)
+	}
+	return time.Time{}, fmt.Errorf("unsupported date format: %s", dateStr)
+}
+
 // (POST /calendar/:calendarId/event/import)
 func (s *Server) ImportEvents(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
@@ -198,4 +210,34 @@ func (s *Server) ImportEvents(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, resp)
+}
+
+// (POST /calendar/:calendarId/event/export)
+func (s *Server) ExportEvents(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	ctx := c.Request().Context()
+	queryResp, err := s.queries.ExportCalendarEvents(ctx, sqlc.ExportCalendarEventsParams{
+		CalendarID: calendarId,
+		OwnerID:    userId,
+	})
+
+	cal := ics.NewCalendar()
+	for _, event := range queryResp {
+		iscEvent := cal.AddEvent(fmt.Sprintf("%s@eeritvan.dev", uuid.New().String()))
+
+		iscEvent.SetSummary(event.Name)
+		iscEvent.SetStartAt(event.Time.Lower.Time.UTC())
+		iscEvent.SetEndAt(event.Time.Upper.Time.UTC())
+	}
+
+	icsData := []byte(cal.Serialize())
+
+	c.Response().Header().Set(echo.HeaderContentDisposition, `attachment; filename="events.ics"`)
+	return c.Blob(http.StatusOK, "text/calendar; charset=utf-8", icsData)
 }
