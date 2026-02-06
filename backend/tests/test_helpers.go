@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/eeritvan/calendar/internal/api"
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/stream"
 	"github.com/google/uuid"
@@ -116,6 +117,25 @@ func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name st
 		CalendarID: calendarId,
 		StartTime:  startTime,
 		EndTime:    endTime,
+	})
+	require.NoError(t, err)
+
+	return event.ID
+}
+
+func seedEvent2(t *testing.T, ctx context.Context, queries *sqlc.Queries, ownerID uuid.UUID, body models.AddEvent) uuid.UUID {
+	t.Helper()
+
+	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{
+		CalendarID:   body.CalendarId,
+		Name:         body.Name,
+		OwnerID:      ownerID,
+		StartTime:    body.StartTime,
+		EndTime:      body.EndTime,
+		LocationName: body.Location.Name,
+		Address:      body.Location.Address,
+		Longitude:    body.Location.Longitude,
+		Latitude:     body.Location.Latitude,
 	})
 	require.NoError(t, err)
 
