@@ -22,11 +22,12 @@ type Event struct {
 	Location   *Location `json:"location"`
 }
 
+// TODO: change types to optional /// lat/lng can be null in db
 type LocationInput struct {
-	Name      string  `json:"name" validate:"max=100"`
-	Address   string  `json:"address" validate:"max=100"`
-	Latitude  float64 `json:"latitude" validate:"latitude"`
-	Longitude float64 `json:"longitude" validate:"longitude"`
+	Name      string  `json:"name" validate:"required,max=100"`
+	Address   string  `json:"address" validate:"omitempty,max=100"`
+	Latitude  float64 `json:"latitude" validate:"required_with=Longitude,latitude"`
+	Longitude float64 `json:"longitude" validate:"required_with=Latitude,longitude"`
 }
 
 type AddEvent struct {
@@ -34,7 +35,7 @@ type AddEvent struct {
 	Name       string        `json:"name" validate:"required,max=100"`
 	StartTime  time.Time     `json:"startTime" validate:"required"`
 	EndTime    time.Time     `json:"endTime" validate:"required,gtfield=StartTime"`
-	Location   LocationInput `json:"location" validate:"required"`
+	Location   LocationInput `json:"location" validate:"omitempty"`
 }
 
 type EventEdit struct {

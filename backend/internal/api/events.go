@@ -30,23 +30,29 @@ func (s *Server) GetEvents(c *echo.Context) error {
 		EndTime:   params.EndTime,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	resp := make([]models.Event, len(queryResp))
 	for i, event := range queryResp {
+		var location *models.Location
+		if event.LocationID.Valid {
+			location = &models.Location{
+				Name:      event.LocationName,
+				Address:   event.Address,
+				Latitude:  event.Point.P.Y,
+				Longitude: event.Point.P.X,
+			}
+		}
+
 		resp[i] = models.Event{
 			Id:         event.ID,
 			CalendarId: event.CalendarID,
 			Name:       event.Name,
 			StartTime:  event.Time.Lower.Time.UTC(),
 			EndTime:    event.Time.Upper.Time.UTC(),
-			Location: &models.Location{
-				Name:      event.LocationName,
-				Address:   event.Address,
-				Latitude:  event.Point.P.Y,
-				Longitude: event.Point.P.X,
-			},
+			Location:   location,
 		}
 	}
 
@@ -78,18 +84,23 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 
 	resp := make([]models.Event, len(queryResp))
 	for i, event := range queryResp {
+		var location *models.Location
+		if event.LocationID.Valid {
+			location = &models.Location{
+				Name:      event.LocationName,
+				Address:   event.Address,
+				Latitude:  event.Point.P.Y,
+				Longitude: event.Point.P.X,
+			}
+		}
+
 		resp[i] = models.Event{
 			Id:         event.ID,
 			CalendarId: event.CalendarID,
 			Name:       event.Name,
 			StartTime:  event.Time.Lower.Time.UTC(),
 			EndTime:    event.Time.Upper.Time.UTC(),
-			Location: &models.Location{
-				Name:      event.LocationName,
-				Address:   event.Address,
-				Latitude:  event.Point.P.Y,
-				Longitude: event.Point.P.X,
-			},
+			Location:   location,
 		}
 	}
 
@@ -122,7 +133,18 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		Longitude:    body.Location.Longitude,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	var location *models.Location
+	if queryResp.LocationID.Valid {
+		location = &models.Location{
+			Name:      queryResp.LocationName,
+			Address:   queryResp.Address,
+			Latitude:  queryResp.Point.P.Y,
+			Longitude: queryResp.Point.P.X,
+		}
 	}
 
 	resp := models.Event{
@@ -131,12 +153,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		Name:       queryResp.Name,
 		StartTime:  queryResp.Time.Lower.Time.UTC(),
 		EndTime:    queryResp.Time.Upper.Time.UTC(),
-		Location: &models.Location{
-			Name:      queryResp.LocationName,
-			Address:   queryResp.Address,
-			Latitude:  queryResp.Point.P.Y,
-			Longitude: queryResp.Point.P.X,
-		},
+		Location:   location,
 	}
 
 	s.sse.Emit(userId, "event/post", resp)

@@ -16,20 +16,25 @@ import (
 const addEvent = `-- name: AddEvent :one
 WITH location_insert AS (
     INSERT INTO Locations (name, address, point)
-    VALUES ($4::text, $5::text, POINT($6, $7))
+    SELECT $4::text, $5::text, POINT($6, $7)
+    WHERE $4::text IS NOT NULL AND $4::text != ''
     ON CONFLICT(name, address) DO UPDATE SET name = EXCLUDED.name
     RETURNING id, name, address, point
 ),
 event_insert AS (
     INSERT INTO Events (calendar_id, name, time, location_id)
-    SELECT $1, $2, tstzrange($8::timestamptz, $9::timestamptz, '[)'), (SELECT id FROM location_insert)
+    SELECT $1, $2, tstzrange($8::timestamptz, $9::timestamptz, '[)'),
+            (SELECT id FROM location_insert LIMIT 1)
     FROM Calendars
     WHERE id = $1 AND owner_id = $3
     RETURNING id, calendar_id, name, time, location_id
 )
-SELECT e.id, e.calendar_id, e.name, e.time, e.location_id, l.name as location_name, l.address as address, l.point as point
+SELECT e.id, e.calendar_id, e.name, e.time, e.location_id as location_id,
+        COALESCE(l.name, '') as location_name,
+        COALESCE(l.address, '') as address,
+        COALESCE(l.point, POINT(0,0)) as point
 FROM event_insert e
-JOIN location_insert l ON e.location_id = l.id
+LEFT JOIN location_insert l ON e.location_id = l.id
 `
 
 type AddEventParams struct {
@@ -49,7 +54,7 @@ type AddEventRow struct {
 	CalendarID   uuid.UUID
 	Name         string
 	Time         pgtype.Range[pgtype.Timestamptz]
-	LocationID   uuid.UUID
+	LocationID   uuid.NullUUID
 	LocationName string
 	Address      string
 	Point        pgtype.Point
@@ -200,10 +205,13 @@ func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEv
 }
 
 const getEvents = `-- name: GetEvents :many
-SELECT e.id, e.calendar_id, e.name, e.time, l.name as location_name, l.address as address, l.point as point
+SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
+       COALESCE(l.name, '') as location_name,
+       COALESCE(l.address, '') as address,
+       COALESCE(l.point, POINT(0,0)) as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
-JOIN Locations l ON e.location_id = l.id
+LEFT JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
   AND time && tstzrange($2::timestamptz, $3::timestamptz, '[)')
 `
@@ -219,6 +227,7 @@ type GetEventsRow struct {
 	CalendarID   uuid.UUID
 	Name         string
 	Time         pgtype.Range[pgtype.Timestamptz]
+	LocationID   uuid.NullUUID
 	LocationName string
 	Address      string
 	Point        pgtype.Point
@@ -238,6 +247,7 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 			&i.CalendarID,
 			&i.Name,
 			&i.Time,
+			&i.LocationID,
 			&i.LocationName,
 			&i.Address,
 			&i.Point,
@@ -253,10 +263,13 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT e.id, e.calendar_id, e.name, e.time, l.name as location_name, l.address as address, l.point as point
+SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
+       COALESCE(l.name, '') as location_name,
+       COALESCE(l.address, '') as address,
+       COALESCE(l.point, POINT(0,0)) as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
-JOIN Locations l ON e.location_id = l.id
+LEFT JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
   AND e.name LIKE '%' || $2 || '%'
 `
@@ -271,6 +284,7 @@ type SearchEventsRow struct {
 	CalendarID   uuid.UUID
 	Name         string
 	Time         pgtype.Range[pgtype.Timestamptz]
+	LocationID   uuid.NullUUID
 	LocationName string
 	Address      string
 	Point        pgtype.Point
@@ -290,6 +304,7 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]S
 			&i.CalendarID,
 			&i.Name,
 			&i.Time,
+			&i.LocationID,
 			&i.LocationName,
 			&i.Address,
 			&i.Point,

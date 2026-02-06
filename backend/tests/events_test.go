@@ -42,12 +42,6 @@ func TestGetEvents(t *testing.T) {
 		Name:       "team meeting",
 		StartTime:  timeMinusHour,
 		EndTime:    timeNow,
-		Location: models.LocationInput{
-			Name:      "toimisto",
-			Address:   "toimistokatu 1",
-			Latitude:  60.248947411912596,
-			Longitude: 24.978291441099014,
-		},
 	})
 	eventId2 := seedEvent2(t, ctx, queries, userId1, models.AddEvent{
 		CalendarId: calendarId2,
@@ -68,12 +62,6 @@ func TestGetEvents(t *testing.T) {
 		Name:       "my winter car",
 		StartTime:  timeMinusHour,
 		EndTime:    timePlusHour,
-		Location: models.LocationInput{
-			Name:      "koti",
-			Address:   "kotikatu 1",
-			Latitude:  61.248947411912596,
-			Longitude: 23.978291441099014,
-		},
 	})
 
 	tests := []struct {
@@ -97,12 +85,7 @@ func TestGetEvents(t *testing.T) {
 					CalendarId: calendarId1,
 					StartTime:  timeMinusHour,
 					EndTime:    timeNow,
-					Location: &models.Location{
-						Name:      "toimisto",
-						Address:   "toimistokatu 1",
-						Latitude:  60.248947411912596,
-						Longitude: 24.978291441099014,
-					},
+					Location:   nil,
 				},
 				{
 					Id:         eventId2,
@@ -132,12 +115,7 @@ func TestGetEvents(t *testing.T) {
 					CalendarId: calendarId3,
 					StartTime:  timeMinusHour,
 					EndTime:    timePlusHour,
-					Location: &models.Location{
-						Name:      "koti",
-						Address:   "kotikatu 1",
-						Latitude:  61.248947411912596,
-						Longitude: 23.978291441099014,
-					},
+					Location:   nil,
 				},
 			},
 		},
@@ -154,12 +132,7 @@ func TestGetEvents(t *testing.T) {
 					CalendarId: calendarId1,
 					StartTime:  timeMinusHour,
 					EndTime:    timeNow,
-					Location: &models.Location{
-						Name:      "toimisto",
-						Address:   "toimistokatu 1",
-						Latitude:  60.248947411912596,
-						Longitude: 24.978291441099014,
-					},
+					Location:   nil,
 				},
 			},
 		},
@@ -234,12 +207,6 @@ func TestSearchEvents(t *testing.T) {
 		Name:       "team meeting",
 		StartTime:  startTime,
 		EndTime:    endTime,
-		Location: models.LocationInput{
-			Name:      "toimisto",
-			Address:   "toimistokatu 1",
-			Latitude:  60.248947411912596,
-			Longitude: 24.978291441099014,
-		},
 	})
 	eventId2 := seedEvent2(t, ctx, queries, userId1, models.AddEvent{
 		CalendarId: calendarId2,
@@ -261,12 +228,6 @@ func TestSearchEvents(t *testing.T) {
 		Name:       "weekly standup",
 		StartTime:  startTime,
 		EndTime:    endTime,
-		Location: models.LocationInput{
-			Name:      "kirjasto",
-			Address:   "helsingin kirjasto 1",
-			Latitude:  62.248947411912596,
-			Longitude: 25.978291441099014,
-		},
 	})
 
 	tests := []struct {
@@ -288,12 +249,7 @@ func TestSearchEvents(t *testing.T) {
 					CalendarId: calendarId1,
 					StartTime:  startTime,
 					EndTime:    endTime,
-					Location: &models.Location{
-						Name:      "toimisto",
-						Address:   "toimistokatu 1",
-						Latitude:  60.248947411912596,
-						Longitude: 24.978291441099014,
-					},
+					Location:   nil,
 				},
 				{
 					Id:         eventId2,
@@ -322,12 +278,7 @@ func TestSearchEvents(t *testing.T) {
 					CalendarId: calendarId3,
 					StartTime:  startTime,
 					EndTime:    endTime,
-					Location: &models.Location{
-						Name:      "kirjasto",
-						Address:   "helsingin kirjasto 1",
-						Latitude:  62.248947411912596,
-						Longitude: 25.978291441099014,
-					},
+					Location:   nil,
 				},
 			},
 		},
@@ -428,6 +379,24 @@ func TestAddEvent(t *testing.T) {
 					Latitude:  62.248947411912596,
 					Longitude: 25.978291441099014,
 				},
+			},
+		},
+		{
+			name: "adding event works without location works",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "online team meeting",
+				StartTime:  startTime,
+				EndTime:    endTime,
+			},
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Event{
+				// id is unknown beforehand
+				Name:       "online team meeting",
+				CalendarId: calendarId,
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location:   nil,
 			},
 		},
 		{
