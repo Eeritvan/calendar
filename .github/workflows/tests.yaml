@@ -1,0 +1,25 @@
+name: tests
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "Go version"
+        required: true
+        type: string
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: backend/go.sum
+      - name: Run full tests
+        run: go test ./tests
