@@ -108,22 +108,7 @@ func seedCalendar(t *testing.T, ctx context.Context, queries *sqlc.Queries, name
 	return calendar.ID
 }
 
-func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name string, ownerID, calendarId uuid.UUID, startTime, endTime time.Time) uuid.UUID {
-	t.Helper()
-
-	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{
-		Name:       name,
-		OwnerID:    ownerID,
-		CalendarID: calendarId,
-		StartTime:  startTime,
-		EndTime:    endTime,
-	})
-	require.NoError(t, err)
-
-	return event.ID
-}
-
-func seedEvent2(t *testing.T, ctx context.Context, queries *sqlc.Queries, ownerID uuid.UUID, body models.AddEvent) uuid.UUID {
+func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, ownerID uuid.UUID, body models.AddEvent) uuid.UUID {
 	t.Helper()
 
 	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{

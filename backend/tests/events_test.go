@@ -37,13 +37,13 @@ func TestGetEvents(t *testing.T) {
 	userId1 := seedUser(t, ctx, queries, "user1", "password1")
 	calendarId1 := seedCalendar(t, ctx, queries, "meetings", userId1)
 	calendarId2 := seedCalendar(t, ctx, queries, "daily", userId1)
-	eventId1 := seedEvent2(t, ctx, queries, userId1, models.AddEvent{
+	eventId1 := seedEvent(t, ctx, queries, userId1, models.AddEvent{
 		CalendarId: calendarId1,
 		Name:       "team meeting",
 		StartTime:  timeMinusHour,
 		EndTime:    timeNow,
 	})
-	eventId2 := seedEvent2(t, ctx, queries, userId1, models.AddEvent{
+	eventId2 := seedEvent(t, ctx, queries, userId1, models.AddEvent{
 		CalendarId: calendarId2,
 		Name:       "monday standup",
 		StartTime:  timeNow,
@@ -57,7 +57,7 @@ func TestGetEvents(t *testing.T) {
 	})
 	userId2 := seedUser(t, ctx, queries, "user2", "password2")
 	calendarId3 := seedCalendar(t, ctx, queries, "video games", userId2)
-	eventId3 := seedEvent2(t, ctx, queries, userId2, models.AddEvent{
+	eventId3 := seedEvent(t, ctx, queries, userId2, models.AddEvent{
 		CalendarId: calendarId3,
 		Name:       "my winter car",
 		StartTime:  timeMinusHour,
@@ -202,13 +202,13 @@ func TestSearchEvents(t *testing.T) {
 	userId1 := seedUser(t, ctx, queries, "user1", "password1")
 	calendarId1 := seedCalendar(t, ctx, queries, "meetings", userId1)
 	calendarId2 := seedCalendar(t, ctx, queries, "daily", userId1)
-	eventId1 := seedEvent2(t, ctx, queries, userId1, models.AddEvent{
+	eventId1 := seedEvent(t, ctx, queries, userId1, models.AddEvent{
 		CalendarId: calendarId1,
 		Name:       "team meeting",
 		StartTime:  startTime,
 		EndTime:    endTime,
 	})
-	eventId2 := seedEvent2(t, ctx, queries, userId1, models.AddEvent{
+	eventId2 := seedEvent(t, ctx, queries, userId1, models.AddEvent{
 		CalendarId: calendarId2,
 		Name:       "daily meeting",
 		StartTime:  startTime,
@@ -223,7 +223,7 @@ func TestSearchEvents(t *testing.T) {
 
 	userId2 := seedUser(t, ctx, queries, "user2", "password2")
 	calendarId3 := seedCalendar(t, ctx, queries, "project meetings", userId2)
-	eventId3 := seedEvent2(t, ctx, queries, userId2, models.AddEvent{
+	eventId3 := seedEvent(t, ctx, queries, userId2, models.AddEvent{
 		CalendarId: calendarId3,
 		Name:       "weekly standup",
 		StartTime:  startTime,
@@ -382,7 +382,7 @@ func TestAddEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "adding event works without location works",
+			name: "adding event without location works",
 			body: models.AddEvent{
 				CalendarId: calendarId,
 				Name:       "online team meeting",
@@ -482,7 +482,12 @@ func TestEditEvent(t *testing.T) {
 
 	userId := seedUser(t, ctx, queries, "editEventUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
-	eventId := seedEvent(t, ctx, queries, "team meeting", userId, calendarId, startTime, endTime)
+	eventId := seedEvent(t, ctx, queries, userId, models.AddEvent{
+		CalendarId: calendarId,
+		Name:       "team meeting",
+		StartTime:  startTime,
+		EndTime:    endTime,
+	})
 
 	userId2 := seedUser(t, ctx, queries, "editEventUser2", "password")
 	calendarId2 := seedCalendar(t, ctx, queries, "meetings", userId2)
@@ -604,7 +609,12 @@ func TestDeleteEvent(t *testing.T) {
 
 	userId := seedUser(t, ctx, queries, "deleteCalendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
-	eventId := seedEvent(t, ctx, queries, "team meeting", userId, calendarId, startTime, endTime)
+	eventId := seedEvent(t, ctx, queries, userId, models.AddEvent{
+		CalendarId: calendarId,
+		Name:       "team meeting",
+		StartTime:  startTime,
+		EndTime:    endTime,
+	})
 
 	randomUUID, err := uuid.NewRandom()
 	require.NoError(t, err)
@@ -664,9 +674,24 @@ func TestBatchDeleteEvents(t *testing.T) {
 
 	userId := seedUser(t, ctx, queries, "batchDeleteCalendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
-	eventId := seedEvent(t, ctx, queries, "team meeting", userId, calendarId, startTime, endTime)
-	eventId2 := seedEvent(t, ctx, queries, "team meeting2", userId, calendarId, startTime, endTime)
-	eventId3 := seedEvent(t, ctx, queries, "team meeting3", userId, calendarId, startTime, endTime)
+	eventId := seedEvent(t, ctx, queries, userId, models.AddEvent{
+		CalendarId: calendarId,
+		Name:       "team meeting",
+		StartTime:  startTime,
+		EndTime:    endTime,
+	})
+	eventId2 := seedEvent(t, ctx, queries, userId, models.AddEvent{
+		CalendarId: calendarId,
+		Name:       "team meeting2",
+		StartTime:  startTime,
+		EndTime:    endTime,
+	})
+	eventId3 := seedEvent(t, ctx, queries, userId, models.AddEvent{
+		CalendarId: calendarId,
+		Name:       "team meeting3",
+		StartTime:  startTime,
+		EndTime:    endTime,
+	})
 
 	randomUUID, err := uuid.NewRandom()
 	require.NoError(t, err)
