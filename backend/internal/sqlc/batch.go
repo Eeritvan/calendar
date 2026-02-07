@@ -18,6 +18,57 @@ var (
 	ErrBatchAlreadyClosed = errors.New("batch already closed")
 )
 
+const deleteManyEvents = `-- name: DeleteManyEvents :batchexec
+DELETE FROM Events e
+WHERE e.id = $1
+  AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $2)
+`
+
+type DeleteManyEventsBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type DeleteManyEventsParams struct {
+	ID      uuid.UUID
+	OwnerID uuid.UUID
+}
+
+func (q *Queries) DeleteManyEvents(ctx context.Context, arg []DeleteManyEventsParams) *DeleteManyEventsBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.ID,
+			a.OwnerID,
+		}
+		batch.Queue(deleteManyEvents, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &DeleteManyEventsBatchResults{br, len(arg), false}
+}
+
+func (b *DeleteManyEventsBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *DeleteManyEventsBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
 const importCalendarEvents = `-- name: ImportCalendarEvents :batchexec
 INSERT INTO Events (calendar_id, name, time)
 SELECT $1, $2, tstzrange($4::timestamptz, $5::timestamptz, '[)')
