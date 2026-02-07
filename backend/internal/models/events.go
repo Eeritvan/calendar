@@ -53,3 +53,7 @@ type GetEventsParams struct {
 type SearchEventsParams struct {
 	Name string `query:"name" validate:"required,max=100"`
 }
+
+type BatchDeleteEvents struct {
+	Ids []uuid.UUID `json:"ids" validate:"required,min=1,dive,required,uuid"`
+}

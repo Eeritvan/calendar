@@ -145,8 +145,8 @@ func (s *Server) ImportEvents(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	layouts := []string{
-		"20060102T150405Z",
 		"20060102T150405",
+		"20060102T150405Z",
 		"20060102T1504",
 		"20060102",
 		"2006-01-02 15:04:05",
@@ -166,6 +166,10 @@ func (s *Server) ImportEvents(c *echo.Context) error {
 	icsContent := string(body)
 
 	cal, err := ics.ParseCalendar(strings.NewReader(icsContent))
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
 
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
@@ -173,7 +177,7 @@ func (s *Server) ImportEvents(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	resp := make([]models.Event, len(cal.Events()))
+	batchParams := make([]sqlc.ImportCalendarEventsParams, len(cal.Events()))
 	for i, ev := range cal.Events() {
 		startStr := ev.GetProperty(ics.ComponentPropertyDtStart).Value
 		parsedStart, err := parseDate(startStr, layouts)
@@ -189,27 +193,32 @@ func (s *Server) ImportEvents(c *echo.Context) error {
 			return c.JSON(http.StatusBadRequest, nil)
 		}
 
-		ctx := c.Request().Context()
-		queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
+		batchParams[i] = sqlc.ImportCalendarEventsParams{
 			CalendarID: calendarId,
 			OwnerID:    userId,
 			Name:       ev.GetProperty(ics.ComponentPropertySummary).Value,
 			StartTime:  parsedStart,
 			EndTime:    parsedEnd,
-		})
-
-		event := models.Event{
-			Id:         queryResp.ID,
-			CalendarId: queryResp.CalendarID,
-			Name:       queryResp.Name,
-			StartTime:  queryResp.Time.Lower.Time.UTC(),
-			EndTime:    queryResp.Time.Upper.Time.UTC(),
 		}
-
-		resp[i] = event
 	}
 
-	return c.JSON(http.StatusOK, resp)
+	ctx := c.Request().Context()
+	batchResults := s.queries.ImportCalendarEvents(ctx, batchParams)
+
+	var batchErr error
+	batchResults.Exec(func(i int, err error) {
+		if err != nil {
+			fmt.Println(i, err)
+			batchErr = err
+		}
+	})
+
+	if batchErr != nil {
+		fmt.Println(batchErr)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
 }
 
 // (POST /calendar/:calendarId/event/export)

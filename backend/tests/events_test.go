@@ -646,3 +646,83 @@ func TestDeleteEvent(t *testing.T) {
 		})
 	}
 }
+
+func TestBatchDeleteEvents(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	connURI, err := spawnPostgresContainer(t, "calendar5")
+	require.NoError(t, err)
+
+	err = runMigrations(t, connURI)
+	require.NoError(t, err)
+
+	server, queries := setupTestServer(t, ctx, connURI)
+
+	startTime := time.Now().UTC().Truncate(time.Microsecond)
+	endTime := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
+
+	userId := seedUser(t, ctx, queries, "batchDeleteCalendarUser", "password")
+	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
+	eventId := seedEvent(t, ctx, queries, "team meeting", userId, calendarId, startTime, endTime)
+	eventId2 := seedEvent(t, ctx, queries, "team meeting2", userId, calendarId, startTime, endTime)
+	eventId3 := seedEvent(t, ctx, queries, "team meeting3", userId, calendarId, startTime, endTime)
+
+	randomUUID, err := uuid.NewRandom()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name           string
+		body           models.BatchDeleteEvents
+		expectedStatus int
+	}{
+		{
+			name: "deleting event works",
+			body: models.BatchDeleteEvents{
+				Ids: []uuid.UUID{
+					eventId,
+					eventId2,
+					eventId3,
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name: "deleting events that does not exist does not fail",
+			body: models.BatchDeleteEvents{
+				Ids: []uuid.UUID{
+					randomUUID,
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "request with no events will fail",
+			body:           models.BatchDeleteEvents{},
+			expectedStatus: http.StatusBadRequest,
+		}}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			bodyJSON, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			c, rec := echotest.ContextConfig{
+				Headers: map[string][]string{
+					echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				},
+				JSONBody: bodyJSON,
+			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
+			c.Set("userId", userId)
+
+			_ = server.BatchDeleteEvents(c)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+		})
+	}
+}

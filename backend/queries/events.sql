@@ -70,6 +70,16 @@ DELETE FROM Events e
 WHERE e.id = $1
   AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $2);
 
+-- name: DeleteManyEvents :batchexec
+DELETE FROM Events e
+WHERE e.id = $1
+  AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $2);
+
+-- name: ImportCalendarEvents :batchexec
+INSERT INTO Events (calendar_id, name, time)
+SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)')
+FROM Calendars
+WHERE id = $1 AND owner_id = $3;
 
 -- name: ExportCalendarEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time
