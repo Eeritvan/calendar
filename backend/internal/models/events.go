@@ -24,9 +24,9 @@ type Event struct {
 
 type LocationInput struct {
 	Name      string   `json:"name" validate:"required,max=100"`
-	Address   *string  `json:"address" validate:"omitempty,max=100"`
-	Latitude  *float64 `json:"latitude" validate:"omitempty,latitude"`
-	Longitude *float64 `json:"longitude" validate:"omitempty,longitude"`
+	Address   *string  `json:"address,omitempty" validate:"omitempty,max=100"`
+	Latitude  *float64 `json:"latitude,omitempty" validate:"omitempty,latitude"`
+	Longitude *float64 `json:"longitude,omitempty" validate:"omitempty,longitude"`
 }
 
 type AddEvent struct {
@@ -37,11 +37,19 @@ type AddEvent struct {
 	Location   *LocationInput `json:"location,omitempty" validate:"omitempty"`
 }
 
+type LocationEdit struct {
+	Name      *string  `json:"name,omitempty" validate:"omitempty,max=100"`
+	Address   *string  `json:"address,omitempty" validate:"omitempty,max=100"`
+	Latitude  *float64 `json:"latitude,omitempty" validate:"omitempty,latitude"`
+	Longitude *float64 `json:"longitude,omitempty" validate:"omitempty,longitude"`
+}
+
 type EventEdit struct {
-	CalendarId *uuid.UUID `json:"calendarId,omitempty" validate:"omitempty,uuid"`
-	Name       *string    `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
-	StartTime  *time.Time `json:"startTime,omitempty" validate:"omitempty"`
-	EndTime    *time.Time `json:"endTime,omitempty" validate:"omitempty,gtfield=StartTime"`
+	CalendarId *uuid.UUID    `json:"calendarId,omitempty" validate:"omitempty,uuid"`
+	Name       *string       `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
+	StartTime  *time.Time    `json:"startTime,omitempty" validate:"omitempty"`
+	EndTime    *time.Time    `json:"endTime,omitempty" validate:"omitempty,gtfield=StartTime"`
+	Location   *LocationEdit `json:"location,omitempty" validate:"omitempty"`
 }
 
 type GetEventsParams struct {

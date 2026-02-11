@@ -216,6 +216,12 @@ func (s *Server) EditEvent(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
+	isLatitude := body.Location != nil && body.Location.Latitude != nil
+	isLongitude := body.Location != nil && body.Location.Longitude != nil
+	if isLatitude != isLongitude {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
