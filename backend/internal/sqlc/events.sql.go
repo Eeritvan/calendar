@@ -16,7 +16,14 @@ import (
 const addEvent = `-- name: AddEvent :one
 WITH location_insert AS (
     INSERT INTO Locations (name, address, point)
-    SELECT $4::text, $5::text, POINT($6, $7)
+    SELECT
+        $4::text,
+        $5,
+        CASE
+            WHEN $6::float8 IS NOT NULL AND $7::float8 IS NOT NULL
+            THEN POINT($6, $7)
+            ELSE NULL
+        END
     WHERE $4::text IS NOT NULL AND $4::text != ''
     ON CONFLICT(name, address) DO UPDATE SET name = EXCLUDED.name
     RETURNING id, name, address, point
@@ -31,8 +38,8 @@ event_insert AS (
 )
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id as location_id,
         COALESCE(l.name, '') as location_name,
-        COALESCE(l.address, '') as address,
-        COALESCE(l.point, POINT(0,0)) as point
+        l.address as address,
+        l.point as point
 FROM event_insert e
 LEFT JOIN location_insert l ON e.location_id = l.id
 `
@@ -42,9 +49,9 @@ type AddEventParams struct {
 	Name         string
 	OwnerID      uuid.UUID
 	LocationName string
-	Address      string
-	Longitude    float64
-	Latitude     float64
+	Address      *string
+	Longitude    *float64
+	Latitude     *float64
 	StartTime    time.Time
 	EndTime      time.Time
 }
@@ -56,7 +63,7 @@ type AddEventRow struct {
 	Time         pgtype.Range[pgtype.Timestamptz]
 	LocationID   uuid.NullUUID
 	LocationName string
-	Address      string
+	Address      *string
 	Point        *pgtype.Point
 }
 

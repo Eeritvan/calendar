@@ -22,7 +22,6 @@ type Event struct {
 	Location   *Location `json:"location,omitempty"`
 }
 
-// TODO: change types to optional /// lat/lng can be null in db
 type LocationInput struct {
 	Name      string   `json:"name" validate:"required,max=100"`
 	Address   *string  `json:"address" validate:"omitempty,max=100"`

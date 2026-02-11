@@ -39,7 +39,6 @@ func (s *Server) GetEvents(c *echo.Context) error {
 	for i, event := range queryResp {
 		var location *models.Location
 		if event.LocationID.Valid {
-			fmt.Println(event.Point)
 			location = &models.Location{
 				Name:      event.LocationName,
 				Address:   event.Address,
@@ -112,23 +111,31 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 // (POST /addEvent)
 func (s *Server) AddEvent(c *echo.Context) error {
 	body := new(models.AddEvent)
-	if err := c.Bind(&body); err != nil {
-		fmt.Println("bind", err)
+	if err := c.Bind(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	if err := c.Validate(body); err != nil {
-		fmt.Println("val", err)
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	isLatitude := body.Location.Latitude != nil
-	isLongitude := body.Location.Longitude != nil
+	isLatitude := body.Location != nil && body.Location.Latitude != nil
+	isLongitude := body.Location != nil && body.Location.Longitude != nil
 	if isLatitude != isLongitude {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	userId := c.Get("userId").(uuid.UUID)
+
+	var locationAddress *string // TODO: would be nice if this wasn't needed
+	var latitude *float64
+	var longitude *float64
+
+	if body.Location != nil {
+		locationAddress = body.Location.Address
+		latitude = body.Location.Latitude
+		longitude = body.Location.Longitude
+	}
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
@@ -138,9 +145,9 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		StartTime:    body.StartTime,
 		EndTime:      body.EndTime,
 		LocationName: body.Location.Name,
-		// Address:      body.Location.Address,
-		// Latitude:     body.Location.Latitude,
-		// Longitude:    body.Location.Longitude,
+		Address:      locationAddress,
+		Latitude:     latitude,
+		Longitude:    longitude,
 	})
 	if err != nil {
 		fmt.Println("db err", err)
@@ -149,11 +156,18 @@ func (s *Server) AddEvent(c *echo.Context) error {
 
 	var location *models.Location
 	if queryResp.LocationID.Valid {
+		var lat *float64
+		var lng *float64
+		if queryResp.Point != nil {
+			lat = utils.Ptr(queryResp.Point.P.Y)
+			lng = utils.Ptr(queryResp.Point.P.X)
+		}
+
 		location = &models.Location{
 			Name:      queryResp.LocationName,
-			Address:   utils.Ptr(queryResp.Address),
-			Latitude:  utils.Ptr(queryResp.Point.P.Y),
-			Longitude: utils.Ptr(queryResp.Point.P.X),
+			Address:   queryResp.Address,
+			Latitude:  lat,
+			Longitude: lng,
 		}
 	}
 

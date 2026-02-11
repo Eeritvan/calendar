@@ -24,7 +24,14 @@ WHERE c.owner_id = $1
 -- name: AddEvent :one
 WITH location_insert AS (
     INSERT INTO Locations (name, address, point)
-    SELECT @location_name::text, @address::text, POINT(@longitude, @latitude)
+    SELECT
+        @location_name::text,
+        sqlc.narg('address'),
+        CASE
+            WHEN @longitude::float8 IS NOT NULL AND @latitude::float8 IS NOT NULL
+            THEN POINT(@longitude, @latitude)
+            ELSE NULL
+        END
     WHERE @location_name::text IS NOT NULL AND @location_name::text != ''
     ON CONFLICT(name, address) DO UPDATE SET name = EXCLUDED.name
     RETURNING id, name, address, point
@@ -39,8 +46,8 @@ event_insert AS (
 )
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id as location_id,
         COALESCE(l.name, '') as location_name,
-        COALESCE(l.address, '') as address,
-        COALESCE(l.point, POINT(0,0)) as point
+        l.address as address,
+        l.point as point
 FROM event_insert e
 LEFT JOIN location_insert l ON e.location_id = l.id;
 

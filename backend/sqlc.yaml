@@ -40,6 +40,11 @@ sql:
               import: "time"
               type: "Time"
               pointer: true
+          - db_type: "float8"
+            nullable: false
+            go_type:
+              type: "float64"
+              pointer: true
           - db_type: "point"
             nullable: true
             go_type:
