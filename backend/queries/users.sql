@@ -10,8 +10,8 @@ WHERE name = $1;
 
 -- name: EnableTotp :one
 UPDATE Users
-SET totp = $1
-WHERE id = $2
+SET totp = @totp::text
+WHERE id = $1
 RETURNING id, name;
 
 -- name: DisableTotp :one

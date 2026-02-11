@@ -7,10 +7,10 @@ import (
 )
 
 type Location struct {
-	Name      string  `json:"name"`
-	Address   string  `json:"address"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Name      string   `json:"name"`
+	Address   *string  `json:"address,omitempty"`
+	Latitude  *float64 `json:"latitude,omitempty"`
+	Longitude *float64 `json:"longitude,omitempty"`
 }
 
 type Event struct {
@@ -19,23 +19,23 @@ type Event struct {
 	Name       string    `json:"name"`
 	StartTime  time.Time `json:"startTime"`
 	EndTime    time.Time `json:"endTime"`
-	Location   *Location `json:"location"`
+	Location   *Location `json:"location,omitempty"`
 }
 
 // TODO: change types to optional /// lat/lng can be null in db
 type LocationInput struct {
-	Name      string  `json:"name" validate:"required,max=100"`
-	Address   string  `json:"address" validate:"omitempty,max=100"`
-	Latitude  float64 `json:"latitude" validate:"required_with=Longitude,latitude"`
-	Longitude float64 `json:"longitude" validate:"required_with=Latitude,longitude"`
+	Name      string   `json:"name" validate:"required,max=100"`
+	Address   *string  `json:"address" validate:"omitempty,max=100"`
+	Latitude  *float64 `json:"latitude" validate:"omitempty,latitude"`
+	Longitude *float64 `json:"longitude" validate:"omitempty,longitude"`
 }
 
 type AddEvent struct {
-	CalendarId uuid.UUID     `json:"calendarId" validate:"required,uuid"`
-	Name       string        `json:"name" validate:"required,max=100"`
-	StartTime  time.Time     `json:"startTime" validate:"required"`
-	EndTime    time.Time     `json:"endTime" validate:"required,gtfield=StartTime"`
-	Location   LocationInput `json:"location" validate:"omitempty"`
+	CalendarId uuid.UUID      `json:"calendarId" validate:"required,uuid"`
+	Name       string         `json:"name" validate:"required,max=100"`
+	StartTime  time.Time      `json:"startTime" validate:"required"`
+	EndTime    time.Time      `json:"endTime" validate:"required,gtfield=StartTime"`
+	Location   *LocationInput `json:"location,omitempty" validate:"omitempty"`
 }
 
 type EventEdit struct {

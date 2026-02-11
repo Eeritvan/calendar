@@ -57,7 +57,7 @@ type AddEventRow struct {
 	LocationID   uuid.NullUUID
 	LocationName string
 	Address      string
-	Point        pgtype.Point
+	Point        *pgtype.Point
 }
 
 func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow, error) {
@@ -129,7 +129,7 @@ type EditEventParams struct {
 	ID         uuid.UUID
 	OwnerID    uuid.UUID
 	CalendarID uuid.UUID
-	Name       string
+	Name       *string
 	StartTime  *time.Time
 	EndTime    *time.Time
 }
@@ -206,9 +206,9 @@ func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEv
 
 const getEvents = `-- name: GetEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
-       COALESCE(l.name, '') as location_name,
-       COALESCE(l.address, '') as address,
-       COALESCE(l.point, POINT(0,0)) as point
+       COALESCE(l.name, '') as location_name, -- TODO: force to be defined???
+       l.address as address,
+       l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
@@ -229,8 +229,8 @@ type GetEventsRow struct {
 	Time         pgtype.Range[pgtype.Timestamptz]
 	LocationID   uuid.NullUUID
 	LocationName string
-	Address      string
-	Point        pgtype.Point
+	Address      *string
+	Point        *pgtype.Point
 }
 
 func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEventsRow, error) {
@@ -264,14 +264,15 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 
 const searchEvents = `-- name: SearchEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
-       COALESCE(l.name, '') as location_name,
-       COALESCE(l.address, '') as address,
-       COALESCE(l.point, POINT(0,0)) as point
+       COALESCE(l.name, '') as location_name, -- TODO: force to be defined???
+       l.address as address,
+       l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
-  AND e.name LIKE '%' || $2 || '%'
+  -- AND e.name LIKE '%' || sqlc.arg('name') || '%';
+  AND e.name LIKE '%' || $2::text || '%'
 `
 
 type SearchEventsParams struct {
@@ -286,8 +287,8 @@ type SearchEventsRow struct {
 	Time         pgtype.Range[pgtype.Timestamptz]
 	LocationID   uuid.NullUUID
 	LocationName string
-	Address      string
-	Point        pgtype.Point
+	Address      *string
+	Point        *pgtype.Point
 }
 
 func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]SearchEventsRow, error) {

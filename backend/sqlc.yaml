@@ -13,6 +13,7 @@ sql:
             nullable: true
             go_type:
               type: "string"
+              pointer: true
           - db_type: "uuid"
             go_type:
               import: "github.com/google/uuid"
@@ -38,4 +39,10 @@ sql:
             go_type:
               import: "time"
               type: "Time"
+              pointer: true
+          - db_type: "point"
+            nullable: true
+            go_type:
+              import: "github.com/jackc/pgx/v5/pgtype"
+              type: "Point"
               pointer: true

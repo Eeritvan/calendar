@@ -1,8 +1,8 @@
 -- name: GetEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
-       COALESCE(l.name, '') as location_name,
-       COALESCE(l.address, '') as address,
-       COALESCE(l.point, POINT(0,0)) as point
+       COALESCE(l.name, '') as location_name, -- TODO: force to be defined???
+       l.address as address,
+       l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
@@ -11,14 +11,15 @@ WHERE c.owner_id = $1
 
 -- name: SearchEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
-       COALESCE(l.name, '') as location_name,
-       COALESCE(l.address, '') as address,
-       COALESCE(l.point, POINT(0,0)) as point
+       COALESCE(l.name, '') as location_name, -- TODO: force to be defined???
+       l.address as address,
+       l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
 WHERE c.owner_id = $1
-  AND e.name LIKE '%' || sqlc.arg('name') || '%';
+  -- AND e.name LIKE '%' || sqlc.arg('name') || '%';
+  AND e.name LIKE '%' || @name::text || '%';
 
 -- name: AddEvent :one
 WITH location_insert AS (

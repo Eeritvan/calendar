@@ -6,6 +6,7 @@ import (
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
+	"github.com/eeritvan/calendar/internal/utils"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 )
@@ -38,11 +39,12 @@ func (s *Server) GetEvents(c *echo.Context) error {
 	for i, event := range queryResp {
 		var location *models.Location
 		if event.LocationID.Valid {
+			fmt.Println(event.Point)
 			location = &models.Location{
 				Name:      event.LocationName,
 				Address:   event.Address,
-				Latitude:  event.Point.P.Y,
-				Longitude: event.Point.P.X,
+				Latitude:  utils.Ptr(event.Point.P.Y),
+				Longitude: utils.Ptr(event.Point.P.X),
 			}
 		}
 
@@ -89,8 +91,8 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 			location = &models.Location{
 				Name:      event.LocationName,
 				Address:   event.Address,
-				Latitude:  event.Point.P.Y,
-				Longitude: event.Point.P.X,
+				Latitude:  utils.Ptr(event.Point.P.Y),
+				Longitude: utils.Ptr(event.Point.P.X),
 			}
 		}
 
@@ -111,10 +113,18 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 func (s *Server) AddEvent(c *echo.Context) error {
 	body := new(models.AddEvent)
 	if err := c.Bind(&body); err != nil {
+		fmt.Println("bind", err)
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	if err := c.Validate(body); err != nil {
+		fmt.Println("val", err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	isLatitude := body.Location.Latitude != nil
+	isLongitude := body.Location.Longitude != nil
+	if isLatitude != isLongitude {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
@@ -128,12 +138,12 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		StartTime:    body.StartTime,
 		EndTime:      body.EndTime,
 		LocationName: body.Location.Name,
-		Address:      body.Location.Address,
-		Latitude:     body.Location.Latitude,
-		Longitude:    body.Location.Longitude,
+		// Address:      body.Location.Address,
+		// Latitude:     body.Location.Latitude,
+		// Longitude:    body.Location.Longitude,
 	})
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("db err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
@@ -141,9 +151,9 @@ func (s *Server) AddEvent(c *echo.Context) error {
 	if queryResp.LocationID.Valid {
 		location = &models.Location{
 			Name:      queryResp.LocationName,
-			Address:   queryResp.Address,
-			Latitude:  queryResp.Point.P.Y,
-			Longitude: queryResp.Point.P.X,
+			Address:   utils.Ptr(queryResp.Address),
+			Latitude:  utils.Ptr(queryResp.Point.P.Y),
+			Longitude: utils.Ptr(queryResp.Point.P.X),
 		}
 	}
 
@@ -183,7 +193,7 @@ func (s *Server) EditEvent(c *echo.Context) error {
 		ID:         eventId,
 		OwnerID:    userId,
 		CalendarID: *body.CalendarId,
-		Name:       *body.Name,
+		Name:       body.Name,
 		StartTime:  body.StartTime,
 		EndTime:    body.EndTime,
 	})
