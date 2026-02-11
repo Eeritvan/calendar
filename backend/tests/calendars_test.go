@@ -193,7 +193,7 @@ func TestEditCalendar(t *testing.T) {
 			name:       "editing calendar works",
 			calendarId: calendarId,
 			body: models.EditCalendar{
-				Name: Ptr("daily"),
+				Name: utils.Ptr("daily"),
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Calendar{
@@ -206,7 +206,7 @@ func TestEditCalendar(t *testing.T) {
 			name:       "editing non-existent calendars fails",
 			calendarId: randomUUID,
 			body: models.EditCalendar{
-				Name: Ptr("daily"),
+				Name: utils.Ptr("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -214,7 +214,7 @@ func TestEditCalendar(t *testing.T) {
 			name:       "editing other users calendars fails",
 			calendarId: calendarId2,
 			body: models.EditCalendar{
-				Name: Ptr("daily"),
+				Name: utils.Ptr("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},

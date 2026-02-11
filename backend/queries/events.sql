@@ -33,7 +33,7 @@ WITH location_insert AS (
             ELSE NULL
         END
     WHERE @location_name::text IS NOT NULL AND @location_name::text != ''
-    ON CONFLICT(name, address) DO UPDATE SET name = EXCLUDED.name
+    ON CONFLICT(name, address, CAST(point AS text)) DO UPDATE SET name = EXCLUDED.name
     RETURNING id, name, address, point
 ),
 event_insert AS (

@@ -48,11 +48,11 @@ func TestGetEvents(t *testing.T) {
 		Name:       "monday standup",
 		StartTime:  timeNow,
 		EndTime:    timePlusHour,
-		Location: models.LocationInput{
+		Location: &models.LocationInput{
 			Name:      "toimisto",
-			Address:   "toimistokatu 1",
-			Latitude:  60.248947411912596,
-			Longitude: 24.978291441099014,
+			Address:   utils.Ptr("toimistokatu 1"),
+			Latitude:  utils.Ptr(60.248947411912596),
+			Longitude: utils.Ptr(24.978291441099014),
 		},
 	})
 	userId2 := seedUser(t, ctx, queries, "user2", "password2")
@@ -62,6 +62,18 @@ func TestGetEvents(t *testing.T) {
 		Name:       "my winter car",
 		StartTime:  timeMinusHour,
 		EndTime:    timePlusHour,
+	})
+	userId3 := seedUser(t, ctx, queries, "user3", "password3")
+	calendarId4 := seedCalendar(t, ctx, queries, "testing calendar", userId3)
+	eventId4 := seedEvent(t, ctx, queries, userId3, models.AddEvent{
+		CalendarId: calendarId4,
+		Name:       "testing event",
+		StartTime:  timeMinusHour,
+		EndTime:    timePlusHour,
+		Location: &models.LocationInput{
+			Name:    "testing",
+			Address: utils.Ptr("testing"),
+		},
 	})
 
 	tests := []struct {
@@ -85,7 +97,6 @@ func TestGetEvents(t *testing.T) {
 					CalendarId: calendarId1,
 					StartTime:  timeMinusHour,
 					EndTime:    timeNow,
-					Location:   nil,
 				},
 				{
 					Id:         eventId2,
@@ -95,9 +106,9 @@ func TestGetEvents(t *testing.T) {
 					EndTime:    timePlusHour,
 					Location: &models.Location{
 						Name:      "toimisto",
-						Address:   "toimistokatu 1",
-						Latitude:  60.248947411912596,
-						Longitude: 24.978291441099014,
+						Address:   utils.Ptr("toimistokatu 1"),
+						Latitude:  utils.Ptr(60.248947411912596),
+						Longitude: utils.Ptr(24.978291441099014),
 					},
 				},
 			},
@@ -115,7 +126,6 @@ func TestGetEvents(t *testing.T) {
 					CalendarId: calendarId3,
 					StartTime:  timeMinusHour,
 					EndTime:    timePlusHour,
-					Location:   nil,
 				},
 			},
 		},
@@ -132,7 +142,26 @@ func TestGetEvents(t *testing.T) {
 					CalendarId: calendarId1,
 					StartTime:  timeMinusHour,
 					EndTime:    timeNow,
-					Location:   nil,
+				},
+			},
+		},
+		{
+			name:           "event with missing lat/lng works",
+			userId:         userId3,
+			queryStartTime: timeMinusHour.Format(time.RFC3339),
+			queryEndTime:   timeNow.Format(time.RFC3339),
+			expectedStatus: http.StatusOK,
+			expectedRespData: []models.Event{
+				{
+					Id:         eventId4,
+					Name:       "testing event",
+					CalendarId: calendarId4,
+					StartTime:  timeMinusHour,
+					EndTime:    timePlusHour,
+					Location: &models.Location{
+						Name:    "testing",
+						Address: utils.Ptr("testing"),
+					},
 				},
 			},
 		},
@@ -213,11 +242,11 @@ func TestSearchEvents(t *testing.T) {
 		Name:       "daily meeting",
 		StartTime:  startTime,
 		EndTime:    endTime,
-		Location: models.LocationInput{
+		Location: &models.LocationInput{
 			Name:      "toimisto",
-			Address:   "toimistokatu 1",
-			Latitude:  60.248947411912596,
-			Longitude: 24.978291441099014,
+			Address:   utils.Ptr("toimistokatu 1"),
+			Latitude:  utils.Ptr(60.248947411912596),
+			Longitude: utils.Ptr(24.978291441099014),
 		},
 	})
 
@@ -228,6 +257,19 @@ func TestSearchEvents(t *testing.T) {
 		Name:       "weekly standup",
 		StartTime:  startTime,
 		EndTime:    endTime,
+	})
+
+	userId3 := seedUser(t, ctx, queries, "user3", "password3")
+	calendarId4 := seedCalendar(t, ctx, queries, "testing calendar", userId3)
+	eventId4 := seedEvent(t, ctx, queries, userId3, models.AddEvent{
+		CalendarId: calendarId4,
+		Name:       "testing event",
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Location: &models.LocationInput{
+			Name:    "testing",
+			Address: utils.Ptr("testing"),
+		},
 	})
 
 	tests := []struct {
@@ -259,9 +301,9 @@ func TestSearchEvents(t *testing.T) {
 					EndTime:    endTime,
 					Location: &models.Location{
 						Name:      "toimisto",
-						Address:   "toimistokatu 1",
-						Latitude:  60.248947411912596,
-						Longitude: 24.978291441099014,
+						Address:   utils.Ptr("toimistokatu 1"),
+						Latitude:  utils.Ptr(60.248947411912596),
+						Longitude: utils.Ptr(24.978291441099014),
 					},
 				},
 			},
@@ -278,7 +320,25 @@ func TestSearchEvents(t *testing.T) {
 					CalendarId: calendarId3,
 					StartTime:  startTime,
 					EndTime:    endTime,
-					Location:   nil,
+				},
+			},
+		},
+		{
+			name:           "event with missing lat/lng works",
+			userId:         userId3,
+			searchName:     "testing",
+			expectedStatus: http.StatusOK,
+			expectedRespData: []models.Event{
+				{
+					Id:         eventId4,
+					Name:       "testing event",
+					CalendarId: calendarId4,
+					StartTime:  startTime,
+					EndTime:    endTime,
+					Location: &models.Location{
+						Name:    "testing",
+						Address: utils.Ptr("testing"),
+					},
 				},
 			},
 		},
@@ -353,17 +413,17 @@ func TestAddEvent(t *testing.T) {
 		expectedRespData models.Event
 	}{
 		{
-			name: "adding event works",
+			name: "adding event with location works",
 			body: models.AddEvent{
 				CalendarId: calendarId,
 				Name:       "team meeting",
 				StartTime:  startTime,
 				EndTime:    endTime,
-				Location: models.LocationInput{
+				Location: &models.LocationInput{
 					Name:      "kirjasto",
-					Address:   "helsingin kirjasto 1",
-					Latitude:  62.248947411912596,
-					Longitude: 25.978291441099014,
+					Address:   utils.Ptr("helsingin kirjasto 1"),
+					Latitude:  utils.Ptr(62.248947411912596),
+					Longitude: utils.Ptr(25.978291441099014),
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -375,9 +435,9 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.Location{
 					Name:      "kirjasto",
-					Address:   "helsingin kirjasto 1",
-					Latitude:  62.248947411912596,
-					Longitude: 25.978291441099014,
+					Address:   utils.Ptr("helsingin kirjasto 1"),
+					Latitude:  utils.Ptr(62.248947411912596),
+					Longitude: utils.Ptr(25.978291441099014),
 				},
 			},
 		},
@@ -400,17 +460,92 @@ func TestAddEvent(t *testing.T) {
 			},
 		},
 		{
+			name: "adding event with only location name works",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "online team meeting",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.LocationInput{
+					Name: "home",
+				},
+			},
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Event{
+				// id is unknown beforehand
+				Name:       "online team meeting",
+				CalendarId: calendarId,
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.Location{
+					Name: "home",
+				},
+			},
+		},
+		{
+			name: "adding event with location name and lat/lng works",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "online team meeting",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.LocationInput{
+					Name:      "home",
+					Latitude:  utils.Ptr(33.4321),
+					Longitude: utils.Ptr(22.1234),
+				},
+			},
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Event{
+				// id is unknown beforehand
+				Name:       "online team meeting",
+				CalendarId: calendarId,
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.Location{
+					Name:      "home",
+					Latitude:  utils.Ptr(33.4321),
+					Longitude: utils.Ptr(22.1234),
+				},
+			},
+		},
+		{
+			name: "adding event with location name and address works",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "online team meeting",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.LocationInput{
+					Name:    "home",
+					Address: utils.Ptr("testroad 1"),
+				},
+			},
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Event{
+				// id is unknown beforehand
+				Name:       "online team meeting",
+				CalendarId: calendarId,
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.Location{
+					Name:    "home",
+					Address: utils.Ptr("testroad 1"),
+				},
+			},
+		},
+		{
 			name: "adding event to non-existent calendar fails",
 			body: models.AddEvent{
 				CalendarId: randomUUID,
 				Name:       "team meeting",
 				StartTime:  startTime,
 				EndTime:    endTime,
-				Location: models.LocationInput{
+				Location: &models.LocationInput{
 					Name:      "kirjasto",
-					Address:   "helsingin kirjasto 1",
-					Latitude:  62.248947411912596,
-					Longitude: 25.978291441099014,
+					Address:   utils.Ptr("helsingin kirjasto 1"),
+					Latitude:  utils.Ptr(62.248947411912596),
+					Longitude: utils.Ptr(25.978291441099014),
 				},
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -422,6 +557,64 @@ func TestAddEvent(t *testing.T) {
 				Name:       "team meeting",
 				StartTime:  endTime,
 				EndTime:    startTime,
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "event with added latitude but missing longitude fails",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "team meeting",
+				StartTime:  endTime,
+				EndTime:    startTime,
+				Location: &models.LocationInput{
+					Name:     "office",
+					Latitude: utils.Ptr(22.12345),
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "event with added longitude but missing latitude fails",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "team meeting",
+				StartTime:  endTime,
+				EndTime:    startTime,
+				Location: &models.LocationInput{
+					Name:      "office",
+					Longitude: utils.Ptr(22.12345),
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "event with too high latitude fails",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "online team meeting",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.LocationInput{
+					Name:      "office",
+					Longitude: utils.Ptr(22.1234),
+					Latitude:  utils.Ptr(181.0),
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "event with too low longitude fails",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "online team meeting",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location: &models.LocationInput{
+					Name:      "office",
+					Longitude: utils.Ptr(22.123),
+					Latitude:  utils.Ptr(-91.0),
+				},
 			},
 			expectedStatus: http.StatusBadRequest,
 		},
@@ -458,6 +651,7 @@ func TestAddEvent(t *testing.T) {
 			assert.Equal(t, tc.expectedRespData.CalendarId, got.CalendarId)
 			assert.Equal(t, tc.expectedRespData.StartTime, got.StartTime)
 			assert.Equal(t, tc.expectedRespData.EndTime, got.EndTime)
+			assert.Equal(t, tc.expectedRespData.Location, got.Location)
 		})
 	}
 }
@@ -508,10 +702,10 @@ func TestEditEvent(t *testing.T) {
 			name:    "editing events works",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: Ptr(calendarId),
-				Name:       Ptr("daily"),
-				StartTime:  Ptr(editedStartTime),
-				EndTime:    Ptr(editedEndTime),
+				CalendarId: utils.Ptr(calendarId),
+				Name:       utils.Ptr("daily"),
+				StartTime:  utils.Ptr(editedStartTime),
+				EndTime:    utils.Ptr(editedEndTime),
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Event{
@@ -526,8 +720,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "calendar can be changed",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: Ptr(editCalendarId),
-				Name:       Ptr("daily"),
+				CalendarId: utils.Ptr(editCalendarId),
+				Name:       utils.Ptr("daily"),
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Event{
@@ -542,8 +736,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "calendar can't be added to non-existent calendar",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: Ptr(randomUUID),
-				Name:       Ptr("daily"),
+				CalendarId: utils.Ptr(randomUUID),
+				Name:       utils.Ptr("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -551,8 +745,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "calendar can't be added to other users calendar",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: Ptr(calendarId2),
-				Name:       Ptr("daily"),
+				CalendarId: utils.Ptr(calendarId2),
+				Name:       utils.Ptr("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},

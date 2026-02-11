@@ -28,10 +28,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func Ptr[T any](v T) *T {
-	return &v
-}
-
 func spawnPostgresContainer(t *testing.T, reuseName string) (string, error) {
 	t.Helper()
 
@@ -111,16 +107,28 @@ func seedCalendar(t *testing.T, ctx context.Context, queries *sqlc.Queries, name
 func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, ownerID uuid.UUID, body models.AddEvent) uuid.UUID {
 	t.Helper()
 
+	var locationName string
+	var locationAddress *string
+	var lat *float64
+	var lng *float64
+
+	if body.Location != nil {
+		locationName = body.Location.Name
+		locationAddress = body.Location.Address
+		lat = body.Location.Latitude
+		lng = body.Location.Longitude
+	}
+
 	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{
 		CalendarID:   body.CalendarId,
 		Name:         body.Name,
 		OwnerID:      ownerID,
 		StartTime:    body.StartTime,
 		EndTime:      body.EndTime,
-		LocationName: body.Location.Name,
-		Address:      body.Location.Address,
-		Longitude:    body.Location.Longitude,
-		Latitude:     body.Location.Latitude,
+		LocationName: locationName,
+		Address:      locationAddress,
+		Longitude:    lng,
+		Latitude:     lat,
 	})
 	require.NoError(t, err)
 

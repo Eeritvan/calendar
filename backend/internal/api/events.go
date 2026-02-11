@@ -39,11 +39,18 @@ func (s *Server) GetEvents(c *echo.Context) error {
 	for i, event := range queryResp {
 		var location *models.Location
 		if event.LocationID.Valid {
+			var lat *float64
+			var lng *float64
+			if event.Point != nil {
+				lat = utils.Ptr(event.Point.P.Y)
+				lng = utils.Ptr(event.Point.P.X)
+			}
+
 			location = &models.Location{
 				Name:      event.LocationName,
 				Address:   event.Address,
-				Latitude:  utils.Ptr(event.Point.P.Y),
-				Longitude: utils.Ptr(event.Point.P.X),
+				Latitude:  lat,
+				Longitude: lng,
 			}
 		}
 
@@ -87,11 +94,18 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 	for i, event := range queryResp {
 		var location *models.Location
 		if event.LocationID.Valid {
+			var lat *float64
+			var lng *float64
+			if event.Point != nil {
+				lat = utils.Ptr(event.Point.P.Y)
+				lng = utils.Ptr(event.Point.P.X)
+			}
+
 			location = &models.Location{
 				Name:      event.LocationName,
 				Address:   event.Address,
-				Latitude:  utils.Ptr(event.Point.P.Y),
-				Longitude: utils.Ptr(event.Point.P.X),
+				Latitude:  lat,
+				Longitude: lng,
 			}
 		}
 
@@ -127,11 +141,13 @@ func (s *Server) AddEvent(c *echo.Context) error {
 
 	userId := c.Get("userId").(uuid.UUID)
 
+	var locationName string
 	var locationAddress *string // TODO: would be nice if this wasn't needed
 	var latitude *float64
 	var longitude *float64
 
 	if body.Location != nil {
+		locationName = body.Location.Name
 		locationAddress = body.Location.Address
 		latitude = body.Location.Latitude
 		longitude = body.Location.Longitude
@@ -144,7 +160,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		OwnerID:      userId,
 		StartTime:    body.StartTime,
 		EndTime:      body.EndTime,
-		LocationName: body.Location.Name,
+		LocationName: locationName,
 		Address:      locationAddress,
 		Latitude:     latitude,
 		Longitude:    longitude,
