@@ -224,26 +224,60 @@ func (s *Server) EditEvent(c *echo.Context) error {
 
 	userId := c.Get("userId").(uuid.UUID)
 
+	locationName := utils.Ptr("")
+	var locationAddress *string // TODO: would be nice if this wasn't needed
+	var latitude *float64
+	var longitude *float64
+
+	if body.Location != nil {
+		locationName = body.Location.Name
+		locationAddress = body.Location.Address
+		latitude = body.Location.Latitude
+		longitude = body.Location.Longitude
+	}
+
 	ctx := c.Request().Context()
-	editedEvent, err := s.queries.EditEvent(ctx, sqlc.EditEventParams{
-		ID:         eventId,
-		OwnerID:    userId,
-		CalendarID: *body.CalendarId,
-		Name:       body.Name,
-		StartTime:  body.StartTime,
-		EndTime:    body.EndTime,
+	queryResp, err := s.queries.EditEvent(ctx, sqlc.EditEventParams{
+		ID:              eventId,
+		OwnerID:         userId,
+		CalendarID:      *body.CalendarId,
+		Name:            body.Name,
+		StartTime:       body.StartTime,
+		EndTime:         body.EndTime,
+		LocationName:    locationName,
+		LocationAddress: locationAddress,
+		Longitude:       longitude,
+		Latitude:        latitude,
 	})
 	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
+	var location *models.Location
+	if queryResp.LocationID.Valid {
+		var lat *float64
+		var lng *float64
+		if queryResp.Point != nil {
+			lat = utils.Ptr(queryResp.Point.P.Y)
+			lng = utils.Ptr(queryResp.Point.P.X)
+		}
+
+		location = &models.Location{
+			Name:      queryResp.LocationName,
+			Address:   queryResp.LocationAddress,
+			Latitude:  lat,
+			Longitude: lng,
+		}
+	}
+
 	resp := models.Event{
-		Id:         editedEvent.ID,
-		CalendarId: editedEvent.CalendarID,
-		Name:       editedEvent.Name,
-		StartTime:  editedEvent.Time.Lower.Time.UTC(),
-		EndTime:    editedEvent.Time.Upper.Time.UTC(),
+		Id:         queryResp.ID,
+		CalendarId: queryResp.CalendarID,
+		Name:       queryResp.Name,
+		StartTime:  queryResp.Time.Lower.Time.UTC(),
+		EndTime:    queryResp.Time.Upper.Time.UTC(),
+		Location:   location,
 	}
 
 	s.sse.Emit(userId, "event/edit", resp)

@@ -38,8 +38,7 @@ WITH location_insert AS (
 ),
 event_insert AS (
     INSERT INTO Events (calendar_id, name, time, location_id)
-    SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)'),
-            (SELECT id FROM location_insert LIMIT 1)
+    SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)'), (SELECT id FROM location_insert)
     FROM Calendars
     WHERE id = $1 AND owner_id = $3
     RETURNING id, calendar_id, name, time, location_id
@@ -52,26 +51,60 @@ FROM event_insert e
 LEFT JOIN location_insert l ON e.location_id = l.id;
 
 -- name: EditEvent :one
-UPDATE Events e
-SET
-    calendar_id = COALESCE(sqlc.narg('calendar_id'), calendar_id),
-    name = COALESCE(sqlc.narg('name'), name),
-    time = tstzrange(
-        COALESCE(sqlc.narg('start_time')::timestamptz, lower(time)),
-        COALESCE(sqlc.narg('end_time')::timestamptz, upper(time)),
-        '[)'
-    )
-WHERE e.id = $1
-    AND e.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
-    AND (
-    sqlc.narg('calendar_id')::UUID IS NULL OR
-    EXISTS (
-        SELECT 1 FROM Calendars c2
-        WHERE c2.id = sqlc.narg('calendar_id')
-        AND c2.owner_id = $2
-    )
+WITH location_update AS (
+    INSERT INTO Locations (name, address, point)
+    SELECT
+        sqlc.narg('location_name')::text,
+        sqlc.narg('location_address'),
+        CASE
+            WHEN sqlc.narg('longitude')::float8 IS NOT NULL AND sqlc.narg('latitude')::float8 IS NOT NULL
+            THEN POINT(sqlc.narg('longitude')::float8, sqlc.narg('latitude')::float8)
+            ELSE NULL
+        END
+    WHERE sqlc.narg('location_name')::text IS NOT NULL
+      AND sqlc.narg('location_name')::text != ''
+    ON CONFLICT(name, address, CAST(point AS text)) DO UPDATE SET name = EXCLUDED.name
+    RETURNING id, name, address, point
+),
+event_update AS (
+    UPDATE Events e
+    SET
+        calendar_id = COALESCE(sqlc.narg('calendar_id')::UUID, calendar_id),
+        name = COALESCE(sqlc.narg('name')::text, name),
+        time = tstzrange(
+            COALESCE(sqlc.narg('start_time')::timestamptz, lower(time)),
+            COALESCE(sqlc.narg('end_time')::timestamptz, upper(time)),
+            '[)'
+        ),
+        location_id = CASE
+            WHEN sqlc.narg('location_name')::text IS NULL THEN location_id
+            WHEN sqlc.narg('location_name')::text = '' THEN NULL
+            ELSE (SELECT id FROM location_update)
+        END
+    WHERE e.id = $1
+        AND e.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
+        AND (
+            sqlc.narg('calendar_id')::UUID IS NULL OR
+            EXISTS (
+                SELECT 1 FROM Calendars c2
+                WHERE c2.id = sqlc.narg('calendar_id')::UUID
+                    AND c2.owner_id = $2
+            )
+        )
+    RETURNING e.id, e.calendar_id, e.name, e.time, e.location_id
 )
-RETURNING e.id, e.calendar_id, e.name, e.time;
+SELECT
+    eu.id,
+    eu.calendar_id,
+    eu.name,
+    eu.time,
+    eu.location_id,
+    COALESCE(lu.name, l.name, '')    AS location_name,
+    COALESCE(lu.address, l.address)  AS location_address,
+    COALESCE(lu.point, l.point)      AS point
+FROM event_update eu
+LEFT JOIN location_update lu ON eu.location_id = lu.id
+LEFT JOIN Locations l ON eu.location_id = l.id;
 
 -- name: DeleteEvent :exec
 DELETE FROM Events e

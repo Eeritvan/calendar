@@ -30,8 +30,7 @@ WITH location_insert AS (
 ),
 event_insert AS (
     INSERT INTO Events (calendar_id, name, time, location_id)
-    SELECT $1, $2, tstzrange($8::timestamptz, $9::timestamptz, '[)'),
-            (SELECT id FROM location_insert LIMIT 1)
+    SELECT $1, $2, tstzrange($8::timestamptz, $9::timestamptz, '[)'), (SELECT id FROM location_insert)
     FROM Calendars
     WHERE id = $1 AND owner_id = $3
     RETURNING id, calendar_id, name, time, location_id
@@ -110,48 +109,94 @@ func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) error 
 }
 
 const editEvent = `-- name: EditEvent :one
-UPDATE Events e
-SET
-    calendar_id = COALESCE($3, calendar_id),
-    name = COALESCE($4, name),
-    time = tstzrange(
-        COALESCE($5::timestamptz, lower(time)),
-        COALESCE($6::timestamptz, upper(time)),
-        '[)'
-    )
-WHERE e.id = $1
-    AND e.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
-    AND (
-    $3::UUID IS NULL OR
-    EXISTS (
-        SELECT 1 FROM Calendars c2
-        WHERE c2.id = $3
-        AND c2.owner_id = $2
-    )
+WITH location_update AS (
+    INSERT INTO Locations (name, address, point)
+    SELECT
+        $3::text,
+        $4,
+        CASE
+            WHEN $5::float8 IS NOT NULL AND $6::float8 IS NOT NULL
+            THEN POINT($5::float8, $6::float8)
+            ELSE NULL
+        END
+    WHERE $3::text IS NOT NULL
+      AND $3::text != ''
+    ON CONFLICT(name, address, CAST(point AS text)) DO UPDATE SET name = EXCLUDED.name
+    RETURNING id, name, address, point
+),
+event_update AS (
+    UPDATE Events e
+    SET
+        calendar_id = COALESCE($7::UUID, calendar_id),
+        name = COALESCE($8::text, name),
+        time = tstzrange(
+            COALESCE($9::timestamptz, lower(time)),
+            COALESCE($10::timestamptz, upper(time)),
+            '[)'
+        ),
+        location_id = CASE
+            WHEN $3::text IS NULL THEN location_id
+            WHEN $3::text = '' THEN NULL
+            ELSE (SELECT id FROM location_update)
+        END
+    WHERE e.id = $1
+        AND e.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
+        AND (
+            $7::UUID IS NULL OR
+            EXISTS (
+                SELECT 1 FROM Calendars c2
+                WHERE c2.id = $7::UUID
+                    AND c2.owner_id = $2
+            )
+        )
+    RETURNING e.id, e.calendar_id, e.name, e.time, e.location_id
 )
-RETURNING e.id, e.calendar_id, e.name, e.time
+SELECT
+    eu.id,
+    eu.calendar_id,
+    eu.name,
+    eu.time,
+    eu.location_id,
+    COALESCE(lu.name, l.name, '')    AS location_name,
+    COALESCE(lu.address, l.address)  AS location_address,
+    COALESCE(lu.point, l.point)      AS point
+FROM event_update eu
+LEFT JOIN location_update lu ON eu.location_id = lu.id
+LEFT JOIN Locations l ON eu.location_id = l.id
 `
 
 type EditEventParams struct {
-	ID         uuid.UUID
-	OwnerID    uuid.UUID
-	CalendarID uuid.UUID
-	Name       *string
-	StartTime  *time.Time
-	EndTime    *time.Time
+	ID              uuid.UUID
+	OwnerID         uuid.UUID
+	LocationName    *string
+	LocationAddress *string
+	Longitude       *float64
+	Latitude        *float64
+	CalendarID      uuid.UUID
+	Name            *string
+	StartTime       *time.Time
+	EndTime         *time.Time
 }
 
 type EditEventRow struct {
-	ID         uuid.UUID
-	CalendarID uuid.UUID
-	Name       string
-	Time       pgtype.Range[pgtype.Timestamptz]
+	ID              uuid.UUID
+	CalendarID      uuid.UUID
+	Name            string
+	Time            pgtype.Range[pgtype.Timestamptz]
+	LocationID      uuid.UUID
+	LocationName    string
+	LocationAddress *string
+	Point           *pgtype.Point
 }
 
 func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEventRow, error) {
 	row := q.db.QueryRow(ctx, editEvent,
 		arg.ID,
 		arg.OwnerID,
+		arg.LocationName,
+		arg.LocationAddress,
+		arg.Longitude,
+		arg.Latitude,
 		arg.CalendarID,
 		arg.Name,
 		arg.StartTime,
@@ -163,6 +208,10 @@ func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEvent
 		&i.CalendarID,
 		&i.Name,
 		&i.Time,
+		&i.LocationID,
+		&i.LocationName,
+		&i.LocationAddress,
+		&i.Point,
 	)
 	return i, err
 }
