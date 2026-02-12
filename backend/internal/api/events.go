@@ -171,7 +171,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 	}
 
 	var location *models.Location
-	if queryResp.LocationID.Valid {
+	if queryResp.Point != nil || queryResp.Address != nil || queryResp.LocationName != "" {
 		var lat *float64
 		var lng *float64
 		if queryResp.Point != nil {
@@ -255,7 +255,7 @@ func (s *Server) EditEvent(c *echo.Context) error {
 	}
 
 	var location *models.Location
-	if queryResp.LocationID.Valid {
+	if queryResp.Point != nil || queryResp.LocationAddress != nil || queryResp.LocationName != "" {
 		var lat *float64
 		var lng *float64
 		if queryResp.Point != nil {

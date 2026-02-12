@@ -35,7 +35,7 @@ event_insert AS (
     WHERE id = $1 AND owner_id = $3
     RETURNING id, calendar_id, name, time, location_id
 )
-SELECT e.id, e.calendar_id, e.name, e.time, e.location_id as location_id,
+SELECT e.id, e.calendar_id, e.name, e.time,
         COALESCE(l.name, '') as location_name,
         l.address as address,
         l.point as point
@@ -60,7 +60,6 @@ type AddEventRow struct {
 	CalendarID   uuid.UUID
 	Name         string
 	Time         pgtype.Range[pgtype.Timestamptz]
-	LocationID   uuid.NullUUID
 	LocationName string
 	Address      *string
 	Point        *pgtype.Point
@@ -84,7 +83,6 @@ func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow
 		&i.CalendarID,
 		&i.Name,
 		&i.Time,
-		&i.LocationID,
 		&i.LocationName,
 		&i.Address,
 		&i.Point,
@@ -151,15 +149,10 @@ event_update AS (
         )
     RETURNING e.id, e.calendar_id, e.name, e.time, e.location_id
 )
-SELECT
-    eu.id,
-    eu.calendar_id,
-    eu.name,
-    eu.time,
-    eu.location_id,
-    COALESCE(lu.name, l.name, '')    AS location_name,
-    COALESCE(lu.address, l.address)  AS location_address,
-    COALESCE(lu.point, l.point)      AS point
+SELECT eu.id, eu.calendar_id, eu.name, eu.time,
+    COALESCE(lu.name, l.name, '')   AS location_name,
+    COALESCE(lu.address, l.address) AS location_address,
+    COALESCE(lu.point, l.point)
 FROM event_update eu
 LEFT JOIN location_update lu ON eu.location_id = lu.id
 LEFT JOIN Locations l ON eu.location_id = l.id
@@ -183,7 +176,6 @@ type EditEventRow struct {
 	CalendarID      uuid.UUID
 	Name            string
 	Time            pgtype.Range[pgtype.Timestamptz]
-	LocationID      uuid.UUID
 	LocationName    string
 	LocationAddress *string
 	Point           *pgtype.Point
@@ -208,7 +200,6 @@ func (q *Queries) EditEvent(ctx context.Context, arg EditEventParams) (EditEvent
 		&i.CalendarID,
 		&i.Name,
 		&i.Time,
-		&i.LocationID,
 		&i.LocationName,
 		&i.LocationAddress,
 		&i.Point,
@@ -283,7 +274,7 @@ type GetEventsRow struct {
 	CalendarID   uuid.UUID
 	Name         string
 	Time         pgtype.Range[pgtype.Timestamptz]
-	LocationID   uuid.NullUUID
+	LocationID   pgtype.Int4
 	LocationName string
 	Address      *string
 	Point        *pgtype.Point
@@ -341,7 +332,7 @@ type SearchEventsRow struct {
 	CalendarID   uuid.UUID
 	Name         string
 	Time         pgtype.Range[pgtype.Timestamptz]
-	LocationID   uuid.NullUUID
+	LocationID   pgtype.Int4
 	LocationName string
 	Address      *string
 	Point        *pgtype.Point

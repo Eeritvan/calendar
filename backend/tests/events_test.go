@@ -682,10 +682,21 @@ func TestEditEvent(t *testing.T) {
 		StartTime:  startTime,
 		EndTime:    endTime,
 	})
+	eventId2 := seedEvent(t, ctx, queries, userId, models.AddEvent{
+		CalendarId: calendarId,
+		Name:       "team meeting",
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Location: &models.LocationInput{
+			Name:      "office",
+			Address:   utils.Ptr("officeRoad 1"),
+			Latitude:  utils.Ptr(12.3456),
+			Longitude: utils.Ptr(65.4321),
+		},
+	})
 
 	userId2 := seedUser(t, ctx, queries, "editEventUser2", "password")
 	calendarId2 := seedCalendar(t, ctx, queries, "meetings", userId2)
-
 	editCalendarId := seedCalendar(t, ctx, queries, "meetings2", userId)
 
 	randomUUID, err := uuid.NewRandom()
@@ -733,7 +744,53 @@ func TestEditEvent(t *testing.T) {
 			},
 		},
 		{
-			name:    "calendar can't be added to non-existent calendar",
+			name:    "location can be changed",
+			eventId: eventId,
+			body: models.EventEdit{
+				CalendarId: utils.Ptr(calendarId),
+				Name:       utils.Ptr("testing"),
+				Location: &models.LocationEdit{
+					Name:      utils.Ptr("office"),
+					Address:   utils.Ptr("road 1"),
+					Latitude:  utils.Ptr(33.33),
+					Longitude: utils.Ptr(22.22),
+				},
+			},
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Event{
+				Id:         eventId,
+				CalendarId: calendarId,
+				Name:       "testing",
+				StartTime:  editedStartTime,
+				EndTime:    editedEndTime,
+				Location: &models.Location{
+					Name:      "office",
+					Address:   utils.Ptr("road 1"),
+					Latitude:  utils.Ptr(33.33),
+					Longitude: utils.Ptr(22.22),
+				},
+			},
+		},
+		{
+			name:    "location can be removed",
+			eventId: eventId2,
+			body: models.EventEdit{
+				CalendarId: utils.Ptr(calendarId),
+				Name:       utils.Ptr("testing"),
+				Location:   nil,
+			},
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Event{
+				Id:         eventId2,
+				CalendarId: calendarId,
+				Name:       "testing",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location:   nil,
+			},
+		},
+		{
+			name:    "event can't be added to non-existent calendar",
 			eventId: eventId,
 			body: models.EventEdit{
 				CalendarId: utils.Ptr(randomUUID),
@@ -742,7 +799,20 @@ func TestEditEvent(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
-			name:    "calendar can't be added to other users calendar",
+			name:    "event latitude and longitude must be edited together",
+			eventId: eventId,
+			body: models.EventEdit{
+				CalendarId: utils.Ptr(calendarId),
+				Name:       utils.Ptr("daily"),
+				Location: &models.LocationEdit{
+					Name:     utils.Ptr("testing"),
+					Latitude: utils.Ptr(23.22),
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:    "event can't be added to other users calendar",
 			eventId: eventId,
 			body: models.EventEdit{
 				CalendarId: utils.Ptr(calendarId2),

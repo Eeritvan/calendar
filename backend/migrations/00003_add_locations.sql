@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS Locations (
-    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    id INTEGER  GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL,
     address TEXT,
     point POINT,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS Locations (
 );
 
 ALTER TABLE Events
-ADD COLUMN location_id UUID REFERENCES Locations(id) ON DELETE SET NULL;
+ADD COLUMN location_id INTEGER REFERENCES Locations(id) ON DELETE SET NULL;
 -- +goose StatementEnd
 
 

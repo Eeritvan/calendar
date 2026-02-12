@@ -43,7 +43,7 @@ event_insert AS (
     WHERE id = $1 AND owner_id = $3
     RETURNING id, calendar_id, name, time, location_id
 )
-SELECT e.id, e.calendar_id, e.name, e.time, e.location_id as location_id,
+SELECT e.id, e.calendar_id, e.name, e.time,
         COALESCE(l.name, '') as location_name,
         l.address as address,
         l.point as point
@@ -93,15 +93,10 @@ event_update AS (
         )
     RETURNING e.id, e.calendar_id, e.name, e.time, e.location_id
 )
-SELECT
-    eu.id,
-    eu.calendar_id,
-    eu.name,
-    eu.time,
-    eu.location_id,
-    COALESCE(lu.name, l.name, '')    AS location_name,
-    COALESCE(lu.address, l.address)  AS location_address,
-    COALESCE(lu.point, l.point)      AS point
+SELECT eu.id, eu.calendar_id, eu.name, eu.time,
+    COALESCE(lu.name, l.name, '')   AS location_name,
+    COALESCE(lu.address, l.address) AS location_address,
+    COALESCE(lu.point, l.point)
 FROM event_update eu
 LEFT JOIN location_update lu ON eu.location_id = lu.id
 LEFT JOIN Locations l ON eu.location_id = l.id;

@@ -22,11 +22,11 @@ type Event struct {
 	CalendarID uuid.UUID
 	Name       string
 	Time       pgtype.Range[pgtype.Timestamptz]
-	LocationID uuid.NullUUID
+	LocationID pgtype.Int4
 }
 
 type Location struct {
-	ID      uuid.UUID
+	ID      int32
 	Name    string
 	Address *string
 	Point   *pgtype.Point
