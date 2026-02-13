@@ -1,5 +1,10 @@
 | day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 12.02.2026 | finished location editing and added + fixed tests                                                | 2    |
+| 11.02.2026 | reworked most of location stuff and began feature to edit locations                              | 4    |
+| 07.02.2026 | optimized and fixed cicd. also added deleting events in batches                                  | 2.5  |
+| 06.02.2026 | fixed tests and return objects in db                                                             | 2    |
+| 05.02.2026 | added locations to events                                                                        | 3    |
 | 03.02.2026 | redesigned dockerfile and fixed deployments                                                      | 1    |
 | 31.01.2026 | optimized ci/cd by adding more caching                                                           | 1    |
 | 31.01.2026 | fixed tests and some timezone stuff with tests                                                   | 2    |

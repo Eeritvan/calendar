@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/eeritvan/calendar/internal/api"
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/stream"
 	"github.com/google/uuid"
@@ -25,10 +26,6 @@ func TestMain(m *testing.M) {
 	os.Setenv("TZ", "UTC")
 	os.Setenv("JWT_KEY", "test_secret")
 	os.Exit(m.Run())
-}
-
-func Ptr[T any](v T) *T {
-	return &v
 }
 
 func spawnPostgresContainer(t *testing.T, reuseName string) (string, error) {
@@ -107,15 +104,31 @@ func seedCalendar(t *testing.T, ctx context.Context, queries *sqlc.Queries, name
 	return calendar.ID
 }
 
-func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, name string, ownerID, calendarId uuid.UUID, startTime, endTime time.Time) uuid.UUID {
+func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, ownerID uuid.UUID, body models.AddEvent) uuid.UUID {
 	t.Helper()
 
+	var locationName string
+	var locationAddress *string
+	var lat *float64
+	var lng *float64
+
+	if body.Location != nil {
+		locationName = body.Location.Name
+		locationAddress = body.Location.Address
+		lat = body.Location.Latitude
+		lng = body.Location.Longitude
+	}
+
 	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{
-		Name:       name,
-		OwnerID:    ownerID,
-		CalendarID: calendarId,
-		StartTime:  startTime,
-		EndTime:    endTime,
+		CalendarID:   body.CalendarId,
+		Name:         body.Name,
+		OwnerID:      ownerID,
+		StartTime:    body.StartTime,
+		EndTime:      body.EndTime,
+		LocationName: locationName,
+		Address:      locationAddress,
+		Longitude:    lng,
+		Latitude:     lat,
 	})
 	require.NoError(t, err)
 

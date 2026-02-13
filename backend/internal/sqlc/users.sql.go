@@ -42,14 +42,14 @@ func (q *Queries) DisableTotp(ctx context.Context, id uuid.UUID) (DisableTotpRow
 
 const enableTotp = `-- name: EnableTotp :one
 UPDATE Users
-SET totp = $1
-WHERE id = $2
+SET totp = $2::text
+WHERE id = $1
 RETURNING id, name
 `
 
 type EnableTotpParams struct {
-	Totp string
 	ID   uuid.UUID
+	Totp string
 }
 
 type EnableTotpRow struct {
@@ -58,7 +58,7 @@ type EnableTotpRow struct {
 }
 
 func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) (EnableTotpRow, error) {
-	row := q.db.QueryRow(ctx, enableTotp, arg.Totp, arg.ID)
+	row := q.db.QueryRow(ctx, enableTotp, arg.ID, arg.Totp)
 	var i EnableTotpRow
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
@@ -135,9 +135,16 @@ FROM Users
 WHERE name = $1
 `
 
-func (q *Queries) Login(ctx context.Context, name string) (User, error) {
+type LoginRow struct {
+	ID           uuid.UUID
+	Name         string
+	PasswordHash string
+	Totp         string
+}
+
+func (q *Queries) Login(ctx context.Context, name string) (LoginRow, error) {
 	row := q.db.QueryRow(ctx, login, name)
-	var i User
+	var i LoginRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,

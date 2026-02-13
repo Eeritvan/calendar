@@ -12,7 +12,7 @@ DB_DRIVER=postgres
 .PHONY: start build test clean generate
 
 # dev
-dev air: frontend_build
+dev air:
 	air
 
 start: build
@@ -26,6 +26,9 @@ clean:
 
 frontend_build:
 	cd ../frontend && npm run build && rm -rf ../backend/dist && mv dist ../backend/dist
+
+test:
+	go test ./tests
 
 # sqlc
 sqlc: sqlc-vet

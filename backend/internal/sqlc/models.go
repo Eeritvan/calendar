@@ -22,13 +22,21 @@ type Event struct {
 	CalendarID uuid.UUID
 	Name       string
 	Time       pgtype.Range[pgtype.Timestamptz]
+	LocationID pgtype.Int4
+}
+
+type Location struct {
+	ID      int32
+	Name    string
+	Address *string
+	Point   *pgtype.Point
 }
 
 type User struct {
 	ID           uuid.UUID
 	Name         string
 	PasswordHash string
-	Totp         string
+	Totp         *string
 }
 
 type UserRecoveryCode struct {
