@@ -8,6 +8,7 @@ import (
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/utils"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
@@ -20,19 +21,14 @@ func TestGetCalendars(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "calendars0")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "calendars")
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	userId1 := seedUser(t, ctx, queries, "calendarUser", "password")
+	userId1 := seedUser(t, ctx, queries, "getCalendarUser", "password")
 	seedCalendar(t, ctx, queries, "meetings", userId1)
 	seedCalendar(t, ctx, queries, "daily", userId1)
 
-	userId2 := seedUser(t, ctx, queries, "secondUser", "password")
+	userId2 := seedUser(t, ctx, queries, "getCalendarUser2", "password")
 	seedCalendar(t, ctx, queries, "video games", userId2)
 
 	tests := []struct {
@@ -92,15 +88,10 @@ func TestAddCalendar(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "calendars")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "calendars")
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	userId := seedUser(t, ctx, queries, "calendarUser", "password")
+	userId := seedUser(t, ctx, queries, "AddCalendarUser", "password")
 
 	tests := []struct {
 		name             string
@@ -165,18 +156,13 @@ func TestEditCalendar(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "calendars2")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "calendars")
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	userId := seedUser(t, ctx, queries, "calendarUser", "password")
+	userId := seedUser(t, ctx, queries, "EditCalendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
 
-	userId2 := seedUser(t, ctx, queries, "calendarUser2", "password")
+	userId2 := seedUser(t, ctx, queries, "EditCalendarUser2", "password")
 	calendarId2 := seedCalendar(t, ctx, queries, "meetings", userId2)
 
 	randomUUID, err := uuid.NewRandom()
@@ -258,15 +244,10 @@ func TestDeleteCalendar(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "deleteCalendar")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "calendars")
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	userId := seedUser(t, ctx, queries, "calendarUser", "password")
+	userId := seedUser(t, ctx, queries, "deleteCalendarUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
 
 	randomUUID, err := uuid.NewRandom()

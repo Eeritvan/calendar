@@ -12,7 +12,6 @@ import (
 	"github.com/eeritvan/calendar/internal/utils"
 
 	"github.com/go-playground/validator/v10"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/echotest"
 	"github.com/stretchr/testify/assert"
@@ -23,12 +22,7 @@ func TestSignup(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "users")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "users")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	seedUser(t, ctx, queries, "signupUser 3", "password 1")
@@ -119,12 +113,7 @@ func TestLogin(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "users")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "users")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	seedUser(t, ctx, queries, "loginUser1", "password 1")
@@ -185,12 +174,7 @@ func TestLogout(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "users")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "users")
 	server, _ := setupTestServer(t, ctx, connURI)
 
 	tests := []struct {
