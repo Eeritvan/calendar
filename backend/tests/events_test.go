@@ -10,6 +10,7 @@ import (
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/utils"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
@@ -22,19 +23,14 @@ func TestGetEvents(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "getEvents")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "events")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	timeNow := time.Now().UTC().Truncate(time.Microsecond)
 	timePlusHour := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
 	timeMinusHour := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Microsecond)
 
-	userId1 := seedUser(t, ctx, queries, "user1", "password1")
+	userId1 := seedUser(t, ctx, queries, "getEventsUser1", "password1")
 	calendarId1 := seedCalendar(t, ctx, queries, "meetings", userId1)
 	calendarId2 := seedCalendar(t, ctx, queries, "daily", userId1)
 	eventId1 := seedEvent(t, ctx, queries, userId1, models.AddEvent{
@@ -55,7 +51,7 @@ func TestGetEvents(t *testing.T) {
 			Longitude: utils.Ptr(24.978291441099014),
 		},
 	})
-	userId2 := seedUser(t, ctx, queries, "user2", "password2")
+	userId2 := seedUser(t, ctx, queries, "getEventsUser2", "password2")
 	calendarId3 := seedCalendar(t, ctx, queries, "video games", userId2)
 	eventId3 := seedEvent(t, ctx, queries, userId2, models.AddEvent{
 		CalendarId: calendarId3,
@@ -63,7 +59,7 @@ func TestGetEvents(t *testing.T) {
 		StartTime:  timeMinusHour,
 		EndTime:    timePlusHour,
 	})
-	userId3 := seedUser(t, ctx, queries, "user3", "password3")
+	userId3 := seedUser(t, ctx, queries, "getEventsUser3", "password3")
 	calendarId4 := seedCalendar(t, ctx, queries, "testing calendar", userId3)
 	eventId4 := seedEvent(t, ctx, queries, userId3, models.AddEvent{
 		CalendarId: calendarId4,
@@ -217,18 +213,13 @@ func TestSearchEvents(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "searchEvents")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "events")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().UTC().Truncate(time.Microsecond)
 	endTime := time.Now().UTC().Add(time.Hour).Truncate(time.Microsecond)
 
-	userId1 := seedUser(t, ctx, queries, "user1", "password1")
+	userId1 := seedUser(t, ctx, queries, "searchEventsUser1", "password1")
 	calendarId1 := seedCalendar(t, ctx, queries, "meetings", userId1)
 	calendarId2 := seedCalendar(t, ctx, queries, "daily", userId1)
 	eventId1 := seedEvent(t, ctx, queries, userId1, models.AddEvent{
@@ -389,15 +380,10 @@ func TestAddEvent(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "addEvents")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "events")
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	userId := seedUser(t, ctx, queries, "eventUser", "password")
+	userId := seedUser(t, ctx, queries, "addEventUser", "password")
 	calendarId := seedCalendar(t, ctx, queries, "meetings", userId)
 
 	startTime := time.Now().UTC().Truncate(time.Microsecond)
@@ -660,12 +646,7 @@ func TestEditEvent(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "editEvents")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "events")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().UTC().Truncate(time.Microsecond)
@@ -860,12 +841,7 @@ func TestDeleteEvent(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "calendar3")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "events")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().UTC().Truncate(time.Microsecond)
@@ -925,12 +901,7 @@ func TestBatchDeleteEvents(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	connURI, err := spawnPostgresContainer(t, "calendar5")
-	require.NoError(t, err)
-
-	err = runMigrations(t, connURI)
-	require.NoError(t, err)
-
+	connURI := spawnPostgresContainer(t, "events")
 	server, queries := setupTestServer(t, ctx, connURI)
 
 	startTime := time.Now().UTC().Truncate(time.Microsecond)

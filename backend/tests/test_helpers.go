@@ -2,8 +2,11 @@ package tests
 
 import (
 	"context"
-	"database/sql"
+	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,7 +17,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -28,15 +30,76 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func spawnPostgresContainer(t *testing.T, reuseName string) (string, error) {
+func buildInitScripts(t *testing.T, dir string) []string {
+	t.Helper()
+
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+
+	var migrationFiles []string
+	for _, e := range entries {
+		migrationFiles = append(migrationFiles, filepath.Join(dir, e.Name()))
+	}
+	sort.Strings(migrationFiles)
+
+	tmpScripts := make([]string, 0, len(migrationFiles))
+	cleanup := func() {
+		for _, p := range tmpScripts {
+			_ = os.Remove(p)
+		}
+	}
+
+	for i, path := range migrationFiles {
+		b, err := os.ReadFile(path)
+		if err != nil {
+			cleanup()
+			require.NoError(t, err)
+		}
+
+		sql := string(b)
+		if idx := strings.Index(sql, "-- +goose Down"); idx >= 0 {
+			sql = sql[:idx]
+		}
+
+		f, err := os.CreateTemp("", fmt.Sprintf("init-%03d-*.sql", i))
+		if err != nil {
+			cleanup()
+			require.NoError(t, err)
+		}
+
+		if _, err := f.WriteString(sql); err != nil {
+			_ = f.Close()
+			_ = os.Remove(f.Name())
+			cleanup()
+			require.NoError(t, err)
+		}
+		if err := f.Close(); err != nil {
+			_ = os.Remove(f.Name())
+			cleanup()
+			require.NoError(t, err)
+		}
+
+		tmpScripts = append(tmpScripts, f.Name())
+	}
+
+	t.Cleanup(cleanup)
+	return tmpScripts
+}
+
+func spawnPostgresContainer(t *testing.T, reuseName string) string {
 	t.Helper()
 
 	ctx := context.Background()
+
+	migrationsDir := filepath.Join("../migrations")
+	filteredScripts := buildInitScripts(t, migrationsDir)
+
 	postgresContainer, err := postgres.Run(context.Background(),
 		"postgres:alpine",
 		postgres.WithDatabase("postgres"),
 		postgres.WithUsername("postgres"),
 		postgres.WithPassword("postgres"),
+		postgres.WithOrderedInitScripts(filteredScripts...),
 		testcontainers.WithReuseByName(reuseName),
 		testcontainers.WithWaitStrategy(
 			wait.
@@ -45,36 +108,12 @@ func spawnPostgresContainer(t *testing.T, reuseName string) (string, error) {
 				WithStartupTimeout(5*time.Second),
 		),
 	)
-
-	if err != nil {
-		return "", err
-	}
+	require.NoError(t, err)
 
 	connURI, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		return "", err
-	}
-	return connURI, nil
-}
+	require.NoError(t, err)
 
-func runMigrations(t *testing.T, connURI string) error {
-	t.Helper()
-
-	db, err := sql.Open("pgx", connURI)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		return err
-	}
-
-	if err := goose.Up(db, "../migrations"); err != nil {
-		return err
-	}
-
-	return nil
+	return connURI
 }
 
 func seedUser(t *testing.T, ctx context.Context, queries *sqlc.Queries, name, password string) uuid.UUID {
