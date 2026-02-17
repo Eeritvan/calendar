@@ -19,7 +19,7 @@ start: build
 	./$(BINARY_NAME)
 
 build: clean frontend_build
-	GOEXPERIMENT=jsonv2 GOEXPERIMENT=greenteagc $(GOBUILD) -o $(BINARY_NAME)
+	GOEXPERIMENT=jsonv2 $(GOBUILD) -o $(BINARY_NAME)
 
 clean:
 	rm -f $(binary_name) && rm -rf tmp && rm -rf dist
