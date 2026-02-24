@@ -1,9 +1,10 @@
-import { Activity } from 'react'
+import { Activity, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { API_URL } from '@/constants'
 import Calendar from '@/features/calendar/calendar'
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -28,6 +29,8 @@ const fetchMe = async () => {
 }
 
 function App() {
+  const { setItem, getItem, removeItem } = useLocalStorage("theme")
+  const [currentTheme, setCurrentTheme] = useState(() => getItem() ?? 'auto')
   const { isLoading, data } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: fetchMe,
@@ -48,6 +51,28 @@ function App() {
 
   return (
     <div>
+      <label htmlFor='mode-switcher'>
+        theme
+        <select
+          id="mode-switcher"
+          value={currentTheme}
+          onChange={(e: any) => {
+            const theme = e.target.value
+            setCurrentTheme(theme)
+            if (theme === 'auto') {
+              document.documentElement.removeAttribute('data-color-scheme')
+              removeItem()
+            } else {
+              document.documentElement.setAttribute('data-color-scheme', theme)
+              setItem(theme)
+            }
+          }}
+      >
+        <option value="auto"> auto </option>
+        <option value="light"> light </option>
+        <option value="dark"> dark </option>
+      </select>
+      </label>
       <Activity mode={isLoading ? "hidden" : "visible"}>
         <Link to="/auth/login">
           login
