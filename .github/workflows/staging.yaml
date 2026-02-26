@@ -24,7 +24,7 @@ jobs:
 
   build-and-push:
     needs: [test]
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
     env:
       IMAGE_NAME: ghcr.io/eeritvan/calendar-staging
       TAILSCALE_TAG: tag:calendar-cicd
