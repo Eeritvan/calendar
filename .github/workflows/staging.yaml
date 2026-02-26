@@ -1,4 +1,4 @@
-name: push to main
+name: deploy staging
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - "**/*.md"
       - "**/*.gitignore"
+      - "**/*.env.template"
       - "työtuntikirjanpito.md"
       - "backend/Makefile"
 
@@ -25,7 +26,7 @@ jobs:
     needs: [test]
     runs-on: ubuntu-24.04
     env:
-      IMAGE_NAME: ghcr.io/eeritvan/calendar
+      IMAGE_NAME: ghcr.io/eeritvan/calendar-staging
       TAILSCALE_TAG: tag:calendar-cicd
     steps:
       - uses: actions/checkout@v6
@@ -56,4 +57,4 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: ${{ env.TAILSCALE_TAG }}
       - name: Push webhook
-        run: curl -sS --fail -X POST "${{ secrets.WEBHOOK_URL }}"
+        run: curl -sS --fail -X POST "${{ secrets.WEBHOOK_URL_STAGING }}"
