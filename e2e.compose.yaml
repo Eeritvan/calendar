@@ -1,0 +1,47 @@
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
+    environment:
+      - BASE_URL=http://application:3010
+    volumes:
+      - ./frontend:/frontend
+    working_dir: /frontend
+    command: >
+      sh -c '
+        echo "Waiting for application to become available...";
+        until curl -sfS http://application:3010 >/dev/null 2>&1; do sleep 1; done;
+        npx playwright test --reporter=list'
+    depends_on:
+      - application
+
+  application:
+    build:
+      context: .
+    environment:
+      - DB_URL=postgresql://postgres:postgres@db:5432/postgres?sslmode=disable
+      - PORT=3010
+      - JWT_KEY=secret
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+    image: ghcr.io/kukymbr/goose-docker:3.27.0
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=postgresql://postgres:postgres@db:5432/postgres?sslmode=disable
+    volumes:
+      - ./backend/migrations:/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

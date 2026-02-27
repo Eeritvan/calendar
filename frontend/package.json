@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "docker compose -f ../e2e.compose.yaml up"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.6",
@@ -25,6 +26,7 @@
     "tailwindcss": "^4.0.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tanstack/devtools-vite": "^0.3.11",
     "@tanstack/eslint-config": "^0.3.0",
     "@testing-library/dom": "^10.4.0",
