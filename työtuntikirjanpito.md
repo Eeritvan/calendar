@@ -1,5 +1,10 @@
 | day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 04.03.2026 | fixed dark/light mode and added e2e tests to run on ci/cd                                        | 3.5  |
+| 27.02.2026 | added playwright e2e tests                                                                       | 1.5  |
+| 26.02.2026 | added staging deployment                                                                         | 2    |
+| 24.02.2026 | worked on light/dark themes                                                                      | 1    |
+| 17.02.2026 | optimized tests and updated go version                                                           | 2    |
 | 12.02.2026 | finished location editing and added + fixed tests                                                | 2    |
 | 11.02.2026 | reworked most of location stuff and began feature to edit locations                              | 4    |
 | 07.02.2026 | optimized and fixed cicd. also added deleting events in batches                                  | 2.5  |
