@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { API_URL } from '@/constants'
 import Calendar from '@/features/calendar/calendar'
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -28,6 +29,7 @@ const fetchMe = async () => {
 }
 
 function App() {
+  const { value: theme, setItem } = useLocalStorage("theme")
   const { isLoading, data } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: fetchMe,
@@ -48,6 +50,21 @@ function App() {
 
   return (
     <div>
+      <label htmlFor='theme-switch'>
+        theme
+        <select
+          id='theme-switch'
+          value={theme ?? 'auto'}
+          onChange={(e: any) => {
+            const newTheme = e.target.value
+            setItem(newTheme)
+          }}
+        >
+          <option value="auto"> auto </option>
+          <option value="light"> light </option>
+          <option value="dark"> dark </option>
+        </select>
+      </label>
       <Activity mode={isLoading ? "hidden" : "visible"}>
         <Link to="/auth/login">
           login
