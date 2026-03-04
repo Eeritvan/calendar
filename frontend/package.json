@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
-    "test:e2e": "docker compose -f ../e2e.compose.yaml up"
+    "test:e2e": "docker compose -f ../e2e.compose.yaml run --rm playwright"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.6",

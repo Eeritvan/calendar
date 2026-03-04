@@ -2,14 +2,15 @@ services:
   playwright:
     image: mcr.microsoft.com/playwright:v1.58.2-noble
     environment:
-      - BASE_URL=http://application:3010
+      - BASE_URL=http://application:3000
     volumes:
-      - ./frontend:/frontend
-    working_dir: /frontend
+      - ./frontend/tests:/e2e/tests
+      - ./frontend/playwright.config.ts:/e2e/playwright.config.ts
+    working_dir: /e2e
     command: >
       sh -c '
-        npm install;
-        until curl -sfS http://application:3010 >/dev/null 2>&1; do sleep 1; done;
+        npm install @playwright/test;
+        until curl -sfS http://application:3000 >/dev/null 2>&1; do sleep 1; done;
         npx playwright test --reporter=list'
     depends_on:
       - application
@@ -19,7 +20,7 @@ services:
       context: .
     environment:
       - DB_URL=postgresql://postgres:postgres@db:5432/postgres?sslmode=disable
-      - PORT=3010
+      - PORT=3000
       - JWT_KEY=secret
     depends_on:
       migrate:
@@ -42,6 +43,6 @@ services:
       - POSTGRES_PASSWORD=postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      interval: 1s
       timeout: 5s
       retries: 5
