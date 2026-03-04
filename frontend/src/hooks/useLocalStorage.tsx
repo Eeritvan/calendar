@@ -1,16 +1,19 @@
-export const useLocalStorage = (key: string) => {
-  const setItem = (value: unknown) => {
-    window.localStorage.setItem(key, JSON.stringify(value))
-  }
+import { useState } from 'react'
 
-  const getItem = () => {
-    const item = window.localStorage.getItem(key)
-    return item ? JSON.parse(item) : null
+export const useLocalStorage = (key: string) => {
+  const [value, setValue] = useState<string | null>(() =>
+    window.localStorage.getItem(key)
+  )
+
+  const setItem = (newValue: string) => {
+    window.localStorage.setItem(key, newValue)
+    setValue(newValue)
   }
 
   const removeItem = () => {
     window.localStorage.removeItem(key)
+    setValue(null)
   }
 
-  return { setItem, getItem, removeItem }
+  return { value, setItem, removeItem }
 }
