@@ -1,0 +1,35 @@
+CALENDARS
+ -> PATCH /:calendarId/visibility
+   - public: generate a link + set to public + expires at
+   - private: removes the public / shared states from everyone
+ -> PATCH /:calendarId/update (BATCH VERSION OF THIS)
+   - {"userId": UUID, "permissions": 'read' | 'write' }
+ -> POST /:calendarId/share
+   - set visibility to shared
+   - share to a specific user with permissions
+   - {"userId": UUID, "permissions": 'read' | 'write' }
+ -> DELETE /:calendarId/share/:userId
+   - revoke access
+   - if no one is there => private
+ -> DELETE /:calendarId/exit
+   - exit from calendar sharing
+   - if no one is there => private
+ -> GET maybe
+
+EVENTS
+ -> PATCH /:eventId/visibility
+   - public: generate a link + set to public + expires at
+   - private: removes the public / shared states from everyone
+ -> PATCH /:eventId/update (BATCH VERSION OF THIS)
+   - {"userId": UUID, "permissions": 'read' | 'write' }
+ -> POST /:eventId/share
+   - set visibility to shared
+   - share to a specific user with permissions
+   - {"userId": UUID, "permissions": 'read' | 'write' }
+ -> DELETE /:eventId/share/:userId
+   - revoke access
+   - if no one is there => private
+ -> DELETE /:eventId/exit
+   - exit from calendar sharing
+   - if no one is there => private
+ -> GET maybe

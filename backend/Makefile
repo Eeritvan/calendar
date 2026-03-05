@@ -6,7 +6,7 @@ GORUN=$(GOCMD) run
 GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 BINARY_NAME=calendar
-MIGRATIONS_ORIGIN=migrations
+MIGRATIONS_ORIGIN=./db/migrations
 DB_DRIVER=postgres
 
 .PHONY: start build test clean generate

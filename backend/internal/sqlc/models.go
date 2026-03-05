@@ -12,9 +12,17 @@ import (
 )
 
 type Calendar struct {
-	ID      uuid.UUID
-	OwnerID uuid.UUID
-	Name    string
+	ID         uuid.UUID
+	OwnerID    uuid.UUID
+	Name       string
+	Visibility interface{}
+}
+
+type CalendarShare struct {
+	ID         int32
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+	Permission interface{}
 }
 
 type Event struct {
