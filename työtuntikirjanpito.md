@@ -1,5 +1,6 @@
 | day        | task                                                                                             | time |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---- |
+| 05.03.2026 | restructured db stuff in backend && added seed files for db                                      | 1.5  |
 | 04.03.2026 | fixed dark/light mode and added e2e tests to run on ci/cd                                        | 3.5  |
 | 27.02.2026 | added playwright e2e tests                                                                       | 1.5  |
 | 26.02.2026 | added staging deployment                                                                         | 2    |
