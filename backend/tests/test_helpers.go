@@ -91,7 +91,7 @@ func spawnPostgresContainer(t *testing.T, reuseName string) string {
 
 	ctx := context.Background()
 
-	migrationsDir := filepath.Join("../migrations")
+	migrationsDir := filepath.Join("../db/migrations")
 	filteredScripts := buildInitScripts(t, migrationsDir)
 
 	postgresContainer, err := postgres.Run(context.Background(),
