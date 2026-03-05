@@ -32,7 +32,7 @@ services:
       - GOOSE_DRIVER=postgres
       - GOOSE_DBSTRING=postgresql://postgres:postgres@db:5432/postgres?sslmode=disable
     volumes:
-      - ./backend/migrations:/migrations
+      - ./backend/db/migrations:/migrations
     depends_on:
       db:
         condition: service_healthy
