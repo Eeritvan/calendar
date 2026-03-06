@@ -21,11 +21,16 @@ WHERE id = $1 AND owner_id = $2;
 INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
 VALUES ($1, $2, $3);
 
--- name: SetVisibility :one
+-- name: SetCalendarPrivate :exec
 UPDATE Calendars
-SET visibility = $1
-WHERE id = $2 AND owner_id = $3
-RETURNING id, name, owner_id, visibility;
+SET visibility = 'private'
+WHERE id = $1 AND owner_id = $2;
+
+-- name: WipeShared :exec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1 AND
+    calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2);
 
 -- name: EditCalendarShared :exec
 UPDATE Calendar_shares c

@@ -148,36 +148,20 @@ func (q *Queries) RemoveUserCalendarShare(ctx context.Context, arg RemoveUserCal
 	return err
 }
 
-const setVisibility = `-- name: SetVisibility :one
+const setCalendarPrivate = `-- name: SetCalendarPrivate :exec
 UPDATE Calendars
-SET visibility = $1
-WHERE id = $2 AND owner_id = $3
-RETURNING id, name, owner_id, visibility
+SET visibility = 'private'
+WHERE id = $1 AND owner_id = $2
 `
 
-type SetVisibilityParams struct {
-	Visibility interface{}
-	ID         uuid.UUID
-	OwnerID    uuid.UUID
+type SetCalendarPrivateParams struct {
+	ID      uuid.UUID
+	OwnerID uuid.UUID
 }
 
-type SetVisibilityRow struct {
-	ID         uuid.UUID
-	Name       string
-	OwnerID    uuid.UUID
-	Visibility interface{}
-}
-
-func (q *Queries) SetVisibility(ctx context.Context, arg SetVisibilityParams) (SetVisibilityRow, error) {
-	row := q.db.QueryRow(ctx, setVisibility, arg.Visibility, arg.ID, arg.OwnerID)
-	var i SetVisibilityRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.OwnerID,
-		&i.Visibility,
-	)
-	return i, err
+func (q *Queries) SetCalendarPrivate(ctx context.Context, arg SetCalendarPrivateParams) error {
+	_, err := q.db.Exec(ctx, setCalendarPrivate, arg.ID, arg.OwnerID)
+	return err
 }
 
 const shareCalendar = `-- name: ShareCalendar :exec
@@ -193,5 +177,22 @@ type ShareCalendarParams struct {
 
 func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) error {
 	_, err := q.db.Exec(ctx, shareCalendar, arg.CalendarID, arg.SharedWith, arg.Permission)
+	return err
+}
+
+const wipeShared = `-- name: WipeShared :exec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1 AND
+    calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
+`
+
+type WipeSharedParams struct {
+	CalendarID uuid.UUID
+	OwnerID    uuid.UUID
+}
+
+func (q *Queries) WipeShared(ctx context.Context, arg WipeSharedParams) error {
+	_, err := q.db.Exec(ctx, wipeShared, arg.CalendarID, arg.OwnerID)
 	return err
 }

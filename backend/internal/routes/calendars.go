@@ -17,7 +17,8 @@ func calendarRoutes(e *echo.Group, s *api.Server) {
 
 	// sharing
 	g.POST("/:calendarId/share", s.ShareCalendar)
-	g.PATCH("/:calendarId/share/visibility", s.CalendarShareSetVisibility)
+	g.PATCH("/:calendarId/share/public", s.ShareCalendarPublic)
+	g.PATCH("/:calendarId/share/private", s.ShareCalendarPrivate)
 	g.PATCH("/:calendarId/share/edit", s.CalendarShareEdit)
 	g.DELETE("/:calendarId/share/remove", s.RemoveUserCalendarSelf)
 }

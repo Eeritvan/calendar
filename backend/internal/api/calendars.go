@@ -252,8 +252,11 @@ func (s *Server) ExportEvents(c *echo.Context) error {
 }
 
 // (POST /calendar/:calendarId/share)
+//
+// TODO: set calendar status to shared
 func (s *Server) ShareCalendar(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
+	fmt.Println(userId)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
 		fmt.Println(err)
@@ -280,21 +283,11 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	if _, err := s.queries.SetVisibility(ctx, sqlc.SetVisibilityParams{
-		ID:         calendarId,
-		OwnerID:    userId,
-		Visibility: "shared",
-	}); err != nil {
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
 	return c.JSON(http.StatusOK, nil)
 }
 
-// (PATCH /calendar/:calendarId/share/visibility)
-//
-// TODO: setting to private => erases the shared_calendars;
-func (s *Server) CalendarShareSetVisibility(c *echo.Context) error {
+// (PATCH /calendar/:calendarId/share/private)
+func (s *Server) ShareCalendarPrivate(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
@@ -303,18 +296,44 @@ func (s *Server) CalendarShareSetVisibility(c *echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	queryResp, err := s.queries.SetVisibility(ctx, sqlc.SetVisibilityParams{
-		ID:         calendarId,
-		OwnerID:    userId,
-		Visibility: "public",
-	})
+	if err = s.queries.SetCalendarPrivate(ctx, sqlc.SetCalendarPrivateParams{
+		ID:      calendarId,
+		OwnerID: userId,
+	}); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
 
-	fmt.Println(queryResp, err)
+	if err := s.queries.WipeShared(ctx, sqlc.WipeSharedParams{
+		OwnerID:    userId,
+		CalendarID: calendarId,
+	}); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+// (PATCH /calendar/:calendarId/share/public)
+//
+// TODO: public => generate link / access token
+func (s *Server) ShareCalendarPublic(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	fmt.Println(userId, calendarId)
 
 	return c.JSON(http.StatusOK, nil)
 }
 
 // (PATCH /calendar/:calendarId/share/edit)
+//
+// TODO: batch edits
 func (s *Server) CalendarShareEdit(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
@@ -350,7 +369,7 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 
 // TODO: userId is calendar owner ==> can delete anyone
 // TODO: userId is random dude ==> can delete self
-
+// TODO: batch deletions
 func (s *Server) RemoveUserCalendarSelf(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
