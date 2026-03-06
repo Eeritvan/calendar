@@ -15,3 +15,13 @@ type AddCalendar struct {
 type EditCalendar struct {
 	Name *string `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
 }
+
+type ShareCalendar struct {
+	UserId      uuid.UUID `json:"userId" validate:"required,uuid"`
+	Permissions string    `json:"permissions"`
+}
+
+type EditCalendarShare struct {
+	UserId      uuid.UUID `json:"userId" validate:"required,uuid"`
+	Permissions string    `json:"permissions"`
+}

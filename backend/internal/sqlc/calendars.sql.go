@@ -106,3 +106,51 @@ func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCal
 	}
 	return items, nil
 }
+
+const setVisibility = `-- name: SetVisibility :one
+UPDATE Calendars c
+SET visibility = $1
+WHERE c.id = $2 AND c.owner_id = $3
+RETURNING id, name, owner_id, visibility
+`
+
+type SetVisibilityParams struct {
+	Visibility interface{}
+	ID         uuid.UUID
+	OwnerID    uuid.UUID
+}
+
+type SetVisibilityRow struct {
+	ID         uuid.UUID
+	Name       string
+	OwnerID    uuid.UUID
+	Visibility interface{}
+}
+
+func (q *Queries) SetVisibility(ctx context.Context, arg SetVisibilityParams) (SetVisibilityRow, error) {
+	row := q.db.QueryRow(ctx, setVisibility, arg.Visibility, arg.ID, arg.OwnerID)
+	var i SetVisibilityRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.Visibility,
+	)
+	return i, err
+}
+
+const shareCalendar = `-- name: ShareCalendar :exec
+INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
+VALUES ($1, $2, $3)
+`
+
+type ShareCalendarParams struct {
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+	Permission interface{}
+}
+
+func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) error {
+	_, err := q.db.Exec(ctx, shareCalendar, arg.CalendarID, arg.SharedWith, arg.Permission)
+	return err
+}

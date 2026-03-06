@@ -250,3 +250,88 @@ func (s *Server) ExportEvents(c *echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentDisposition, `attachment; filename="events.ics"`)
 	return c.Blob(http.StatusOK, "text/calendar; charset=utf-8", icsData)
 }
+
+// (POST /calendar/:calendarId/share)
+func (s *Server) ShareCalendar(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	body := new(models.ShareCalendar)
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	// TODO: validate that 'permissions' is read or write
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	// TODO: check that the user own the calendar
+	ctx := c.Request().Context()
+	if err = s.queries.ShareCalendar(ctx, sqlc.ShareCalendarParams{
+		CalendarID: calendarId,
+		SharedWith: body.UserId,
+		Permission: body.Permissions,
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	if _, err := s.queries.SetVisibility(ctx, sqlc.SetVisibilityParams{
+		ID:         calendarId,
+		OwnerID:    userId,
+		Visibility: "shared",
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+// (PATCH /calendar/:calendarId/share/visibility)
+func (s *Server) CalendarShareSetVisibility(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	ctx := c.Request().Context()
+	queryResp, err := s.queries.SetVisibility(ctx, sqlc.SetVisibilityParams{
+		ID:         calendarId,
+		OwnerID:    userId,
+		Visibility: "public",
+	})
+
+	fmt.Println(queryResp, err)
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+// (PATCH /calendar/:calendarId/share/edit)
+func (s *Server) CalendarShareEdit(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	body := new(models.EditCalendarShare)
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	// TODO: validate that 'permissions' is read or write
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	fmt.Println(userId, calendarId, body)
+
+	return c.JSON(http.StatusOK, nil)
+}
