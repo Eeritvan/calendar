@@ -292,6 +292,8 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 }
 
 // (PATCH /calendar/:calendarId/share/visibility)
+//
+// TODO: setting to private => erases the shared_calendars;
 func (s *Server) CalendarShareSetVisibility(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
@@ -321,7 +323,7 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	body := new(models.EditCalendarShare)
+	body := new(models.ShareCalendar)
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
@@ -331,7 +333,40 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	fmt.Println(userId, calendarId, body)
+	ctx := c.Request().Context()
+	if err = s.queries.EditCalendarShared(ctx, sqlc.EditCalendarSharedParams{
+		OwnerID:    userId,
+		CalendarID: calendarId,
+		Permission: body.Permissions,
+		SharedWith: body.UserId,
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+// (DELETE /:calendarId/share/remove/self)
+
+// TODO: userId is calendar owner ==> can delete anyone
+// TODO: userId is random dude ==> can delete self
+
+func (s *Server) RemoveUserCalendarSelf(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	ctx := c.Request().Context()
+	if err = s.queries.RemoveUserCalendarShare(ctx, sqlc.RemoveUserCalendarShareParams{
+		CalendarID: calendarId,
+		SharedWith: userId,
+	}); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
 
 	return c.JSON(http.StatusOK, nil)
 }

@@ -76,6 +76,32 @@ func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (Edi
 	return i, err
 }
 
+const editCalendarShared = `-- name: EditCalendarShared :exec
+UPDATE Calendar_shares c
+SET permission = $2
+WHERE
+    c.calendar_id = $3 AND
+    c.shared_with = $4 AND
+    c.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $1)
+`
+
+type EditCalendarSharedParams struct {
+	OwnerID    uuid.UUID
+	Permission interface{}
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+}
+
+func (q *Queries) EditCalendarShared(ctx context.Context, arg EditCalendarSharedParams) error {
+	_, err := q.db.Exec(ctx, editCalendarShared,
+		arg.OwnerID,
+		arg.Permission,
+		arg.CalendarID,
+		arg.SharedWith,
+	)
+	return err
+}
+
 const getCalendars = `-- name: GetCalendars :many
 SELECT id, name, owner_id FROM Calendars
 WHERE owner_id = $1
@@ -107,10 +133,25 @@ func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCal
 	return items, nil
 }
 
+const removeUserCalendarShare = `-- name: RemoveUserCalendarShare :exec
+DELETE FROM Calendar_shares
+WHERE calendar_id = $1 AND shared_with = $2
+`
+
+type RemoveUserCalendarShareParams struct {
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+}
+
+func (q *Queries) RemoveUserCalendarShare(ctx context.Context, arg RemoveUserCalendarShareParams) error {
+	_, err := q.db.Exec(ctx, removeUserCalendarShare, arg.CalendarID, arg.SharedWith)
+	return err
+}
+
 const setVisibility = `-- name: SetVisibility :one
-UPDATE Calendars c
+UPDATE Calendars
 SET visibility = $1
-WHERE c.id = $2 AND c.owner_id = $3
+WHERE id = $2 AND owner_id = $3
 RETURNING id, name, owner_id, visibility
 `
 

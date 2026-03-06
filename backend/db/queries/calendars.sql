@@ -22,7 +22,19 @@ INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
 VALUES ($1, $2, $3);
 
 -- name: SetVisibility :one
-UPDATE Calendars c
+UPDATE Calendars
 SET visibility = $1
-WHERE c.id = $2 AND c.owner_id = $3
+WHERE id = $2 AND owner_id = $3
 RETURNING id, name, owner_id, visibility;
+
+-- name: EditCalendarShared :exec
+UPDATE Calendar_shares c
+SET permission = $2
+WHERE
+    c.calendar_id = $3 AND
+    c.shared_with = $4 AND
+    c.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $1);
+
+-- name: RemoveUserCalendarShare :exec
+DELETE FROM Calendar_shares
+WHERE calendar_id = $1 AND shared_with = $2;

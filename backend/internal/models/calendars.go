@@ -20,8 +20,3 @@ type ShareCalendar struct {
 	UserId      uuid.UUID `json:"userId" validate:"required,uuid"`
 	Permissions string    `json:"permissions"`
 }
-
-type EditCalendarShare struct {
-	UserId      uuid.UUID `json:"userId" validate:"required,uuid"`
-	Permissions string    `json:"permissions"`
-}
