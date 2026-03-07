@@ -2,6 +2,13 @@ package models
 
 import "github.com/google/uuid"
 
+type Permission string
+
+const (
+	PermissionRead  Permission = "read"
+	PermissionWrite Permission = "write"
+)
+
 type Calendar struct {
 	Id      uuid.UUID `json:"id"`
 	Name    string    `json:"name"`
@@ -17,6 +24,6 @@ type EditCalendar struct {
 }
 
 type ShareCalendar struct {
-	UserId      uuid.UUID `json:"userId" validate:"required,uuid"`
-	Permissions string    `json:"permissions"`
+	UserId     uuid.UUID  `json:"userId" validate:"required,uuid"`
+	Permission Permission `json:"permissions" validate:"required,oneof=read write"`
 }

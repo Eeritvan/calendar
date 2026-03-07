@@ -7,6 +7,7 @@ package sqlc
 import (
 	"time"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -22,7 +23,7 @@ type CalendarShare struct {
 	ID         int32
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
-	Permission interface{}
+	Permission models.Permission
 }
 
 type Event struct {

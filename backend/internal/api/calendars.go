@@ -268,7 +268,6 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	// TODO: validate that 'permissions' is read or write
 	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
@@ -278,7 +277,7 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 	if err = s.queries.ShareCalendar(ctx, sqlc.ShareCalendarParams{
 		CalendarID: calendarId,
 		SharedWith: body.UserId,
-		Permission: body.Permissions,
+		Permission: body.Permission,
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -347,7 +346,6 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	// TODO: validate that 'permissions' is read or write
 	if err := c.Validate(body); err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
@@ -356,7 +354,7 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 	if err = s.queries.EditCalendarShared(ctx, sqlc.EditCalendarSharedParams{
 		OwnerID:    userId,
 		CalendarID: calendarId,
-		Permission: body.Permissions,
+		Permission: body.Permission,
 		SharedWith: body.UserId,
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)

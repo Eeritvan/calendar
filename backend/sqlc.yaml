@@ -50,3 +50,5 @@ sql:
               import: "github.com/jackc/pgx/v5/pgtype"
               type: "Point"
               pointer: true
+          - column: calendar_shares.permission
+            go_type: "github.com/eeritvan/calendar/internal/models.Permission"

@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -87,7 +88,7 @@ WHERE
 
 type EditCalendarSharedParams struct {
 	OwnerID    uuid.UUID
-	Permission interface{}
+	Permission models.Permission
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
 }
@@ -172,7 +173,7 @@ VALUES ($1, $2, $3)
 type ShareCalendarParams struct {
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
-	Permission interface{}
+	Permission models.Permission
 }
 
 func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) error {
