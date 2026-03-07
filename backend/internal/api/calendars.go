@@ -285,6 +285,58 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
+// (POST /calendar/:calendarId/share/batch)
+//
+// TODO: set calendar status to shared
+func (s *Server) BatchShareCalendar(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	fmt.Println(userId)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	body := new(models.BatchShareCalendar)
+	if err := c.Bind(&body); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	batchParams := make([]sqlc.BatchShareCalendarParams, len(body.Items))
+	for i, body := range body.Items {
+		batchParams[i] = sqlc.BatchShareCalendarParams{
+			CalendarID: calendarId,
+			SharedWith: body.UserId,
+			Permission: body.Permission,
+		}
+	}
+
+	// TODO: check that the user own the calendar
+	ctx := c.Request().Context()
+	batchResults := s.queries.BatchShareCalendar(ctx, batchParams)
+
+	var batchErr error
+	batchResults.Exec(func(i int, err error) {
+		if err != nil {
+			fmt.Println(i, err)
+			batchErr = err
+		}
+	})
+
+	if batchErr != nil {
+		fmt.Println(batchErr)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
 // (PATCH /calendar/:calendarId/share/private)
 func (s *Server) ShareCalendarPrivate(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
@@ -363,26 +415,82 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-// (DELETE /:calendarId/share/remove/self)
-
-// TODO: userId is calendar owner ==> can delete anyone
-// TODO: userId is random dude ==> can delete self
-// TODO: batch deletions
-func (s *Server) RemoveUserCalendarSelf(c *echo.Context) error {
+// (DELETE /:calendarId/share/remove/:userId)
+func (s *Server) RemoveUserCalendar(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
-		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	targetUserID, err := echo.PathParam[uuid.UUID](c, "userId")
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	ctx := c.Request().Context()
-	if err = s.queries.RemoveUserCalendarShare(ctx, sqlc.RemoveUserCalendarShareParams{
+	if targetUserID == userId {
+		if err := s.queries.RemoveCalendarShareSelf(ctx, sqlc.RemoveCalendarShareSelfParams{
+			CalendarID: calendarId,
+			SharedWith: userId,
+		}); err != nil {
+			return c.JSON(http.StatusInternalServerError, nil)
+		}
+		return c.JSON(http.StatusOK, nil)
+	}
+
+	if err := s.queries.RemoveCalendarShareAsOwner(ctx, sqlc.RemoveCalendarShareAsOwnerParams{
 		CalendarID: calendarId,
-		SharedWith: userId,
+		SharedWith: targetUserID,
+		OwnerID:    userId,
 	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+// (POST /:calendarId/share/remove/batch)
+func (s *Server) BatchRemoveUserCalendar(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+	body := new(models.BatchRemoveUserShare)
+	if err := c.Bind(&body); err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	batchParams := make([]sqlc.RemoveCalendarShareManyParams, len(body.Ids))
+	for i, id := range body.Ids {
+		batchParams[i] = sqlc.RemoveCalendarShareManyParams{
+			CalendarID: calendarId,
+			SharedWith: id,
+			OwnerID:    userId,
+		}
+	}
+
+	ctx := c.Request().Context()
+	batchResults := s.queries.RemoveCalendarShareMany(ctx, batchParams)
+
+	var batchErr error
+	batchResults.Exec(func(i int, err error) {
+		if err != nil {
+			fmt.Println(i, err)
+			batchErr = err
+		}
+	})
+
+	if batchErr != nil {
+		fmt.Println(batchErr)
+		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	return c.JSON(http.StatusOK, nil)

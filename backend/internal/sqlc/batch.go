@@ -10,6 +10,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -17,6 +18,58 @@ import (
 var (
 	ErrBatchAlreadyClosed = errors.New("batch already closed")
 )
+
+const batchShareCalendar = `-- name: BatchShareCalendar :batchexec
+INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
+VALUES ($1, $2, $3)
+`
+
+type BatchShareCalendarBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type BatchShareCalendarParams struct {
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+	Permission models.Permission
+}
+
+func (q *Queries) BatchShareCalendar(ctx context.Context, arg []BatchShareCalendarParams) *BatchShareCalendarBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.CalendarID,
+			a.SharedWith,
+			a.Permission,
+		}
+		batch.Queue(batchShareCalendar, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &BatchShareCalendarBatchResults{br, len(arg), false}
+}
+
+func (b *BatchShareCalendarBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *BatchShareCalendarBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
 
 const deleteManyEvents = `-- name: DeleteManyEvents :batchexec
 DELETE FROM Events e
@@ -123,6 +176,61 @@ func (b *ImportCalendarEventsBatchResults) Exec(f func(int, error)) {
 }
 
 func (b *ImportCalendarEventsBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
+const removeCalendarShareMany = `-- name: RemoveCalendarShareMany :batchexec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1
+    AND shared_with = $2
+    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3)
+`
+
+type RemoveCalendarShareManyBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type RemoveCalendarShareManyParams struct {
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+	OwnerID    uuid.UUID
+}
+
+func (q *Queries) RemoveCalendarShareMany(ctx context.Context, arg []RemoveCalendarShareManyParams) *RemoveCalendarShareManyBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.CalendarID,
+			a.SharedWith,
+			a.OwnerID,
+		}
+		batch.Queue(removeCalendarShareMany, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &RemoveCalendarShareManyBatchResults{br, len(arg), false}
+}
+
+func (b *RemoveCalendarShareManyBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *RemoveCalendarShareManyBatchResults) Close() error {
 	b.closed = true
 	return b.br.Close()
 }

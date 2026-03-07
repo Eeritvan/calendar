@@ -27,3 +27,11 @@ type ShareCalendar struct {
 	UserId     uuid.UUID  `json:"userId" validate:"required,uuid"`
 	Permission Permission `json:"permissions" validate:"required,oneof=read write"`
 }
+
+type BatchShareCalendar struct {
+	Items []ShareCalendar `json:"items" validate:"required,min=1,dive"`
+}
+
+type BatchRemoveUserShare struct {
+	Ids []uuid.UUID `json:"ids" validate:"required,min=1,dive,required,uuid"`
+}

@@ -134,18 +134,37 @@ func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCal
 	return items, nil
 }
 
-const removeUserCalendarShare = `-- name: RemoveUserCalendarShare :exec
+const removeCalendarShareAsOwner = `-- name: RemoveCalendarShareAsOwner :exec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1
+    AND shared_with = $2
+    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3)
+`
+
+type RemoveCalendarShareAsOwnerParams struct {
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+	OwnerID    uuid.UUID
+}
+
+func (q *Queries) RemoveCalendarShareAsOwner(ctx context.Context, arg RemoveCalendarShareAsOwnerParams) error {
+	_, err := q.db.Exec(ctx, removeCalendarShareAsOwner, arg.CalendarID, arg.SharedWith, arg.OwnerID)
+	return err
+}
+
+const removeCalendarShareSelf = `-- name: RemoveCalendarShareSelf :exec
 DELETE FROM Calendar_shares
 WHERE calendar_id = $1 AND shared_with = $2
 `
 
-type RemoveUserCalendarShareParams struct {
+type RemoveCalendarShareSelfParams struct {
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
 }
 
-func (q *Queries) RemoveUserCalendarShare(ctx context.Context, arg RemoveUserCalendarShareParams) error {
-	_, err := q.db.Exec(ctx, removeUserCalendarShare, arg.CalendarID, arg.SharedWith)
+func (q *Queries) RemoveCalendarShareSelf(ctx context.Context, arg RemoveCalendarShareSelfParams) error {
+	_, err := q.db.Exec(ctx, removeCalendarShareSelf, arg.CalendarID, arg.SharedWith)
 	return err
 }
 

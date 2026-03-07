@@ -21,6 +21,10 @@ WHERE id = $1 AND owner_id = $2;
 INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
 VALUES ($1, $2, $3);
 
+-- name: BatchShareCalendar :batchexec
+INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
+VALUES ($1, $2, $3);
+
 -- name: SetCalendarPrivate :exec
 UPDATE Calendars
 SET visibility = 'private'
@@ -40,6 +44,20 @@ WHERE
     c.shared_with = $4 AND
     c.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $1);
 
--- name: RemoveUserCalendarShare :exec
+-- name: RemoveCalendarShareAsOwner :exec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1
+    AND shared_with = $2
+    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3);
+
+-- name: RemoveCalendarShareMany :batchexec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1
+    AND shared_with = $2
+    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3);
+
+-- name: RemoveCalendarShareSelf :exec
 DELETE FROM Calendar_shares
 WHERE calendar_id = $1 AND shared_with = $2;
