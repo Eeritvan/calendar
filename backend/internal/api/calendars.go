@@ -32,6 +32,8 @@ func (s *Server) GetCalendars(c *echo.Context) error {
 			Name:       calendar.Name,
 			OwnerId:    calendar.OwnerID,
 			Visibility: calendar.Visibility,
+			Permission: calendar.Permission,
+			IsOwner:    calendar.IsOwner,
 		}
 	}
 
@@ -362,22 +364,6 @@ func (s *Server) ShareCalendarPrivate(c *echo.Context) error {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
-
-	return c.JSON(http.StatusOK, nil)
-}
-
-// (PATCH /calendar/:calendarId/share/public)
-//
-// TODO: public => generate link / access token
-func (s *Server) ShareCalendarPublic(c *echo.Context) error {
-	userId := c.Get("userId").(uuid.UUID)
-	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusBadRequest, nil)
-	}
-
-	fmt.Println(userId, calendarId)
 
 	return c.JSON(http.StatusOK, nil)
 }

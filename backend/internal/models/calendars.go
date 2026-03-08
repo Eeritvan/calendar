@@ -22,6 +22,8 @@ type Calendar struct {
 	Name       string     `json:"name"`
 	OwnerId    uuid.UUID  `json:"ownerId"`
 	Visibility Visibility `json:"visibility"`
+	Permission Permission `json:"permission"`
+	IsOwner    bool       `json:"isOwner"`
 }
 
 type AddCalendar struct {

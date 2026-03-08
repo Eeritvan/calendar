@@ -22,6 +22,5 @@ func calendarRoutes(e *echo.Group, s *api.Server) {
 	g.PATCH("/:calendarId/share/edit/batch", s.BatchCalendarShareEdit)
 	g.DELETE("/:calendarId/share/remove/self", s.RemoveUserCalendar)
 	g.POST("/:calendarId/share/remove/batch", s.BatchRemoveUserCalendar)
-	g.PATCH("/:calendarId/share/public", s.ShareCalendarPublic)
 	g.PATCH("/:calendarId/share/private", s.ShareCalendarPrivate)
 }

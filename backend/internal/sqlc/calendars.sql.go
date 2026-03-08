@@ -141,8 +141,9 @@ SELECT
   c.id,
   c.name,
   c.owner_id,
-  c.visibility
-  -- cs.permission,
+  c.visibility,
+  COALESCE(cs.permission, 'write'),
+  ($1 = c.owner_id) as is_owner
 FROM Calendars c
 LEFT JOIN Calendar_shares cs
   ON cs.calendar_id = c.id AND cs.shared_with = $1
@@ -156,10 +157,12 @@ type GetCalendarsRow struct {
 	Name       string
 	OwnerID    uuid.UUID
 	Visibility models.Visibility
+	Permission models.Permission
+	IsOwner    bool
 }
 
-func (q *Queries) GetCalendars(ctx context.Context, sharedWith uuid.UUID) ([]GetCalendarsRow, error) {
-	rows, err := q.db.Query(ctx, getCalendars, sharedWith)
+func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCalendarsRow, error) {
+	rows, err := q.db.Query(ctx, getCalendars, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +175,8 @@ func (q *Queries) GetCalendars(ctx context.Context, sharedWith uuid.UUID) ([]Get
 			&i.Name,
 			&i.OwnerID,
 			&i.Visibility,
+			&i.Permission,
+			&i.IsOwner,
 		); err != nil {
 			return nil, err
 		}
@@ -236,7 +241,6 @@ func (q *Queries) SetCalendarPrivate(ctx context.Context, arg SetCalendarPrivate
 }
 
 const shareCalendar = `-- name: ShareCalendar :exec
-
 INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
 SELECT $1, $2, $3
 FROM Calendars
@@ -250,7 +254,6 @@ type ShareCalendarParams struct {
 	OwnerID    uuid.UUID
 }
 
-// ---- //// -----
 func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) error {
 	_, err := q.db.Exec(ctx, shareCalendar,
 		arg.CalendarID,

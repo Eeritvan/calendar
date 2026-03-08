@@ -3,8 +3,9 @@ SELECT
   c.id,
   c.name,
   c.owner_id,
-  c.visibility
-  -- cs.permission,
+  c.visibility,
+  COALESCE(cs.permission, 'write'),
+  ($1 = c.owner_id) as is_owner
 FROM Calendars c
 LEFT JOIN Calendar_shares cs
   ON cs.calendar_id = c.id AND cs.shared_with = $1
