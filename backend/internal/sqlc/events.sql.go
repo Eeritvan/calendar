@@ -106,6 +106,22 @@ func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) error 
 	return err
 }
 
+const deleteManyEvents = `-- name: DeleteManyEvents :exec
+DELETE FROM Events e
+WHERE e.id = ANY($2::uuid[])
+  AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $1)
+`
+
+type DeleteManyEventsParams struct {
+	OwnerID  uuid.UUID
+	EventIds []uuid.UUID
+}
+
+func (q *Queries) DeleteManyEvents(ctx context.Context, arg DeleteManyEventsParams) error {
+	_, err := q.db.Exec(ctx, deleteManyEvents, arg.OwnerID, arg.EventIds)
+	return err
+}
+
 const editEvent = `-- name: EditEvent :one
 WITH location_update AS (
     INSERT INTO Locations (name, address, point)

@@ -106,10 +106,10 @@ DELETE FROM Events e
 WHERE e.id = $1
   AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $2);
 
--- name: DeleteManyEvents :batchexec
+-- name: DeleteManyEvents :exec
 DELETE FROM Events e
-WHERE e.id = $1
-  AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $2);
+WHERE e.id = ANY(@event_ids::uuid[])
+  AND e.calendar_id IN (SELECT id FROM Calendars WHERE owner_id = $1);
 
 -- name: ImportCalendarEvents :batchexec
 INSERT INTO Events (calendar_id, name, time)
