@@ -42,8 +42,8 @@ func TestGetCalendars(t *testing.T) {
 			userId:         userId1,
 			expectedStatus: http.StatusOK,
 			expectedRespData: []models.Calendar{
-				{Name: "meetings", OwnerId: userId1},
-				{Name: "daily", OwnerId: userId1},
+				{Name: "meetings", OwnerId: userId1, Visibility: models.VisibilityPrivate},
+				{Name: "daily", OwnerId: userId1, Visibility: models.VisibilityPrivate},
 			},
 		},
 		{
@@ -51,7 +51,7 @@ func TestGetCalendars(t *testing.T) {
 			userId:         userId2,
 			expectedStatus: http.StatusOK,
 			expectedRespData: []models.Calendar{
-				{Name: "video games", OwnerId: userId2},
+				{Name: "video games", OwnerId: userId2, Visibility: models.VisibilityPrivate},
 			},
 		},
 	}
@@ -107,8 +107,9 @@ func TestAddCalendar(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Calendar{
 				// id is unknown beforehand
-				Name:    "meetings",
-				OwnerId: userId,
+				Name:       "meetings",
+				OwnerId:    userId,
+				Visibility: models.VisibilityPrivate,
 			},
 		},
 		// TODO
@@ -183,9 +184,10 @@ func TestEditCalendar(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Calendar{
-				Id:      calendarId,
-				Name:    "daily",
-				OwnerId: userId,
+				Id:         calendarId,
+				Name:       "daily",
+				OwnerId:    userId,
+				Visibility: models.VisibilityPrivate,
 			},
 		},
 		{

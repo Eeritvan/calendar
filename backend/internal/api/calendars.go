@@ -21,16 +21,17 @@ func (s *Server) GetCalendars(c *echo.Context) error {
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.GetCalendars(ctx, userId)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("test", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	resp := make([]models.Calendar, len(queryResp))
 	for i, calendar := range queryResp {
 		resp[i] = models.Calendar{
-			Id:      calendar.ID,
-			Name:    calendar.Name,
-			OwnerId: calendar.OwnerID,
+			Id:         calendar.ID,
+			Name:       calendar.Name,
+			OwnerId:    calendar.OwnerID,
+			Visibility: calendar.Visibility,
 		}
 	}
 
@@ -62,9 +63,10 @@ func (s *Server) AddCalendar(c *echo.Context) error {
 	}
 
 	resp := models.Calendar{
-		Id:      queryResp.ID,
-		Name:    queryResp.Name,
-		OwnerId: queryResp.OwnerID,
+		Id:         queryResp.ID,
+		Name:       queryResp.Name,
+		OwnerId:    queryResp.OwnerID,
+		Visibility: queryResp.Visibility,
 	}
 
 	s.sse.Emit(userId, "calendar/post", resp)
@@ -98,9 +100,10 @@ func (s *Server) EditCalendar(c *echo.Context) error {
 	}
 
 	resp := models.Calendar{
-		Id:      editedCalendar.ID,
-		Name:    editedCalendar.Name,
-		OwnerId: editedCalendar.OwnerID,
+		Id:         editedCalendar.ID,
+		Name:       editedCalendar.Name,
+		OwnerId:    editedCalendar.OwnerID,
+		Visibility: editedCalendar.Visibility,
 	}
 
 	s.sse.Emit(userId, "calendar/edit", resp)
@@ -108,7 +111,6 @@ func (s *Server) EditCalendar(c *echo.Context) error {
 }
 
 // (DELETE /calendar/delete/:calendarId)
-
 func (s *Server) DeleteCalendar(c *echo.Context) error {
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
@@ -256,7 +258,6 @@ func (s *Server) ExportEvents(c *echo.Context) error {
 // TODO: set calendar status to shared
 func (s *Server) ShareCalendar(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
-	fmt.Println(userId)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
 		fmt.Println(err)
@@ -272,12 +273,12 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	// TODO: check that the user own the calendar
 	ctx := c.Request().Context()
 	if err = s.queries.ShareCalendar(ctx, sqlc.ShareCalendarParams{
 		CalendarID: calendarId,
 		SharedWith: body.UserId,
 		Permission: body.Permission,
+		OwnerID:    userId,
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -290,7 +291,6 @@ func (s *Server) ShareCalendar(c *echo.Context) error {
 // TODO: set calendar status to shared
 func (s *Server) BatchShareCalendar(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
-	fmt.Println(userId)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
 	if err != nil {
 		fmt.Println(err)
@@ -314,10 +314,10 @@ func (s *Server) BatchShareCalendar(c *echo.Context) error {
 			CalendarID: calendarId,
 			SharedWith: body.UserId,
 			Permission: body.Permission,
+			OwnerID:    userId,
 		}
 	}
 
-	// TODO: check that the user own the calendar
 	ctx := c.Request().Context()
 	batchResults := s.queries.BatchShareCalendar(ctx, batchParams)
 
@@ -355,7 +355,7 @@ func (s *Server) ShareCalendarPrivate(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	if err := s.queries.WipeShared(ctx, sqlc.WipeSharedParams{
+	if err := s.queries.DeleteAllCalendarShares(ctx, sqlc.DeleteAllCalendarSharesParams{
 		OwnerID:    userId,
 		CalendarID: calendarId,
 	}); err != nil {
@@ -383,8 +383,6 @@ func (s *Server) ShareCalendarPublic(c *echo.Context) error {
 }
 
 // (PATCH /calendar/:calendarId/share/edit)
-//
-// TODO: batch edits
 func (s *Server) CalendarShareEdit(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
@@ -403,7 +401,7 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	if err = s.queries.EditCalendarShared(ctx, sqlc.EditCalendarSharedParams{
+	if err = s.queries.EditSharedCalendarPermissions(ctx, sqlc.EditSharedCalendarPermissionsParams{
 		OwnerID:    userId,
 		CalendarID: calendarId,
 		Permission: body.Permission,
@@ -415,7 +413,54 @@ func (s *Server) CalendarShareEdit(c *echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-// (DELETE /:calendarId/share/remove/:userId)
+// (PATCH /calendar/:calendarId/share/edit/batch)
+func (s *Server) BatchCalendarShareEdit(c *echo.Context) error {
+	userId := c.Get("userId").(uuid.UUID)
+	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
+	if err != nil {
+		fmt.Println(err)
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	body := new(models.BatchShareCalendar)
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	if err := c.Validate(body); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+
+	batchParams := make([]sqlc.BatchEditSharedCalendarPermissionsParams, len(body.Items))
+	for i, body := range body.Items {
+		batchParams[i] = sqlc.BatchEditSharedCalendarPermissionsParams{
+			OwnerID:    userId,
+			CalendarID: calendarId,
+			SharedWith: body.UserId,
+			Permission: body.Permission,
+		}
+	}
+
+	ctx := c.Request().Context()
+	batchResults := s.queries.BatchEditSharedCalendarPermissions(ctx, batchParams)
+
+	var batchErr error
+	batchResults.Exec(func(i int, err error) {
+		if err != nil {
+			fmt.Println(i, err)
+			batchErr = err
+		}
+	})
+
+	if batchErr != nil {
+		fmt.Println(batchErr)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+// (DELETE /:calendarId/share/remove/self)
 func (s *Server) RemoveUserCalendar(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 	calendarId, err := echo.PathParam[uuid.UUID](c, "calendarId")
@@ -423,26 +468,10 @@ func (s *Server) RemoveUserCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	targetUserID, err := echo.PathParam[uuid.UUID](c, "userId")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, nil)
-	}
-
 	ctx := c.Request().Context()
-	if targetUserID == userId {
-		if err := s.queries.RemoveCalendarShareSelf(ctx, sqlc.RemoveCalendarShareSelfParams{
-			CalendarID: calendarId,
-			SharedWith: userId,
-		}); err != nil {
-			return c.JSON(http.StatusInternalServerError, nil)
-		}
-		return c.JSON(http.StatusOK, nil)
-	}
-
-	if err := s.queries.RemoveCalendarShareAsOwner(ctx, sqlc.RemoveCalendarShareAsOwnerParams{
+	if err := s.queries.RemoveCalendarShareSelf(ctx, sqlc.RemoveCalendarShareSelfParams{
 		CalendarID: calendarId,
-		SharedWith: targetUserID,
-		OwnerID:    userId,
+		SharedWith: userId,
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}

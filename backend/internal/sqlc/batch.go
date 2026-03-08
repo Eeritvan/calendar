@@ -19,7 +19,7 @@ var (
 	ErrBatchAlreadyClosed = errors.New("batch already closed")
 )
 
-const batchEditCalendarShared = `-- name: BatchEditCalendarShared :batchexec
+const batchEditSharedCalendarPermissions = `-- name: BatchEditSharedCalendarPermissions :batchexec
 UPDATE Calendar_shares cs
 SET permission = $1
 FROM Calendars c
@@ -30,20 +30,20 @@ WHERE
     AND c.owner_id = $4
 `
 
-type BatchEditCalendarSharedBatchResults struct {
+type BatchEditSharedCalendarPermissionsBatchResults struct {
 	br     pgx.BatchResults
 	tot    int
 	closed bool
 }
 
-type BatchEditCalendarSharedParams struct {
+type BatchEditSharedCalendarPermissionsParams struct {
 	Permission models.Permission
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
 	OwnerID    uuid.UUID
 }
 
-func (q *Queries) BatchEditCalendarShared(ctx context.Context, arg []BatchEditCalendarSharedParams) *BatchEditCalendarSharedBatchResults {
+func (q *Queries) BatchEditSharedCalendarPermissions(ctx context.Context, arg []BatchEditSharedCalendarPermissionsParams) *BatchEditSharedCalendarPermissionsBatchResults {
 	batch := &pgx.Batch{}
 	for _, a := range arg {
 		vals := []interface{}{
@@ -52,13 +52,13 @@ func (q *Queries) BatchEditCalendarShared(ctx context.Context, arg []BatchEditCa
 			a.SharedWith,
 			a.OwnerID,
 		}
-		batch.Queue(batchEditCalendarShared, vals...)
+		batch.Queue(batchEditSharedCalendarPermissions, vals...)
 	}
 	br := q.db.SendBatch(ctx, batch)
-	return &BatchEditCalendarSharedBatchResults{br, len(arg), false}
+	return &BatchEditSharedCalendarPermissionsBatchResults{br, len(arg), false}
 }
 
-func (b *BatchEditCalendarSharedBatchResults) Exec(f func(int, error)) {
+func (b *BatchEditSharedCalendarPermissionsBatchResults) Exec(f func(int, error)) {
 	defer b.br.Close()
 	for t := 0; t < b.tot; t++ {
 		if b.closed {
@@ -74,14 +74,16 @@ func (b *BatchEditCalendarSharedBatchResults) Exec(f func(int, error)) {
 	}
 }
 
-func (b *BatchEditCalendarSharedBatchResults) Close() error {
+func (b *BatchEditSharedCalendarPermissionsBatchResults) Close() error {
 	b.closed = true
 	return b.br.Close()
 }
 
 const batchShareCalendar = `-- name: BatchShareCalendar :batchexec
 INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
-VALUES ($1, $2, $3)
+SELECT $1, $2, $3
+FROM Calendars
+WHERE id = $1 AND owner_id = $4
 `
 
 type BatchShareCalendarBatchResults struct {
@@ -94,6 +96,7 @@ type BatchShareCalendarParams struct {
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
 	Permission models.Permission
+	OwnerID    uuid.UUID
 }
 
 func (q *Queries) BatchShareCalendar(ctx context.Context, arg []BatchShareCalendarParams) *BatchShareCalendarBatchResults {
@@ -103,6 +106,7 @@ func (q *Queries) BatchShareCalendar(ctx context.Context, arg []BatchShareCalend
 			a.CalendarID,
 			a.SharedWith,
 			a.Permission,
+			a.OwnerID,
 		}
 		batch.Queue(batchShareCalendar, vals...)
 	}

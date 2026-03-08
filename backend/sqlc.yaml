@@ -52,3 +52,5 @@ sql:
               pointer: true
           - column: calendar_shares.permission
             go_type: "github.com/eeritvan/calendar/internal/models.Permission"
+          - column: calendars.visibility
+            go_type: "github.com/eeritvan/calendar/internal/models.Visibility"

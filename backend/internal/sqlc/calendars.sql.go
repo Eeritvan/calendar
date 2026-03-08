@@ -15,7 +15,7 @@ import (
 const addCalendar = `-- name: AddCalendar :one
 INSERT INTO Calendars (name, owner_id)
 VALUES ($1, $2)
-RETURNING id, name, owner_id
+RETURNING id, name, owner_id, visibility
 `
 
 type AddCalendarParams struct {
@@ -24,16 +24,41 @@ type AddCalendarParams struct {
 }
 
 type AddCalendarRow struct {
-	ID      uuid.UUID
-	Name    string
-	OwnerID uuid.UUID
+	ID         uuid.UUID
+	Name       string
+	OwnerID    uuid.UUID
+	Visibility models.Visibility
 }
 
 func (q *Queries) AddCalendar(ctx context.Context, arg AddCalendarParams) (AddCalendarRow, error) {
 	row := q.db.QueryRow(ctx, addCalendar, arg.Name, arg.OwnerID)
 	var i AddCalendarRow
-	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.Visibility,
+	)
 	return i, err
+}
+
+const deleteAllCalendarShares = `-- name: DeleteAllCalendarShares :exec
+DELETE FROM Calendar_shares cs
+USING Calendars c
+WHERE
+    cs.calendar_id = $1
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $2
+`
+
+type DeleteAllCalendarSharesParams struct {
+	CalendarID uuid.UUID
+	OwnerID    uuid.UUID
+}
+
+func (q *Queries) DeleteAllCalendarShares(ctx context.Context, arg DeleteAllCalendarSharesParams) error {
+	_, err := q.db.Exec(ctx, deleteAllCalendarShares, arg.CalendarID, arg.OwnerID)
+	return err
 }
 
 const deleteCalendar = `-- name: DeleteCalendar :exec
@@ -55,7 +80,7 @@ const editCalendar = `-- name: EditCalendar :one
 UPDATE Calendars c
 SET name = COALESCE($1, name)
 WHERE c.id = $2 AND owner_id = $3
-RETURNING id, name, owner_id
+RETURNING id, name, owner_id, visibility
 `
 
 type EditCalendarParams struct {
@@ -65,19 +90,25 @@ type EditCalendarParams struct {
 }
 
 type EditCalendarRow struct {
-	ID      uuid.UUID
-	Name    string
-	OwnerID uuid.UUID
+	ID         uuid.UUID
+	Name       string
+	OwnerID    uuid.UUID
+	Visibility models.Visibility
 }
 
 func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (EditCalendarRow, error) {
 	row := q.db.QueryRow(ctx, editCalendar, arg.Name, arg.ID, arg.OwnerID)
 	var i EditCalendarRow
-	err := row.Scan(&i.ID, &i.Name, &i.OwnerID)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.Visibility,
+	)
 	return i, err
 }
 
-const editCalendarShared = `-- name: EditCalendarShared :exec
+const editSharedCalendarPermissions = `-- name: EditSharedCalendarPermissions :exec
 UPDATE Calendar_shares cs
 SET permission = $1
 FROM Calendars c
@@ -88,15 +119,15 @@ WHERE
     AND c.owner_id = $4
 `
 
-type EditCalendarSharedParams struct {
+type EditSharedCalendarPermissionsParams struct {
 	Permission models.Permission
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
 	OwnerID    uuid.UUID
 }
 
-func (q *Queries) EditCalendarShared(ctx context.Context, arg EditCalendarSharedParams) error {
-	_, err := q.db.Exec(ctx, editCalendarShared,
+func (q *Queries) EditSharedCalendarPermissions(ctx context.Context, arg EditSharedCalendarPermissionsParams) error {
+	_, err := q.db.Exec(ctx, editSharedCalendarPermissions,
 		arg.Permission,
 		arg.CalendarID,
 		arg.SharedWith,
@@ -106,18 +137,29 @@ func (q *Queries) EditCalendarShared(ctx context.Context, arg EditCalendarShared
 }
 
 const getCalendars = `-- name: GetCalendars :many
-SELECT id, name, owner_id FROM Calendars
-WHERE owner_id = $1
+SELECT
+  c.id,
+  c.name,
+  c.owner_id,
+  c.visibility
+  -- cs.permission,
+FROM Calendars c
+LEFT JOIN Calendar_shares cs
+  ON cs.calendar_id = c.id AND cs.shared_with = $1
+WHERE
+  c.owner_id = $1
+  OR cs.shared_with = $1
 `
 
 type GetCalendarsRow struct {
-	ID      uuid.UUID
-	Name    string
-	OwnerID uuid.UUID
+	ID         uuid.UUID
+	Name       string
+	OwnerID    uuid.UUID
+	Visibility models.Visibility
 }
 
-func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCalendarsRow, error) {
-	rows, err := q.db.Query(ctx, getCalendars, ownerID)
+func (q *Queries) GetCalendars(ctx context.Context, sharedWith uuid.UUID) ([]GetCalendarsRow, error) {
+	rows, err := q.db.Query(ctx, getCalendars, sharedWith)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +167,12 @@ func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCal
 	var items []GetCalendarsRow
 	for rows.Next() {
 		var i GetCalendarsRow
-		if err := rows.Scan(&i.ID, &i.Name, &i.OwnerID); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.OwnerID,
+			&i.Visibility,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -134,27 +181,6 @@ func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCal
 		return nil, err
 	}
 	return items, nil
-}
-
-const removeCalendarShareAsOwner = `-- name: RemoveCalendarShareAsOwner :exec
-DELETE FROM Calendar_shares cs
-USING Calendars c
-WHERE
-    cs.calendar_id = $1
-    AND cs.shared_with = $2
-    AND c.id = cs.calendar_id
-    AND c.owner_id = $3
-`
-
-type RemoveCalendarShareAsOwnerParams struct {
-	CalendarID uuid.UUID
-	SharedWith uuid.UUID
-	OwnerID    uuid.UUID
-}
-
-func (q *Queries) RemoveCalendarShareAsOwner(ctx context.Context, arg RemoveCalendarShareAsOwnerParams) error {
-	_, err := q.db.Exec(ctx, removeCalendarShareAsOwner, arg.CalendarID, arg.SharedWith, arg.OwnerID)
-	return err
 }
 
 const removeCalendarShareMany = `-- name: RemoveCalendarShareMany :exec
@@ -210,36 +236,27 @@ func (q *Queries) SetCalendarPrivate(ctx context.Context, arg SetCalendarPrivate
 }
 
 const shareCalendar = `-- name: ShareCalendar :exec
+
 INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
-VALUES ($1, $2, $3)
+SELECT $1, $2, $3
+FROM Calendars
+WHERE id = $1 AND owner_id = $4
 `
 
 type ShareCalendarParams struct {
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
 	Permission models.Permission
-}
-
-func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) error {
-	_, err := q.db.Exec(ctx, shareCalendar, arg.CalendarID, arg.SharedWith, arg.Permission)
-	return err
-}
-
-const wipeShared = `-- name: WipeShared :exec
-DELETE FROM Calendar_shares cs
-USING Calendars c
-WHERE
-    cs.calendar_id = $1
-    AND c.id = cs.calendar_id
-    AND c.owner_id = $2
-`
-
-type WipeSharedParams struct {
-	CalendarID uuid.UUID
 	OwnerID    uuid.UUID
 }
 
-func (q *Queries) WipeShared(ctx context.Context, arg WipeSharedParams) error {
-	_, err := q.db.Exec(ctx, wipeShared, arg.CalendarID, arg.OwnerID)
+// ---- //// -----
+func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) error {
+	_, err := q.db.Exec(ctx, shareCalendar,
+		arg.CalendarID,
+		arg.SharedWith,
+		arg.Permission,
+		arg.OwnerID,
+	)
 	return err
 }

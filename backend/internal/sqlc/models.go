@@ -16,7 +16,7 @@ type Calendar struct {
 	ID         uuid.UUID
 	OwnerID    uuid.UUID
 	Name       string
-	Visibility interface{}
+	Visibility models.Visibility
 }
 
 type CalendarShare struct {

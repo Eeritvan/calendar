@@ -9,10 +9,19 @@ const (
 	PermissionWrite Permission = "write"
 )
 
+type Visibility string
+
+const (
+	VisibilityPrivate Visibility = "private"
+	VisibilityShared  Visibility = "shared"
+	VisibilityPubic   Visibility = "public"
+)
+
 type Calendar struct {
-	Id      uuid.UUID `json:"id"`
-	Name    string    `json:"name"`
-	OwnerId uuid.UUID `json:"ownerId"`
+	Id         uuid.UUID  `json:"id"`
+	Name       string     `json:"name"`
+	OwnerId    uuid.UUID  `json:"ownerId"`
+	Visibility Visibility `json:"visibility"`
 }
 
 type AddCalendar struct {
