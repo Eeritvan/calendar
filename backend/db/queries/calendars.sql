@@ -31,32 +31,50 @@ SET visibility = 'private'
 WHERE id = $1 AND owner_id = $2;
 
 -- name: WipeShared :exec
-DELETE FROM Calendar_shares
+DELETE FROM Calendar_shares cs
+USING Calendars c
 WHERE
-    calendar_id = $1 AND
-    calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2);
+    cs.calendar_id = $1
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $2;
 
 -- name: EditCalendarShared :exec
-UPDATE Calendar_shares c
-SET permission = $2
+UPDATE Calendar_shares cs
+SET permission = $1
+FROM Calendars c
 WHERE
-    c.calendar_id = $3 AND
-    c.shared_with = $4 AND
-    c.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $1);
+    cs.calendar_id = $2
+    AND cs.shared_with = $3
+    AND cs.calendar_id = c.id
+    AND c.owner_id = $4;
+
+-- name: BatchEditCalendarShared :batchexec
+UPDATE Calendar_shares cs
+SET permission = $1
+FROM Calendars c
+WHERE
+    cs.calendar_id = $2
+    AND cs.shared_with = $3
+    AND cs.calendar_id = c.id
+    AND c.owner_id = $4;
 
 -- name: RemoveCalendarShareAsOwner :exec
-DELETE FROM Calendar_shares
+DELETE FROM Calendar_shares cs
+USING Calendars c
 WHERE
-    calendar_id = $1
-    AND shared_with = $2
-    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3);
+    cs.calendar_id = $1
+    AND cs.shared_with = $2
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $3;
 
 -- name: RemoveCalendarShareMany :exec
-DELETE FROM Calendar_shares
+DELETE FROM Calendar_shares cs
+USING Calendars c
 WHERE
-    calendar_id = $1
-    AND shared_with = ANY(@shared_with_ids::uuid[])
-    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $2);
+    cs.calendar_id = $1
+    AND cs.shared_with = ANY(@shared_with_ids::uuid[])
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $2;
 
 -- name: RemoveCalendarShareSelf :exec
 DELETE FROM Calendar_shares

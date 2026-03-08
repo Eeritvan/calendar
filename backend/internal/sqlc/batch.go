@@ -19,6 +19,66 @@ var (
 	ErrBatchAlreadyClosed = errors.New("batch already closed")
 )
 
+const batchEditCalendarShared = `-- name: BatchEditCalendarShared :batchexec
+UPDATE Calendar_shares cs
+SET permission = $1
+FROM Calendars c
+WHERE
+    cs.calendar_id = $2
+    AND cs.shared_with = $3
+    AND cs.calendar_id = c.id
+    AND c.owner_id = $4
+`
+
+type BatchEditCalendarSharedBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type BatchEditCalendarSharedParams struct {
+	Permission models.Permission
+	CalendarID uuid.UUID
+	SharedWith uuid.UUID
+	OwnerID    uuid.UUID
+}
+
+func (q *Queries) BatchEditCalendarShared(ctx context.Context, arg []BatchEditCalendarSharedParams) *BatchEditCalendarSharedBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.Permission,
+			a.CalendarID,
+			a.SharedWith,
+			a.OwnerID,
+		}
+		batch.Queue(batchEditCalendarShared, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &BatchEditCalendarSharedBatchResults{br, len(arg), false}
+}
+
+func (b *BatchEditCalendarSharedBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *BatchEditCalendarSharedBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
 const batchShareCalendar = `-- name: BatchShareCalendar :batchexec
 INSERT INTO Calendar_shares (calendar_id, shared_with, permission)
 VALUES ($1, $2, $3)

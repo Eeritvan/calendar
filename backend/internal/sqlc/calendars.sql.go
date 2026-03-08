@@ -78,27 +78,29 @@ func (q *Queries) EditCalendar(ctx context.Context, arg EditCalendarParams) (Edi
 }
 
 const editCalendarShared = `-- name: EditCalendarShared :exec
-UPDATE Calendar_shares c
-SET permission = $2
+UPDATE Calendar_shares cs
+SET permission = $1
+FROM Calendars c
 WHERE
-    c.calendar_id = $3 AND
-    c.shared_with = $4 AND
-    c.calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $1)
+    cs.calendar_id = $2
+    AND cs.shared_with = $3
+    AND cs.calendar_id = c.id
+    AND c.owner_id = $4
 `
 
 type EditCalendarSharedParams struct {
-	OwnerID    uuid.UUID
 	Permission models.Permission
 	CalendarID uuid.UUID
 	SharedWith uuid.UUID
+	OwnerID    uuid.UUID
 }
 
 func (q *Queries) EditCalendarShared(ctx context.Context, arg EditCalendarSharedParams) error {
 	_, err := q.db.Exec(ctx, editCalendarShared,
-		arg.OwnerID,
 		arg.Permission,
 		arg.CalendarID,
 		arg.SharedWith,
+		arg.OwnerID,
 	)
 	return err
 }
@@ -135,11 +137,13 @@ func (q *Queries) GetCalendars(ctx context.Context, ownerID uuid.UUID) ([]GetCal
 }
 
 const removeCalendarShareAsOwner = `-- name: RemoveCalendarShareAsOwner :exec
-DELETE FROM Calendar_shares
+DELETE FROM Calendar_shares cs
+USING Calendars c
 WHERE
-    calendar_id = $1
-    AND shared_with = $2
-    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3)
+    cs.calendar_id = $1
+    AND cs.shared_with = $2
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $3
 `
 
 type RemoveCalendarShareAsOwnerParams struct {
@@ -154,11 +158,13 @@ func (q *Queries) RemoveCalendarShareAsOwner(ctx context.Context, arg RemoveCale
 }
 
 const removeCalendarShareMany = `-- name: RemoveCalendarShareMany :exec
-DELETE FROM Calendar_shares
+DELETE FROM Calendar_shares cs
+USING Calendars c
 WHERE
-    calendar_id = $1
-    AND shared_with = ANY($3::uuid[])
-    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $2)
+    cs.calendar_id = $1
+    AND cs.shared_with = ANY($3::uuid[])
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $2
 `
 
 type RemoveCalendarShareManyParams struct {
@@ -220,10 +226,12 @@ func (q *Queries) ShareCalendar(ctx context.Context, arg ShareCalendarParams) er
 }
 
 const wipeShared = `-- name: WipeShared :exec
-DELETE FROM Calendar_shares
+DELETE FROM Calendar_shares cs
+USING Calendars c
 WHERE
-    calendar_id = $1 AND
-    calendar_id IN (SELECT c1.id FROM Calendars c1 WHERE c1.owner_id = $2)
+    cs.calendar_id = $1
+    AND c.id = cs.calendar_id
+    AND c.owner_id = $2
 `
 
 type WipeSharedParams struct {
