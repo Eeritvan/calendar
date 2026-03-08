@@ -153,6 +153,25 @@ func (q *Queries) RemoveCalendarShareAsOwner(ctx context.Context, arg RemoveCale
 	return err
 }
 
+const removeCalendarShareMany = `-- name: RemoveCalendarShareMany :exec
+DELETE FROM Calendar_shares
+WHERE
+    calendar_id = $1
+    AND shared_with = ANY($3::uuid[])
+    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $2)
+`
+
+type RemoveCalendarShareManyParams struct {
+	CalendarID    uuid.UUID
+	OwnerID       uuid.UUID
+	SharedWithIds []uuid.UUID
+}
+
+func (q *Queries) RemoveCalendarShareMany(ctx context.Context, arg RemoveCalendarShareManyParams) error {
+	_, err := q.db.Exec(ctx, removeCalendarShareMany, arg.CalendarID, arg.OwnerID, arg.SharedWithIds)
+	return err
+}
+
 const removeCalendarShareSelf = `-- name: RemoveCalendarShareSelf :exec
 DELETE FROM Calendar_shares
 WHERE calendar_id = $1 AND shared_with = $2

@@ -51,12 +51,12 @@ WHERE
     AND shared_with = $2
     AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3);
 
--- name: RemoveCalendarShareMany :batchexec
+-- name: RemoveCalendarShareMany :exec
 DELETE FROM Calendar_shares
 WHERE
     calendar_id = $1
-    AND shared_with = $2
-    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $3);
+    AND shared_with = ANY(@shared_with_ids::uuid[])
+    AND calendar_id IN (SELECT c.id FROM Calendars c WHERE c.owner_id = $2);
 
 -- name: RemoveCalendarShareSelf :exec
 DELETE FROM Calendar_shares

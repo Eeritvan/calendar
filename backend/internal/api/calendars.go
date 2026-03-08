@@ -468,28 +468,13 @@ func (s *Server) BatchRemoveUserCalendar(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	batchParams := make([]sqlc.RemoveCalendarShareManyParams, len(body.Ids))
-	for i, id := range body.Ids {
-		batchParams[i] = sqlc.RemoveCalendarShareManyParams{
-			CalendarID: calendarId,
-			SharedWith: id,
-			OwnerID:    userId,
-		}
-	}
-
 	ctx := c.Request().Context()
-	batchResults := s.queries.RemoveCalendarShareMany(ctx, batchParams)
-
-	var batchErr error
-	batchResults.Exec(func(i int, err error) {
-		if err != nil {
-			fmt.Println(i, err)
-			batchErr = err
-		}
-	})
-
-	if batchErr != nil {
-		fmt.Println(batchErr)
+	if err := s.queries.RemoveCalendarShareMany(ctx, sqlc.RemoveCalendarShareManyParams{
+		CalendarID:    calendarId,
+		SharedWithIds: body.Ids,
+		OwnerID:       userId,
+	}); err != nil {
+		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
