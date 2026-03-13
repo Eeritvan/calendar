@@ -1,12 +1,14 @@
 -- name: GetEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
-       COALESCE(l.name, '') as location_name, -- TODO: force to be defined???
+       COALESCE(l.name, '') as location_name,
        l.address as address,
        l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
-WHERE c.owner_id = $1
+LEFT JOIN Calendar_shares cs ON cs.calendar_id = c.id AND cs.shared_with = @user_id::uuid
+WHERE
+  (c.owner_id = @user_id::uuid OR cs.shared_with = @user_id::uuid)
   AND time && tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)');
 
 -- name: SearchEvents :many
@@ -17,7 +19,9 @@ SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
-WHERE c.owner_id = $1
+LEFT JOIN Calendar_shares cs ON cs.calendar_id = c.id AND cs.shared_with = @user_id::uuid
+WHERE
+  (c.owner_id = @user_id::uuid OR cs.shared_with = @user_id::uuid)
   -- AND e.name LIKE '%' || sqlc.arg('name') || '%';
   AND e.name LIKE '%' || @name::text || '%';
 
@@ -40,7 +44,7 @@ event_insert AS (
     INSERT INTO Events (calendar_id, name, time, location_id)
     SELECT $1, $2, tstzrange(@start_time::timestamptz, @end_time::timestamptz, '[)'), (SELECT id FROM location_insert)
     FROM Calendars
-    WHERE id = $1 AND owner_id = $3
+    WHERE id = $1 AND has_calendar_permission($1, $3)
     RETURNING id, calendar_id, name, time, location_id
 )
 SELECT e.id, e.calendar_id, e.name, e.time,
@@ -122,3 +126,6 @@ SELECT e.id, e.calendar_id, e.name, e.time
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 WHERE c.owner_id = $1 AND c.id = @calendar_id;
+
+-- name: Testing :one
+SELECT has_calendar_permission('019cc87d-d182-7dce-bbad-b64d7b61b75d'::uuid, 'aef72ac7-1345-42bd-bbc3-758789c847a9'::uuid) AS has_permission;

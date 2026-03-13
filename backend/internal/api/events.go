@@ -26,7 +26,7 @@ func (s *Server) GetEvents(c *echo.Context) error {
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.GetEvents(ctx, sqlc.GetEventsParams{
-		OwnerID:   userId,
+		UserID:    userId,
 		StartTime: params.StartTime,
 		EndTime:   params.EndTime,
 	})
@@ -82,8 +82,8 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 
 	ctx := c.Request().Context()
 	queryResp, err := s.queries.SearchEvents(ctx, sqlc.SearchEventsParams{
-		OwnerID: userId,
-		Name:    params.Name,
+		UserID: userId,
+		Name:   params.Name,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -157,7 +157,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 	queryResp, err := s.queries.AddEvent(ctx, sqlc.AddEventParams{
 		CalendarID:   body.CalendarId,
 		Name:         body.Name,
-		OwnerID:      userId,
+		UserIDParam:  userId,
 		StartTime:    body.StartTime,
 		EndTime:      body.EndTime,
 		LocationName: locationName,

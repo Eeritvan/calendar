@@ -32,7 +32,7 @@ event_insert AS (
     INSERT INTO Events (calendar_id, name, time, location_id)
     SELECT $1, $2, tstzrange($8::timestamptz, $9::timestamptz, '[)'), (SELECT id FROM location_insert)
     FROM Calendars
-    WHERE id = $1 AND owner_id = $3
+    WHERE id = $1 AND has_calendar_permission($1, $3)
     RETURNING id, calendar_id, name, time, location_id
 )
 SELECT e.id, e.calendar_id, e.name, e.time,
@@ -46,7 +46,7 @@ LEFT JOIN location_insert l ON e.location_id = l.id
 type AddEventParams struct {
 	CalendarID   uuid.UUID
 	Name         string
-	OwnerID      uuid.UUID
+	UserIDParam  uuid.UUID
 	LocationName string
 	Address      *string
 	Longitude    *float64
@@ -69,7 +69,7 @@ func (q *Queries) AddEvent(ctx context.Context, arg AddEventParams) (AddEventRow
 	row := q.db.QueryRow(ctx, addEvent,
 		arg.CalendarID,
 		arg.Name,
-		arg.OwnerID,
+		arg.UserIDParam,
 		arg.LocationName,
 		arg.Address,
 		arg.Longitude,
@@ -269,18 +269,20 @@ func (q *Queries) ExportCalendarEvents(ctx context.Context, arg ExportCalendarEv
 
 const getEvents = `-- name: GetEvents :many
 SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
-       COALESCE(l.name, '') as location_name, -- TODO: force to be defined???
+       COALESCE(l.name, '') as location_name,
        l.address as address,
        l.point as point
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
-WHERE c.owner_id = $1
+LEFT JOIN Calendar_shares cs ON cs.calendar_id = c.id AND cs.shared_with = $1::uuid
+WHERE
+  (c.owner_id = $1::uuid OR cs.shared_with = $1::uuid)
   AND time && tstzrange($2::timestamptz, $3::timestamptz, '[)')
 `
 
 type GetEventsParams struct {
-	OwnerID   uuid.UUID
+	UserID    uuid.UUID
 	StartTime time.Time
 	EndTime   time.Time
 }
@@ -297,7 +299,7 @@ type GetEventsRow struct {
 }
 
 func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEventsRow, error) {
-	rows, err := q.db.Query(ctx, getEvents, arg.OwnerID, arg.StartTime, arg.EndTime)
+	rows, err := q.db.Query(ctx, getEvents, arg.UserID, arg.StartTime, arg.EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -333,14 +335,16 @@ SELECT e.id, e.calendar_id, e.name, e.time, e.location_id,
 FROM Events e
 JOIN Calendars c ON e.calendar_id = c.id
 LEFT JOIN Locations l ON e.location_id = l.id
-WHERE c.owner_id = $1
+LEFT JOIN Calendar_shares cs ON cs.calendar_id = c.id AND cs.shared_with = $1::uuid
+WHERE
+  (c.owner_id = $1::uuid OR cs.shared_with = $1::uuid)
   -- AND e.name LIKE '%' || sqlc.arg('name') || '%';
   AND e.name LIKE '%' || $2::text || '%'
 `
 
 type SearchEventsParams struct {
-	OwnerID uuid.UUID
-	Name    string
+	UserID uuid.UUID
+	Name   string
 }
 
 type SearchEventsRow struct {
@@ -355,7 +359,7 @@ type SearchEventsRow struct {
 }
 
 func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]SearchEventsRow, error) {
-	rows, err := q.db.Query(ctx, searchEvents, arg.OwnerID, arg.Name)
+	rows, err := q.db.Query(ctx, searchEvents, arg.UserID, arg.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -381,4 +385,15 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]S
 		return nil, err
 	}
 	return items, nil
+}
+
+const testing = `-- name: Testing :one
+SELECT has_calendar_permission('019cc87d-d182-7dce-bbad-b64d7b61b75d'::uuid, 'aef72ac7-1345-42bd-bbc3-758789c847a9'::uuid) AS has_permission
+`
+
+func (q *Queries) Testing(ctx context.Context) (bool, error) {
+	row := q.db.QueryRow(ctx, testing)
+	var has_permission bool
+	err := row.Scan(&has_permission)
+	return has_permission, err
 }
