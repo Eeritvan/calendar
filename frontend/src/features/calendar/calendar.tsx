@@ -91,46 +91,48 @@ const Calendar = () => {
   }, [rowItems, referenceDate]);
 
   return (
-    <div
-      ref={parentRef}
-      className="h-150 overflow-auto bg-white"
-    >
+    <div className='w-dvw flex bg-red-300 rounded-2xl m-2 ml-44 overflow-hidden'>
       <div
-        className="relative"
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          width: `${columnVirtualizer.getTotalSize()}px`,
-        }}
+        ref={parentRef}
+        className="overflow-auto bg-white"
       >
-        {rowItems.map((row) => {
-          const weekData = generateWeekData(row.index - 1 - CURRENT_WEEK_INDEX, referenceDate);
+        <div
+          className="relative"
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: `${columnVirtualizer.getTotalSize()}px`,
+          }}
+        >
+          {rowItems.map((row) => {
+            const weekData = generateWeekData(row.index - 1 - CURRENT_WEEK_INDEX, referenceDate);
 
-          return (
-            <div
-              key={row.key}
-              data-index={row.index}
-              ref={rowVirtualizer.measureElement}
-              className="absolute w-full grid grid-cols-7"
-              style={{
-                transform: `translateY(${row.start}px)`,
-              }}
-            >
-              {columnItems.map((column) => {
-                const cellContent = weekData[column.index];
+            return (
+              <div
+                key={row.key}
+                data-index={row.index}
+                ref={rowVirtualizer.measureElement}
+                className="absolute w-full grid grid-cols-7"
+                style={{
+                  transform: `translateY(${row.start}px)`,
+                }}
+              >
+                {columnItems.map((column) => {
+                  const cellContent = weekData[column.index];
 
-                return (
-                  <div
-                    key={column.key}
-                    className={`overflow-hidden whitespace-pre-wrap border hover:bg-red-200`}
-                    style={{ minHeight: ROW_HEIGHT }}
-                  >
-                    {cellContent}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+                  return (
+                    <div
+                      key={column.key}
+                      className={`overflow-hidden whitespace-pre-wrap border hover:bg-red-200`}
+                      style={{ minHeight: ROW_HEIGHT }}
+                    >
+                      {cellContent}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
