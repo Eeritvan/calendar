@@ -24,7 +24,7 @@ const fetchMe = async () => {
 
 const Sidebar = () => {
   const { value: theme, setItem } = useLocalStorage("theme")
-  const { value: sidebar, setItem: setSidebar } = useLocalStorage("theme")
+  const { value: sidebar, setItem: setSidebar } = useLocalStorage("sidebar")
   const { isLoading, data } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: fetchMe,
@@ -38,7 +38,7 @@ const Sidebar = () => {
   })
 
   return (
-    <div>
+    <nav>
       <label htmlFor='sidebar-toggle'>
         sidebar
         <select
@@ -98,7 +98,7 @@ const Sidebar = () => {
       <button onClick={() => mutate()}>
         logout
       </button>
-    </div>
+    </nav>
   )
 }
 

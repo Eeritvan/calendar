@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
+import { useHotkey } from '@tanstack/react-hotkeys'
 import Sidebar from '@/features/sidebar/sidebar'
 import Calendar from '@/features/calendar/calendar'
 
@@ -8,18 +8,14 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
-  useKeyboardShortcut({
-    key: "i",
-    ctrl: true,
-    onKeyPressed: () => console.log("Enter was pressed!"),
+  useHotkey('Control+I', () => {
+    console.log("key pressed")
   })
 
   return (
-    <div className='w-dvw h-dvh flex'>
-      <div className='w-dvw flex bg-blue-300'>
-        <Sidebar />
-        <Calendar />
-      </div>
-    </div>
+    <main className='w-screen h-screen flex bg-blue-300'>
+      <Sidebar />
+      <Calendar />
+    </main>
   )
 }

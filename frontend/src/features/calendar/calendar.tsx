@@ -91,7 +91,7 @@ const Calendar = () => {
   }, [rowItems, referenceDate]);
 
   return (
-    <div className='w-dvw flex bg-red-300 rounded-2xl m-2 ml-44 overflow-hidden'>
+    <section className='w-dvw flex bg-red-300 rounded-2xl m-2 ml-44 overflow-hidden'>
       <div
         ref={parentRef}
         className="overflow-auto bg-white"
@@ -134,7 +134,7 @@ const Calendar = () => {
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
