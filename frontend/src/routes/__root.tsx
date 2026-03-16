@@ -1,6 +1,8 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { hotkeysDevtoolsPlugin } from '@tanstack/react-hotkeys-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { formDevtoolsPlugin } from '@tanstack/react-form-devtools'
 
 import {  useQuery } from '@tanstack/react-query'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
@@ -43,6 +45,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
               render: <TanStackRouterDevtoolsPanel />,
             },
             TanStackQueryDevtools,
+            formDevtoolsPlugin(),
+            hotkeysDevtoolsPlugin(),
           ]}
         />
       </>
