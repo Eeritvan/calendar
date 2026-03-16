@@ -1,17 +1,8 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { API_URL } from "@/constants";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Activity } from "react";
-
-const logout = async () => {
-  const res = await fetch(`${API_URL}/auth/logout`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include'
-  })
-  return res.json()
-}
+import { Activity, useRef } from "react";
+import Settings, { type SettingsRef } from '@/features/settings/settings'
+import { API_URL } from "@/constants";
 
 const fetchMe = async () => {
   const res = await fetch(`${API_URL}/auth/me`, {
@@ -23,8 +14,7 @@ const fetchMe = async () => {
 }
 
 const Sidebar = () => {
-  const { value: theme, setItem } = useLocalStorage("theme")
-  const { value: sidebar, setItem: setSidebar } = useLocalStorage("sidebar")
+  const settingsRef = useRef<SettingsRef>(null);
   const { isLoading, data } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: fetchMe,
@@ -33,42 +23,12 @@ const Sidebar = () => {
 
   console.log(data)
 
-  const { mutate } = useMutation({
-    mutationFn: logout
-  })
-
   return (
-    <nav>
-      <label htmlFor='sidebar-toggle'>
-        sidebar
-        <select
-          id='sidebar-toggle'
-          value={sidebar ?? 'on'}
-          onChange={(e: any) => {
-            const newSidebar = e.target.value
-            setSidebar(newSidebar)
-          }}
-        >
-          <option value="on"> on </option>
-          <option value="off"> off </option>
-        </select>
-      </label>
-      <br />
-      <label htmlFor='theme-switch'>
-        theme
-        <select
-          id='theme-switch'
-          value={theme ?? 'auto'}
-          onChange={(e: any) => {
-            const newTheme = e.target.value
-            setItem(newTheme)
-          }}
-        >
-          <option value="auto"> auto </option>
-          <option value="light"> light </option>
-          <option value="dark"> dark </option>
-        </select>
-      </label>
+    <nav
+      className="min-w-44 bg-amber-500"
+    >
+      <Settings ref={ settingsRef }/>
+      <button onClick={() => settingsRef.current?.toggle()}>toggle</button>
       <Activity mode={isLoading ? "hidden" : "visible"}>
         <Link to="/auth/login">
           login
@@ -94,10 +54,6 @@ const Sidebar = () => {
       <Link to="/events/addEvent">
         addEvent
       </Link>
-      <br />
-      <button onClick={() => mutate()}>
-        logout
-      </button>
     </nav>
   )
 }
