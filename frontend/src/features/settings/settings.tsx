@@ -1,20 +1,21 @@
-import { API_URL } from "@/constants"
-import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { useMutation } from "@tanstack/react-query"
 import { forwardRef, useImperativeHandle, useRef, useState } from "react"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { API_URL } from "@/constants"
 
 export type SettingsRef = {
   toggle: () => void
 }
 
 type Tab = "appearance" | "account"
+type Theme = "auto" | "light" | "dark"
 
 const logout = async () => {
   const res = await fetch(`${API_URL}/auth/logout`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include'
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   })
   return res.json()
 }
@@ -22,7 +23,8 @@ const logout = async () => {
 const Settings = forwardRef<SettingsRef>((_, ref) => {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
   const { value: theme, setItem } = useLocalStorage("theme")
-  const [tab, setTab]  = useState<Tab>("appearance")
+  const [tab, setTab] = useState<Tab>("appearance")
+  const html = document.documentElement
 
   const toggleDialog = () => {
     const dialog = dialogRef.current
@@ -31,11 +33,11 @@ const Settings = forwardRef<SettingsRef>((_, ref) => {
   }
 
   const { mutate } = useMutation({
-    mutationFn: logout
+    mutationFn: logout,
   })
 
   useImperativeHandle(ref, () => ({
-    toggle: toggleDialog
+    toggle: toggleDialog,
   }))
 
   useHotkey("Control+I", toggleDialog)
@@ -43,14 +45,14 @@ const Settings = forwardRef<SettingsRef>((_, ref) => {
   return (
     <dialog
       ref={dialogRef}
-      className="m-auto backdrop:bg-black/40 rounded-2xl w-170"
+      className="m-auto backdrop:bg-black/80 rounded-2xl w-170"
       onClick={(e) => {
         if (e.currentTarget === e.target) toggleDialog()
       }}
     >
-      <div className="bg-white flex flex-row h-140">
-        <nav className="flex-1 max-w-44 bg-emerald-700">
-          <ul className="">
+      <div className="flex flex-row h-140">
+        <nav className="flex-1 max-w-44 bg-base">
+          <ul>
             <li>
               <button
                 className="hover:bg-emerald-600"
@@ -69,17 +71,22 @@ const Settings = forwardRef<SettingsRef>((_, ref) => {
             </li>
           </ul>
         </nav>
-        <section className="flex-1 bg-orange-300">
-          {tab === "appearance" &&
+        <section className="flex-1 bg-alt">
+          {tab === "appearance" && (
             <div>
-              <label htmlFor='theme-switch'>
+              <label htmlFor="theme-switch">
                 Appearance
                 <select
-                  id='theme-switch'
-                  value={theme ?? 'auto'}
-                  onChange={(e: any) => {
-                    const newTheme = e.target.value
+                  id="theme-switch"
+                  value={(theme ?? "auto") as Theme}
+                  onChange={(e) => {
+                    const newTheme = e.target.value as Theme
                     setItem(newTheme)
+                    if (newTheme === "auto") {
+                      html.removeAttribute("data-theme")
+                      return
+                    }
+                    html.setAttribute("data-theme", newTheme)
                   }}
                 >
                   <option value="auto"> auto </option>
@@ -88,14 +95,14 @@ const Settings = forwardRef<SettingsRef>((_, ref) => {
                 </select>
               </label>
             </div>
-          }
-          {tab === "account" &&
+          )}
+          {tab === "account" && (
             <div>
               <button onClick={() => mutate()}>
                 logout
               </button>
             </div>
-          }
+          )}
         </section>
       </div>
     </dialog>

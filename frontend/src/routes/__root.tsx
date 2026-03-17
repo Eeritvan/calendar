@@ -32,6 +32,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     });
     useSse(data?.id ?? "")
 
+    // set correct theme on initial render
+    const theme = window.localStorage.getItem("theme")
+    theme && theme !== "auto" &&
+      document.documentElement.setAttribute("data-theme", theme)
+
     return (
       <>
         <Outlet />

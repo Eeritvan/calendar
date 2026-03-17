@@ -8,7 +8,7 @@ export const Route = createFileRoute('/')({
 
 function App() {
   return (
-    <main className='w-screen h-screen flex bg-blue-300'>
+    <main className='w-screen h-screen flex'>
       <Sidebar />
       <Calendar />
     </main>

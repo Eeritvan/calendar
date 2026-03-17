@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Activity, useRef } from "react";
-import Settings, { type SettingsRef } from '@/features/settings/settings'
+import type {SettingsRef} from '@/features/settings/settings';
+import Settings from '@/features/settings/settings'
 import { API_URL } from "@/constants";
 
 const fetchMe = async () => {
@@ -25,7 +26,7 @@ const Sidebar = () => {
 
   return (
     <nav
-      className="min-w-44 bg-amber-500"
+      className="min-w-44"
     >
       <Settings ref={ settingsRef }/>
       <button onClick={() => settingsRef.current?.toggle()}>toggle</button>

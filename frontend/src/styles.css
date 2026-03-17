@@ -1,16 +1,40 @@
 @import "tailwindcss";
 
+@property --color-base {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: light-dark(oklch(0.82 0 0), oklch(0.2 0 0));
+}
+
+@property --color-alt {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: light-dark(oklch(0.9 0 0), oklch(0.25 0 0));
+}
+
 html {
   color-scheme: light dark;
-  background-color: light-dark(white, black);
+  background-color: light-dark(oklch(0.82 0 0), oklch(0.2 0 0));
+
+
+  &[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  &[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  transition:
+    --color-base 300ms ease,
+    --color-alt 300ms ease,
+    background-color 300ms ease,
+    color 300ms ease;
 }
 
-html:has(#theme-switch [value="light"]:checked) {
-  color-scheme: light;
-}
-
-html:has(#theme-switch [value="dark"]:checked) {
-  color-scheme: dark;
+@theme {
+  --color-base: light-dark(oklch(0.82 0 0), oklch(0.2 0 0));
+  --color-alt: light-dark(oklch(0.9 0 0), oklch(0.25 0 0));
 }
 
 body {

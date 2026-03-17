@@ -91,10 +91,10 @@ const Calendar = () => {
   }, [rowItems, referenceDate]);
 
   return (
-    <section className='flex bg-red-300 rounded-2xl m-2 overflow-hidden'>
+    <section className='flex rounded-2xl m-2 overflow-hidden'>
       <div
         ref={parentRef}
-        className="overflow-auto bg-white"
+        className="overflow-auto bg-alt"
       >
         <div
           className="relative"
