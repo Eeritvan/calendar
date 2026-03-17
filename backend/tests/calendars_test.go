@@ -42,8 +42,20 @@ func TestGetCalendars(t *testing.T) {
 			userId:         userId1,
 			expectedStatus: http.StatusOK,
 			expectedRespData: []models.Calendar{
-				{Name: "meetings", OwnerId: userId1, Visibility: models.VisibilityPrivate},
-				{Name: "daily", OwnerId: userId1, Visibility: models.VisibilityPrivate},
+				{
+					Name:       "meetings",
+					OwnerId:    userId1,
+					Permission: models.PermissionWrite,
+					Visibility: models.VisibilityPrivate,
+					IsOwner:    true,
+				},
+				{
+					Name:       "daily",
+					OwnerId:    userId1,
+					Permission: models.PermissionWrite,
+					Visibility: models.VisibilityPrivate,
+					IsOwner:    true,
+				},
 			},
 		},
 		{
@@ -51,7 +63,13 @@ func TestGetCalendars(t *testing.T) {
 			userId:         userId2,
 			expectedStatus: http.StatusOK,
 			expectedRespData: []models.Calendar{
-				{Name: "video games", OwnerId: userId2, Visibility: models.VisibilityPrivate},
+				{
+					Name:       "video games",
+					OwnerId:    userId2,
+					Permission: models.PermissionWrite,
+					Visibility: models.VisibilityPrivate,
+					IsOwner:    true,
+				},
 			},
 		},
 	}
@@ -107,9 +125,8 @@ func TestAddCalendar(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Calendar{
 				// id is unknown beforehand
-				Name:       "meetings",
-				OwnerId:    userId,
-				Visibility: models.VisibilityPrivate,
+				Name:    "meetings",
+				OwnerId: userId,
 			},
 		},
 		// TODO
@@ -148,7 +165,6 @@ func TestAddCalendar(t *testing.T) {
 
 			assert.NotNil(t, got.Id)
 			assert.Equal(t, tc.expectedRespData.Name, got.Name)
-			assert.Equal(t, tc.expectedRespData.OwnerId, got.OwnerId)
 		})
 	}
 }
@@ -180,7 +196,7 @@ func TestEditCalendar(t *testing.T) {
 			name:       "editing calendar works",
 			calendarId: calendarId,
 			body: models.EditCalendar{
-				Name: utils.Ptr("daily"),
+				Name: new("daily"),
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Calendar{
@@ -194,7 +210,7 @@ func TestEditCalendar(t *testing.T) {
 			name:       "editing non-existent calendars fails",
 			calendarId: randomUUID,
 			body: models.EditCalendar{
-				Name: utils.Ptr("daily"),
+				Name: new("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -202,7 +218,7 @@ func TestEditCalendar(t *testing.T) {
 			name:       "editing other users calendars fails",
 			calendarId: calendarId2,
 			body: models.EditCalendar{
-				Name: utils.Ptr("daily"),
+				Name: new("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},

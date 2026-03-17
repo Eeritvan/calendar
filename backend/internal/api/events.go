@@ -6,7 +6,6 @@ import (
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/sqlc"
-	"github.com/eeritvan/calendar/internal/utils"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 )
@@ -42,8 +41,8 @@ func (s *Server) GetEvents(c *echo.Context) error {
 			var lat *float64
 			var lng *float64
 			if event.Point != nil {
-				lat = utils.Ptr(event.Point.P.Y)
-				lng = utils.Ptr(event.Point.P.X)
+				lat = new(event.Point.P.Y)
+				lng = new(event.Point.P.X)
 			}
 
 			location = &models.Location{
@@ -97,8 +96,8 @@ func (s *Server) SearchEvents(c *echo.Context) error {
 			var lat *float64
 			var lng *float64
 			if event.Point != nil {
-				lat = utils.Ptr(event.Point.P.Y)
-				lng = utils.Ptr(event.Point.P.X)
+				lat = new(event.Point.P.Y)
+				lng = new(event.Point.P.X)
 			}
 
 			location = &models.Location{
@@ -175,8 +174,8 @@ func (s *Server) AddEvent(c *echo.Context) error {
 		var lat *float64
 		var lng *float64
 		if queryResp.Point != nil {
-			lat = utils.Ptr(queryResp.Point.P.Y)
-			lng = utils.Ptr(queryResp.Point.P.X)
+			lat = new(queryResp.Point.P.Y)
+			lng = new(queryResp.Point.P.X)
 		}
 
 		location = &models.Location{
@@ -224,7 +223,7 @@ func (s *Server) EditEvent(c *echo.Context) error {
 
 	userId := c.Get("userId").(uuid.UUID)
 
-	locationName := utils.Ptr("")
+	locationName := new("")
 	var locationAddress *string // TODO: would be nice if this wasn't needed
 	var latitude *float64
 	var longitude *float64
@@ -259,8 +258,8 @@ func (s *Server) EditEvent(c *echo.Context) error {
 		var lat *float64
 		var lng *float64
 		if queryResp.Point != nil {
-			lat = utils.Ptr(queryResp.Point.P.Y)
-			lng = utils.Ptr(queryResp.Point.P.X)
+			lat = new(queryResp.Point.P.Y)
+			lng = new(queryResp.Point.P.X)
 		}
 
 		location = &models.Location{

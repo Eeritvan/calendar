@@ -161,7 +161,7 @@ func seedEvent(t *testing.T, ctx context.Context, queries *sqlc.Queries, ownerID
 	event, err := queries.AddEvent(ctx, sqlc.AddEventParams{
 		CalendarID:   body.CalendarId,
 		Name:         body.Name,
-		OwnerID:      ownerID,
+		UserIDParam:  ownerID,
 		StartTime:    body.StartTime,
 		EndTime:      body.EndTime,
 		LocationName: locationName,

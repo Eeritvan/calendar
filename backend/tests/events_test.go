@@ -46,9 +46,9 @@ func TestGetEvents(t *testing.T) {
 		EndTime:    timePlusHour,
 		Location: &models.LocationInput{
 			Name:      "toimisto",
-			Address:   utils.Ptr("toimistokatu 1"),
-			Latitude:  utils.Ptr(60.248947411912596),
-			Longitude: utils.Ptr(24.978291441099014),
+			Address:   new("toimistokatu 1"),
+			Latitude:  new(60.248947411912596),
+			Longitude: new(24.978291441099014),
 		},
 	})
 	userId2 := seedUser(t, ctx, queries, "getEventsUser2", "password2")
@@ -68,7 +68,7 @@ func TestGetEvents(t *testing.T) {
 		EndTime:    timePlusHour,
 		Location: &models.LocationInput{
 			Name:    "testing",
-			Address: utils.Ptr("testing"),
+			Address: new("testing"),
 		},
 	})
 
@@ -102,9 +102,9 @@ func TestGetEvents(t *testing.T) {
 					EndTime:    timePlusHour,
 					Location: &models.Location{
 						Name:      "toimisto",
-						Address:   utils.Ptr("toimistokatu 1"),
-						Latitude:  utils.Ptr(60.248947411912596),
-						Longitude: utils.Ptr(24.978291441099014),
+						Address:   new("toimistokatu 1"),
+						Latitude:  new(60.248947411912596),
+						Longitude: new(24.978291441099014),
 					},
 				},
 			},
@@ -156,7 +156,7 @@ func TestGetEvents(t *testing.T) {
 					EndTime:    timePlusHour,
 					Location: &models.Location{
 						Name:    "testing",
-						Address: utils.Ptr("testing"),
+						Address: new("testing"),
 					},
 				},
 			},
@@ -235,9 +235,9 @@ func TestSearchEvents(t *testing.T) {
 		EndTime:    endTime,
 		Location: &models.LocationInput{
 			Name:      "toimisto",
-			Address:   utils.Ptr("toimistokatu 1"),
-			Latitude:  utils.Ptr(60.248947411912596),
-			Longitude: utils.Ptr(24.978291441099014),
+			Address:   new("toimistokatu 1"),
+			Latitude:  new(60.248947411912596),
+			Longitude: new(24.978291441099014),
 		},
 	})
 
@@ -259,7 +259,7 @@ func TestSearchEvents(t *testing.T) {
 		EndTime:    endTime,
 		Location: &models.LocationInput{
 			Name:    "testing",
-			Address: utils.Ptr("testing"),
+			Address: new("testing"),
 		},
 	})
 
@@ -292,9 +292,9 @@ func TestSearchEvents(t *testing.T) {
 					EndTime:    endTime,
 					Location: &models.Location{
 						Name:      "toimisto",
-						Address:   utils.Ptr("toimistokatu 1"),
-						Latitude:  utils.Ptr(60.248947411912596),
-						Longitude: utils.Ptr(24.978291441099014),
+						Address:   new("toimistokatu 1"),
+						Latitude:  new(60.248947411912596),
+						Longitude: new(24.978291441099014),
 					},
 				},
 			},
@@ -328,7 +328,7 @@ func TestSearchEvents(t *testing.T) {
 					EndTime:    endTime,
 					Location: &models.Location{
 						Name:    "testing",
-						Address: utils.Ptr("testing"),
+						Address: new("testing"),
 					},
 				},
 			},
@@ -407,9 +407,9 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.LocationInput{
 					Name:      "kirjasto",
-					Address:   utils.Ptr("helsingin kirjasto 1"),
-					Latitude:  utils.Ptr(62.248947411912596),
-					Longitude: utils.Ptr(25.978291441099014),
+					Address:   new("helsingin kirjasto 1"),
+					Latitude:  new(62.248947411912596),
+					Longitude: new(25.978291441099014),
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -421,9 +421,9 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.Location{
 					Name:      "kirjasto",
-					Address:   utils.Ptr("helsingin kirjasto 1"),
-					Latitude:  utils.Ptr(62.248947411912596),
-					Longitude: utils.Ptr(25.978291441099014),
+					Address:   new("helsingin kirjasto 1"),
+					Latitude:  new(62.248947411912596),
+					Longitude: new(25.978291441099014),
 				},
 			},
 		},
@@ -477,8 +477,8 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.LocationInput{
 					Name:      "home",
-					Latitude:  utils.Ptr(33.4321),
-					Longitude: utils.Ptr(22.1234),
+					Latitude:  new(33.4321),
+					Longitude: new(22.1234),
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -490,8 +490,8 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.Location{
 					Name:      "home",
-					Latitude:  utils.Ptr(33.4321),
-					Longitude: utils.Ptr(22.1234),
+					Latitude:  new(33.4321),
+					Longitude: new(22.1234),
 				},
 			},
 		},
@@ -504,7 +504,7 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.LocationInput{
 					Name:    "home",
-					Address: utils.Ptr("testroad 1"),
+					Address: new("testroad 1"),
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -516,7 +516,7 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.Location{
 					Name:    "home",
-					Address: utils.Ptr("testroad 1"),
+					Address: new("testroad 1"),
 				},
 			},
 		},
@@ -529,9 +529,9 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.LocationInput{
 					Name:      "kirjasto",
-					Address:   utils.Ptr("helsingin kirjasto 1"),
-					Latitude:  utils.Ptr(62.248947411912596),
-					Longitude: utils.Ptr(25.978291441099014),
+					Address:   new("helsingin kirjasto 1"),
+					Latitude:  new(62.248947411912596),
+					Longitude: new(25.978291441099014),
 				},
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -555,7 +555,7 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    startTime,
 				Location: &models.LocationInput{
 					Name:     "office",
-					Latitude: utils.Ptr(22.12345),
+					Latitude: new(22.12345),
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -569,7 +569,7 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    startTime,
 				Location: &models.LocationInput{
 					Name:      "office",
-					Longitude: utils.Ptr(22.12345),
+					Longitude: new(22.12345),
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -583,8 +583,8 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.LocationInput{
 					Name:      "office",
-					Longitude: utils.Ptr(22.1234),
-					Latitude:  utils.Ptr(181.0),
+					Longitude: new(22.1234),
+					Latitude:  new(181.0),
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -598,8 +598,8 @@ func TestAddEvent(t *testing.T) {
 				EndTime:    endTime,
 				Location: &models.LocationInput{
 					Name:      "office",
-					Longitude: utils.Ptr(22.123),
-					Latitude:  utils.Ptr(-91.0),
+					Longitude: new(22.123),
+					Latitude:  new(-91.0),
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -670,9 +670,9 @@ func TestEditEvent(t *testing.T) {
 		EndTime:    endTime,
 		Location: &models.LocationInput{
 			Name:      "office",
-			Address:   utils.Ptr("officeRoad 1"),
-			Latitude:  utils.Ptr(12.3456),
-			Longitude: utils.Ptr(65.4321),
+			Address:   new("officeRoad 1"),
+			Latitude:  new(12.3456),
+			Longitude: new(65.4321),
 		},
 	})
 
@@ -694,10 +694,10 @@ func TestEditEvent(t *testing.T) {
 			name:    "editing events works",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(calendarId),
-				Name:       utils.Ptr("daily"),
-				StartTime:  utils.Ptr(editedStartTime),
-				EndTime:    utils.Ptr(editedEndTime),
+				CalendarId: new(calendarId),
+				Name:       new("daily"),
+				StartTime:  new(editedStartTime),
+				EndTime:    new(editedEndTime),
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Event{
@@ -712,8 +712,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "calendar can be changed",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(editCalendarId),
-				Name:       utils.Ptr("daily"),
+				CalendarId: new(editCalendarId),
+				Name:       new("daily"),
 			},
 			expectedStatus: http.StatusOK,
 			expectedRespData: models.Event{
@@ -728,13 +728,13 @@ func TestEditEvent(t *testing.T) {
 			name:    "location can be changed",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(calendarId),
-				Name:       utils.Ptr("testing"),
+				CalendarId: new(calendarId),
+				Name:       new("testing"),
 				Location: &models.LocationEdit{
-					Name:      utils.Ptr("office"),
-					Address:   utils.Ptr("road 1"),
-					Latitude:  utils.Ptr(33.33),
-					Longitude: utils.Ptr(22.22),
+					Name:      new("office"),
+					Address:   new("road 1"),
+					Latitude:  new(33.33),
+					Longitude: new(22.22),
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -746,9 +746,9 @@ func TestEditEvent(t *testing.T) {
 				EndTime:    editedEndTime,
 				Location: &models.Location{
 					Name:      "office",
-					Address:   utils.Ptr("road 1"),
-					Latitude:  utils.Ptr(33.33),
-					Longitude: utils.Ptr(22.22),
+					Address:   new("road 1"),
+					Latitude:  new(33.33),
+					Longitude: new(22.22),
 				},
 			},
 		},
@@ -756,8 +756,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "location can be removed",
 			eventId: eventId2,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(calendarId),
-				Name:       utils.Ptr("testing"),
+				CalendarId: new(calendarId),
+				Name:       new("testing"),
 				Location:   nil,
 			},
 			expectedStatus: http.StatusOK,
@@ -774,8 +774,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "event can't be added to non-existent calendar",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(randomUUID),
-				Name:       utils.Ptr("daily"),
+				CalendarId: new(randomUUID),
+				Name:       new("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -783,11 +783,11 @@ func TestEditEvent(t *testing.T) {
 			name:    "event latitude and longitude must be edited together",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(calendarId),
-				Name:       utils.Ptr("daily"),
+				CalendarId: new(calendarId),
+				Name:       new("daily"),
 				Location: &models.LocationEdit{
-					Name:     utils.Ptr("testing"),
-					Latitude: utils.Ptr(23.22),
+					Name:     new("testing"),
+					Latitude: new(23.22),
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -796,8 +796,8 @@ func TestEditEvent(t *testing.T) {
 			name:    "event can't be added to other users calendar",
 			eventId: eventId,
 			body: models.EventEdit{
-				CalendarId: utils.Ptr(calendarId2),
-				Name:       utils.Ptr("daily"),
+				CalendarId: new(calendarId2),
+				Name:       new("daily"),
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
