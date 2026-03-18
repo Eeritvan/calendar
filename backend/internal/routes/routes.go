@@ -11,4 +11,5 @@ func RegisterRoutes(e *echo.Echo, s *api.Server) {
 	authRoutes(g, s)
 	calendarRoutes(g, s)
 	eventRoutes(g, s)
+	folderRoutes(g, s)
 }

@@ -17,6 +17,7 @@ type Calendar struct {
 	OwnerID    uuid.UUID
 	Name       string
 	Visibility models.Visibility
+	FolderID   uuid.UUID
 }
 
 type CalendarShare struct {
@@ -32,6 +33,12 @@ type Event struct {
 	Name       string
 	Time       pgtype.Range[pgtype.Timestamptz]
 	LocationID pgtype.Int4
+}
+
+type Folder struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+	Name   string
 }
 
 type Location struct {
