@@ -27,20 +27,31 @@ func (s *Server) GetCalendars(c *echo.Context) error {
 
 	resp := make([]models.Calendar, len(queryResp))
 	for i, calendar := range queryResp {
-		resp[i] = models.Calendar{
+		item := models.Calendar{
 			Id:         calendar.ID,
 			Name:       calendar.Name,
 			OwnerId:    calendar.OwnerID,
 			Visibility: calendar.Visibility,
 			Permission: calendar.Permission,
 			IsOwner:    calendar.IsOwner,
+			Folder:     nil,
 		}
+
+		if calendar.FolderID != uuid.Nil {
+			item.Folder = &models.Folder{
+				Id:   calendar.FolderID,
+				Name: *calendar.FolderName,
+			}
+		}
+
+		resp[i] = item
 	}
 
 	return c.JSON(http.StatusOK, resp)
 }
 
 // (POST /addCalendar)
+// -- TODO: add to folder also
 func (s *Server) AddCalendar(c *echo.Context) error {
 	body := new(models.AddCalendar)
 	if err := c.Bind(&body); err != nil {

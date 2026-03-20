@@ -17,6 +17,11 @@ const (
 	VisibilityPubic   Visibility = "public"
 )
 
+type Folder struct {
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
 type Calendar struct {
 	Id         uuid.UUID  `json:"id"`
 	Name       string     `json:"name"`
@@ -24,10 +29,12 @@ type Calendar struct {
 	Visibility Visibility `json:"visibility"`
 	Permission Permission `json:"permission"`
 	IsOwner    bool       `json:"isOwner"`
+	Folder     *Folder    `json:"folder"`
 }
 
 type AddCalendar struct {
-	Name string `json:"name" validate:"required,max=100"`
+	Name     string     `json:"name" validate:"required,max=100"`
+	FolderId *uuid.UUID `json:"folderId,omitempty" validate:"omitempty,uuid"`
 }
 
 type EditCalendar struct {

@@ -4,11 +4,15 @@ SELECT
   c.name,
   c.owner_id,
   c.visibility,
+  f.name AS folder_name,
+  f.id AS folder_ID,
   COALESCE(cs.permission, 'write'),
   ($1 = c.owner_id) as is_owner
 FROM Calendars c
 LEFT JOIN Calendar_shares cs
   ON cs.calendar_id = c.id AND cs.shared_with = $1
+LEFT JOIN Folders f
+  ON c.folder_id = f.id AND $1 = f.user_id
 WHERE
   c.owner_id = $1
   OR cs.shared_with = $1;
