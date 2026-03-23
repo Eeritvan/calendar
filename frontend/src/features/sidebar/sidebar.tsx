@@ -4,6 +4,9 @@ import { Activity, useRef } from "react";
 import type {SettingsRef} from '@/features/settings/settings';
 import Settings from '@/features/settings/settings'
 import { API_URL } from "@/constants";
+import { fetchCalendars } from "./api";
+import type { Calendar } from "@/types";
+import CalendarItem from "./components/calendarItem";
 
 const fetchMe = async () => {
   const res = await fetch(`${API_URL}/auth/me`, {
@@ -22,7 +25,11 @@ const Sidebar = () => {
     enabled: false
   });
 
-  console.log(data)
+  const { data: calendars } = useQuery<Array<Calendar>>({
+    queryKey: ['calendars'],
+    queryFn: () => fetchCalendars(),
+    refetchOnMount: false
+  });
 
   return (
     <nav
@@ -40,10 +47,6 @@ const Sidebar = () => {
         </Link>
       </Activity>
       <br />
-      <Link to="/calendars/getCalendars">
-        getCalendars
-      </Link>
-      <br />
       <Link to="/calendars/addCalendar">
         addCalendar
       </Link>
@@ -55,6 +58,11 @@ const Sidebar = () => {
       <Link to="/events/addEvent">
         addEvent
       </Link>
+      <ul className="gap-5">
+        {calendars?.map((item, index) => (
+          <CalendarItem item={item} index={index} />
+        ))}
+      </ul>
     </nav>
   )
 }
