@@ -25,6 +25,8 @@ const Sidebar = () => {
     enabled: false
   });
 
+  console.log(data)
+
   const { data: calendars } = useQuery<Array<Calendar>>({
     queryKey: ['calendars'],
     queryFn: () => fetchCalendars(),

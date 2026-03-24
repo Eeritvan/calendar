@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsGetEventsRouteImport } from './routes/events/getEvents'
 import { Route as EventsAddEventRouteImport } from './routes/events/addEvent'
-import { Route as CalendarsGetCalendarsRouteImport } from './routes/calendars/getCalendars'
 import { Route as CalendarsAddCalendarRouteImport } from './routes/calendars/addCalendar'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
@@ -30,11 +29,6 @@ const EventsGetEventsRoute = EventsGetEventsRouteImport.update({
 const EventsAddEventRoute = EventsAddEventRouteImport.update({
   id: '/events/addEvent',
   path: '/events/addEvent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarsGetCalendarsRoute = CalendarsGetCalendarsRouteImport.update({
-  id: '/calendars/getCalendars',
-  path: '/calendars/getCalendars',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarsAddCalendarRoute = CalendarsAddCalendarRouteImport.update({
@@ -58,7 +52,6 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/calendars/addCalendar': typeof CalendarsAddCalendarRoute
-  '/calendars/getCalendars': typeof CalendarsGetCalendarsRoute
   '/events/addEvent': typeof EventsAddEventRoute
   '/events/getEvents': typeof EventsGetEventsRoute
 }
@@ -67,7 +60,6 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/calendars/addCalendar': typeof CalendarsAddCalendarRoute
-  '/calendars/getCalendars': typeof CalendarsGetCalendarsRoute
   '/events/addEvent': typeof EventsAddEventRoute
   '/events/getEvents': typeof EventsGetEventsRoute
 }
@@ -77,7 +69,6 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/calendars/addCalendar': typeof CalendarsAddCalendarRoute
-  '/calendars/getCalendars': typeof CalendarsGetCalendarsRoute
   '/events/addEvent': typeof EventsAddEventRoute
   '/events/getEvents': typeof EventsGetEventsRoute
 }
@@ -88,7 +79,6 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/signup'
     | '/calendars/addCalendar'
-    | '/calendars/getCalendars'
     | '/events/addEvent'
     | '/events/getEvents'
   fileRoutesByTo: FileRoutesByTo
@@ -97,7 +87,6 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/signup'
     | '/calendars/addCalendar'
-    | '/calendars/getCalendars'
     | '/events/addEvent'
     | '/events/getEvents'
   id:
@@ -106,7 +95,6 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/signup'
     | '/calendars/addCalendar'
-    | '/calendars/getCalendars'
     | '/events/addEvent'
     | '/events/getEvents'
   fileRoutesById: FileRoutesById
@@ -116,7 +104,6 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSignupRoute: typeof AuthSignupRoute
   CalendarsAddCalendarRoute: typeof CalendarsAddCalendarRoute
-  CalendarsGetCalendarsRoute: typeof CalendarsGetCalendarsRoute
   EventsAddEventRoute: typeof EventsAddEventRoute
   EventsGetEventsRoute: typeof EventsGetEventsRoute
 }
@@ -142,13 +129,6 @@ declare module '@tanstack/react-router' {
       path: '/events/addEvent'
       fullPath: '/events/addEvent'
       preLoaderRoute: typeof EventsAddEventRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendars/getCalendars': {
-      id: '/calendars/getCalendars'
-      path: '/calendars/getCalendars'
-      fullPath: '/calendars/getCalendars'
-      preLoaderRoute: typeof CalendarsGetCalendarsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendars/addCalendar': {
@@ -180,7 +160,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthSignupRoute: AuthSignupRoute,
   CalendarsAddCalendarRoute: CalendarsAddCalendarRoute,
-  CalendarsGetCalendarsRoute: CalendarsGetCalendarsRoute,
   EventsAddEventRoute: EventsAddEventRoute,
   EventsGetEventsRoute: EventsGetEventsRoute,
 }
