@@ -13,6 +13,7 @@ import (
 	"github.com/eeritvan/calendar/internal/sqlc"
 	"github.com/eeritvan/calendar/internal/stream"
 	"github.com/eeritvan/calendar/internal/utils"
+	"github.com/rs/zerolog"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -63,6 +64,26 @@ func main() {
 	}
 
 	e.Use(middleware.BodyLimit(524_288)) // 500kb
+
+	logger := zerolog.New(os.Stdout)
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			userId, ok := c.Get("userId").(uuid.UUID)
+			userIdStr := ""
+			if ok {
+				userIdStr = userId.String()
+			}
+			logger.Info().
+				Str("URI", v.URI).
+				Int("status", v.Status).
+				Str("userId", userIdStr).
+				Msg("request")
+
+			return nil
+		},
+	}))
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000"},
