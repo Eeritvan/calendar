@@ -39,7 +39,7 @@ func TestSignup(t *testing.T) {
 				Password:             "password",
 				PasswordConfirmation: "password",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 		},
 		{
 			name: "signup fails with mismatched passwords",
@@ -183,7 +183,7 @@ func TestLogout(t *testing.T) {
 	}{
 		{
 			name:           "logout works and clears the cookie",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 	}
 

@@ -62,7 +62,7 @@ func (s *Server) Signup(c *echo.Context) error {
 
 	jwtCookie := utils.CreateJWTCookie(jwtToken)
 	c.SetCookie(jwtCookie)
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusCreated, resp)
 }
 
 // (POST /login)
@@ -422,5 +422,5 @@ func (s *Server) TotpRecovery(c *echo.Context) error {
 func (s *Server) Logout(c *echo.Context) error {
 	cookie := utils.DeleteJWTCookie()
 	c.SetCookie(cookie)
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }

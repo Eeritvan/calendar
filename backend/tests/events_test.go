@@ -412,7 +412,7 @@ func TestAddEvent(t *testing.T) {
 					Longitude: new(25.978291441099014),
 				},
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectedRespData: models.Event{
 				// id is unknown beforehand
 				Name:       "team meeting",
@@ -435,7 +435,7 @@ func TestAddEvent(t *testing.T) {
 				StartTime:  startTime,
 				EndTime:    endTime,
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectedRespData: models.Event{
 				// id is unknown beforehand
 				Name:       "online team meeting",
@@ -456,7 +456,7 @@ func TestAddEvent(t *testing.T) {
 					Name: "home",
 				},
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectedRespData: models.Event{
 				// id is unknown beforehand
 				Name:       "online team meeting",
@@ -481,7 +481,7 @@ func TestAddEvent(t *testing.T) {
 					Longitude: new(22.1234),
 				},
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectedRespData: models.Event{
 				// id is unknown beforehand
 				Name:       "online team meeting",
@@ -507,7 +507,7 @@ func TestAddEvent(t *testing.T) {
 					Address: new("testroad 1"),
 				},
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectedRespData: models.Event{
 				// id is unknown beforehand
 				Name:       "online team meeting",
@@ -867,12 +867,12 @@ func TestDeleteEvent(t *testing.T) {
 		{
 			name:           "deleting event works",
 			eventId:        eventId,
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 		{
 			name:           "deleting event that does not exist does not fail",
 			eventId:        randomUUID,
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 	}
 
@@ -945,7 +945,7 @@ func TestBatchDeleteEvents(t *testing.T) {
 					eventId3,
 				},
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 		{
 			name: "deleting events that does not exist does not fail",
@@ -954,7 +954,7 @@ func TestBatchDeleteEvents(t *testing.T) {
 					randomUUID,
 				},
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 		{
 			name:           "request with no events will fail",

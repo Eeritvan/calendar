@@ -83,7 +83,7 @@ func (s *Server) AddCalendar(c *echo.Context) error {
 	}
 
 	s.sse.Emit(userId, "calendar/post", resp)
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusCreated, resp)
 }
 
 // (PATCH /calendar/edit/:calendarId)
@@ -141,7 +141,7 @@ func (s *Server) DeleteCalendar(c *echo.Context) error {
 	}
 
 	s.sse.Emit(userId, "calendar/delete", calendarId)
-	return c.JSON(http.StatusOK, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func parseDate(dateStr string, layouts []string) (time.Time, error) {
@@ -233,7 +233,7 @@ func (s *Server) ImportEvents(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 // (POST /calendar/:calendarId/event/export)

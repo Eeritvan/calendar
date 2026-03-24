@@ -196,7 +196,7 @@ func (s *Server) AddEvent(c *echo.Context) error {
 	}
 
 	s.sse.Emit(userId, "event/post", resp)
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusCreated, resp)
 }
 
 // (PATCH /event/edit/:eventId)
@@ -301,7 +301,7 @@ func (s *Server) DeleteEvent(c *echo.Context) error {
 	}
 
 	s.sse.Emit(userId, "event/delete", eventId)
-	return c.JSON(http.StatusOK, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 // (POST /event/delete/batch)
@@ -327,5 +327,5 @@ func (s *Server) BatchDeleteEvents(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.NoContent(http.StatusNoContent)
 }

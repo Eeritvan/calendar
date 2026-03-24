@@ -122,7 +122,7 @@ func TestAddCalendar(t *testing.T) {
 			body: models.AddCalendar{
 				Name: "meetings",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectedRespData: models.Calendar{
 				// id is unknown beforehand
 				Name:    "meetings",
@@ -279,12 +279,12 @@ func TestDeleteCalendar(t *testing.T) {
 		{
 			name:           "deleting calendar works",
 			calendarId:     calendarId,
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 		{
 			name:           "deleting calendar that does not exist does not fail",
 			calendarId:     randomUUID,
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 	}
 
