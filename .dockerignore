@@ -13,7 +13,7 @@ backend/migrations/
 backend/queries/
 backend/tests/
 
-# shared
+# common
 työtuntikirjanpito.md
 .dockerignore
 Dockerfile
