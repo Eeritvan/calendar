@@ -166,3 +166,70 @@ func TestAddCalendarToFolder(t *testing.T) {
 		})
 	}
 }
+
+// func TestEditFolder(t *testing.T) {
+// 	t.Parallel()
+
+// 	ctx := context.Background()
+// 	connURI := spawnPostgresContainer(t, "folders")
+// 	server, queries := setupTestServer(t, ctx, connURI)
+
+// 	userId := seedUser(t, ctx, queries, "editFolderUser", "password1")
+// 	folderId := seedFolder(t, ctx, queries, "folder 1", userId)
+
+// 	tests := []struct {
+// 		name             string
+// 		folderId         uuid.UUID
+// 		body             models.FolderEdit
+// 		expectedStatus   int
+// 		expectedRespData models.Folder
+// 	}{
+// 		{
+// 			name:     "editing folder works",
+// 			folderId: folderId,
+// 			body: models.FolderEdit{
+// 				Name: new("edited folder"),
+// 			},
+// 			expectedStatus: http.StatusOK,
+// 			expectedRespData: models.Folder{
+// 				Id:   folderId,
+// 				Name: "edited folder",
+// 			},
+// 		},
+// 		// {
+// 		// 	name:           "other users folders cannot be edited",
+// 		// 	folderId:       folderId,
+// 		// 	calendarId:     calendarId,
+// 		// 	expectedStatus: http.StatusOK,
+// 		// },
+// 	}
+
+// 	for _, tc := range tests {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			t.Parallel()
+
+// 			c, rec := echotest.ContextConfig{
+// 				PathValues: echo.PathValues{
+// 					{Name: "folderId", Value: folderId.String()},
+// 				},
+// 				Headers: map[string][]string{
+// 					echo.HeaderContentType: {echo.MIMEApplicationJSON},
+// 				},
+// 			}.ToContextRecorder(t)
+// 			c.Echo().Validator = &utils.CustomValidator{
+// 				Validator: validator.New(validator.WithRequiredStructEnabled()),
+// 			}
+// 			c.Set("userId", userId)
+
+// 			_ = server.EditFolder(c)
+
+// 			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+// 			var got models.Folder
+// 			err := json.Unmarshal(rec.Body.Bytes(), &got)
+// 			require.NoError(t, err)
+
+// 			assert.Equal(t, tc.expectedRespData, got)
+// 		})
+// 	}
+// }

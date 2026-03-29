@@ -104,10 +104,11 @@ func (q *Queries) DeleteFolder(ctx context.Context, arg DeleteFolderParams) erro
 	return err
 }
 
-const editFolder = `-- name: EditFolder :exec
+const editFolder = `-- name: EditFolder :one
 UPDATE Folders
 SET name = $1
 WHERE id = $2 AND user_id = $3
+RETURNING id, name
 `
 
 type EditFolderParams struct {
@@ -116,9 +117,16 @@ type EditFolderParams struct {
 	UserID uuid.UUID
 }
 
-func (q *Queries) EditFolder(ctx context.Context, arg EditFolderParams) error {
-	_, err := q.db.Exec(ctx, editFolder, arg.Name, arg.ID, arg.UserID)
-	return err
+type EditFolderRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) EditFolder(ctx context.Context, arg EditFolderParams) (EditFolderRow, error) {
+	row := q.db.QueryRow(ctx, editFolder, arg.Name, arg.ID, arg.UserID)
+	var i EditFolderRow
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
 }
 
 const removeCalendarFromFolder = `-- name: RemoveCalendarFromFolder :exec

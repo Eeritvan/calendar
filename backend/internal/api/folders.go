@@ -100,16 +100,22 @@ func (s *Server) EditFolder(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
-	if err := s.queries.EditFolder(ctx, sqlc.EditFolderParams{
+	queryResp, err := s.queries.EditFolder(ctx, sqlc.EditFolderParams{
 		ID:     folderId,
 		Name:   *body.Name,
 		UserID: userId,
-	}); err != nil {
+	})
+	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	resp := models.Folder{
+		Id:   queryResp.ID,
+		Name: queryResp.Name,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // (DELETE /folders/remove/:calendarId)

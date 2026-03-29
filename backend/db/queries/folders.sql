@@ -3,10 +3,11 @@ INSERT INTO Folders (name, user_id)
 VALUES ($1, $2)
 RETURNING id, name;
 
--- name: EditFolder :exec
+-- name: EditFolder :one
 UPDATE Folders
 SET name = $1
-WHERE id = $2 AND user_id = $3;
+WHERE id = $2 AND user_id = $3
+RETURNING id, name;
 
 -- name: AddCalendarToFolder :one
 WITH updated AS (
