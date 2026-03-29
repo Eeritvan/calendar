@@ -8,13 +8,31 @@ package sqlc
 import (
 	"context"
 
+	"github.com/eeritvan/calendar/internal/models"
 	"github.com/google/uuid"
 )
 
-const addCalendarToFolder = `-- name: AddCalendarToFolder :exec
-UPDATE Calendars
-SET folder_id = $1
-WHERE id = $2 AND owner_id = $3
+const addCalendarToFolder = `-- name: AddCalendarToFolder :one
+WITH updated AS (
+  UPDATE Calendars c
+  SET folder_id = $1
+  FROM Folders f
+  WHERE c.id = $2
+    AND c.owner_id = $3
+    AND f.id = $1
+    AND f.user_id = $3
+  RETURNING c.id, c.name, c.owner_id, c.visibility, c.folder_id, (c.owner_id = $3) as is_owner
+)
+SELECT
+  u.id,
+  u.name,
+  u.owner_id,
+  u.visibility,
+  u.folder_id,
+  u.is_owner,
+  f.name AS folder_name
+FROM updated u
+JOIN Folders f ON f.id = u.folder_id
 `
 
 type AddCalendarToFolderParams struct {
@@ -23,9 +41,29 @@ type AddCalendarToFolderParams struct {
 	OwnerID  uuid.UUID
 }
 
-func (q *Queries) AddCalendarToFolder(ctx context.Context, arg AddCalendarToFolderParams) error {
-	_, err := q.db.Exec(ctx, addCalendarToFolder, arg.FolderID, arg.ID, arg.OwnerID)
-	return err
+type AddCalendarToFolderRow struct {
+	ID         uuid.UUID
+	Name       string
+	OwnerID    uuid.UUID
+	Visibility models.Visibility
+	FolderID   uuid.UUID
+	IsOwner    bool
+	FolderName string
+}
+
+func (q *Queries) AddCalendarToFolder(ctx context.Context, arg AddCalendarToFolderParams) (AddCalendarToFolderRow, error) {
+	row := q.db.QueryRow(ctx, addCalendarToFolder, arg.FolderID, arg.ID, arg.OwnerID)
+	var i AddCalendarToFolderRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.Visibility,
+		&i.FolderID,
+		&i.IsOwner,
+		&i.FolderName,
+	)
+	return i, err
 }
 
 const addFolder = `-- name: AddFolder :one

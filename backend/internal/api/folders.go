@@ -56,16 +56,29 @@ func (s *Server) AddCalendarToFolder(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
-	if err := s.queries.AddCalendarToFolder(ctx, sqlc.AddCalendarToFolderParams{
+	queryResp, err := s.queries.AddCalendarToFolder(ctx, sqlc.AddCalendarToFolderParams{
 		ID:       calendarId,
 		FolderID: folderId,
 		OwnerID:  userId,
-	}); err != nil {
+	})
+	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
+	resp := models.Calendar{
+		Id:         queryResp.ID,
+		Name:       queryResp.Name,
+		OwnerId:    queryResp.OwnerID,
+		Visibility: queryResp.Visibility,
+		// TODO: permission
+		IsOwner: queryResp.IsOwner,
+		Folder: &models.Folder{
+			Id:   queryResp.FolderID,
+			Name: queryResp.FolderName,
+		},
+	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusOK, resp)
 }
 
 // (PATCH /folders/edit/:folderId)

@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/eeritvan/calendar/internal/models"
 	"github.com/eeritvan/calendar/internal/utils"
+	"github.com/google/uuid"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
@@ -23,7 +25,7 @@ func TestAddFolder(t *testing.T) {
 	connURI := spawnPostgresContainer(t, "folders")
 	server, queries := setupTestServer(t, ctx, connURI)
 
-	userId := seedUser(t, ctx, queries, "addFolderUser1", "password1")
+	userId := seedUser(t, ctx, queries, "addFolderUser", "password1")
 
 	tests := []struct {
 		name             string
@@ -41,6 +43,20 @@ func TestAddFolder(t *testing.T) {
 				// id is unknown beforehand
 				Name: "work",
 			},
+		},
+		{
+			name: "adding new folder with no name returns bad request",
+			body: models.AddFolder{
+				Name: "",
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "adding new folder with too long name (>100 chars) returns bad request",
+			body: models.AddFolder{
+				Name: strings.Repeat("a", 101),
+			},
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -72,6 +88,81 @@ func TestAddFolder(t *testing.T) {
 
 			assert.NotNil(t, got.Id)
 			assert.Equal(t, tc.expectedRespData.Name, got.Name)
+		})
+	}
+}
+
+func TestAddCalendarToFolder(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	connURI := spawnPostgresContainer(t, "folders")
+	server, queries := setupTestServer(t, ctx, connURI)
+
+	userId := seedUser(t, ctx, queries, "addCalendarToFolderUser1", "password1")
+	calendarId := seedCalendar(t, ctx, queries, "calendar 1", userId)
+	folderId := seedFolder(t, ctx, queries, "folder 1", userId)
+
+	tests := []struct {
+		name             string
+		folderId         uuid.UUID
+		calendarId       uuid.UUID
+		expectedStatus   int
+		expectedRespData models.Calendar
+	}{
+		{
+			name:           "adding calendar to folder works",
+			folderId:       folderId,
+			calendarId:     calendarId,
+			expectedStatus: http.StatusOK,
+			expectedRespData: models.Calendar{
+				Id:         calendarId,
+				Name:       "calendar 1",
+				OwnerId:    userId,
+				Visibility: models.VisibilityPrivate,
+				// Permission: models.PermissionWrite,
+				IsOwner: true,
+				Folder: &models.Folder{
+					Id:   folderId,
+					Name: "folder 1",
+				},
+			},
+		},
+		// {
+		// 	name:           "calendars that are not own cannot be added to folders",
+		// 	folderId:       folderId,
+		// 	calendarId:     calendarId,
+		// 	expectedStatus: http.StatusOK,
+		// },
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			c, rec := echotest.ContextConfig{
+				PathValues: echo.PathValues{
+					{Name: "calendarId", Value: calendarId.String()},
+					{Name: "folderId", Value: folderId.String()},
+				},
+				Headers: map[string][]string{
+					echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				},
+			}.ToContextRecorder(t)
+			c.Echo().Validator = &utils.CustomValidator{
+				Validator: validator.New(validator.WithRequiredStructEnabled()),
+			}
+			c.Set("userId", userId)
+
+			_ = server.AddCalendarToFolder(c)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+			var got models.Calendar
+			err := json.Unmarshal(rec.Body.Bytes(), &got)
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.expectedRespData, got)
 		})
 	}
 }

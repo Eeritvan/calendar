@@ -54,3 +54,5 @@ sql:
             go_type: "github.com/eeritvan/calendar/internal/models.Permission"
           - column: calendars.visibility
             go_type: "github.com/eeritvan/calendar/internal/models.Visibility"
+          - column: updated.visibility
+            go_type: "github.com/eeritvan/calendar/internal/models.Visibility"

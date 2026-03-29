@@ -131,6 +131,18 @@ func seedUser(t *testing.T, ctx context.Context, queries *sqlc.Queries, name, pa
 	return user.ID
 }
 
+func seedFolder(t *testing.T, ctx context.Context, queries *sqlc.Queries, name string, userId uuid.UUID) uuid.UUID {
+	t.Helper()
+
+	folder, err := queries.AddFolder(ctx, sqlc.AddFolderParams{
+		UserID: userId,
+		Name:   name,
+	})
+	require.NoError(t, err)
+
+	return folder.ID
+}
+
 func seedCalendar(t *testing.T, ctx context.Context, queries *sqlc.Queries, name string, userId uuid.UUID) uuid.UUID {
 	t.Helper()
 
