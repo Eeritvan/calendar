@@ -24,15 +24,21 @@ func (s *Server) NewFolder(c *echo.Context) error {
 	userId := c.Get("userId").(uuid.UUID)
 
 	ctx := c.Request().Context()
-	if err := s.queries.AddFolder(ctx, sqlc.AddFolderParams{
+	queryResp, err := s.queries.AddFolder(ctx, sqlc.AddFolderParams{
 		Name:   body.Name,
 		UserID: userId,
-	}); err != nil {
+	})
+	if err != nil {
 		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusCreated, nil)
+	resp := models.Folder{
+		Id:   queryResp.ID,
+		Name: queryResp.Name,
+	}
+
+	return c.JSON(http.StatusCreated, resp)
 }
 
 // (POST /folders/add/:calendarId/:folderId)

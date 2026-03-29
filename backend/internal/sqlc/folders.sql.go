@@ -28,9 +28,10 @@ func (q *Queries) AddCalendarToFolder(ctx context.Context, arg AddCalendarToFold
 	return err
 }
 
-const addFolder = `-- name: AddFolder :exec
+const addFolder = `-- name: AddFolder :one
 INSERT INTO Folders (name, user_id)
 VALUES ($1, $2)
+RETURNING id, name
 `
 
 type AddFolderParams struct {
@@ -38,9 +39,16 @@ type AddFolderParams struct {
 	UserID uuid.UUID
 }
 
-func (q *Queries) AddFolder(ctx context.Context, arg AddFolderParams) error {
-	_, err := q.db.Exec(ctx, addFolder, arg.Name, arg.UserID)
-	return err
+type AddFolderRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) AddFolder(ctx context.Context, arg AddFolderParams) (AddFolderRow, error) {
+	row := q.db.QueryRow(ctx, addFolder, arg.Name, arg.UserID)
+	var i AddFolderRow
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
 }
 
 const deleteFolder = `-- name: DeleteFolder :exec

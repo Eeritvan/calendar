@@ -17,11 +17,6 @@ const (
 	VisibilityPubic   Visibility = "public"
 )
 
-type Folder struct {
-	Id   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
-
 type Calendar struct {
 	Id         uuid.UUID  `json:"id"`
 	Name       string     `json:"name"`

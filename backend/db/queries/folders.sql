@@ -1,6 +1,7 @@
--- name: AddFolder :exec
+-- name: AddFolder :one
 INSERT INTO Folders (name, user_id)
-VALUES ($1, $2);
+VALUES ($1, $2)
+RETURNING id, name;
 
 -- name: EditFolder :exec
 UPDATE Folders
