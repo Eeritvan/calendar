@@ -8,5 +8,10 @@ export const fetchCalendars = async (): Promise<Array<Calendar>> => {
     credentials: 'include',
   });
 
+  if (!res.ok) {
+    console.log("error happened", await res.json())
+    throw new Error("error");
+  }
+
   return res.json();
 };
