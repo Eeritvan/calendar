@@ -86,7 +86,7 @@ func main() {
 	}))
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
 	}))
@@ -129,5 +129,5 @@ func main() {
 	e.StaticFS("/", echo.MustSubFS(dist, "dist"))
 
 	port := os.Getenv("PORT")
-	log.Fatal(e.Start("0.0.0.0:" + port))
+	log.Fatal(e.Start("127.0.0.1:" + port))
 }
