@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -467,6 +468,28 @@ func TestAddEvent(t *testing.T) {
 					Name: "home",
 				},
 			},
+		},
+		{
+			name: "missing name fails",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       "",
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location:   nil,
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "too long name fails",
+			body: models.AddEvent{
+				CalendarId: calendarId,
+				Name:       strings.Repeat("a", 101),
+				StartTime:  startTime,
+				EndTime:    endTime,
+				Location:   nil,
+			},
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name: "adding event with location name and lat/lng works",

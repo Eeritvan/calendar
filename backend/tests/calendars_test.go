@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/eeritvan/calendar/internal/models"
@@ -129,12 +130,20 @@ func TestAddCalendar(t *testing.T) {
 				OwnerId: userId,
 			},
 		},
-		// TODO
-		// {
-		// 	name:           "adding calendars fails with empty body",
-		// 	body:           models.AddCalendar{},
-		// 	expectedStatus: http.StatusBadRequest,
-		// },
+		{
+			name: "missing name fails",
+			body: models.AddCalendar{
+				Name: "",
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "too long name fails",
+			body: models.AddCalendar{
+				Name: strings.Repeat("a", 101),
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, tc := range tests {
