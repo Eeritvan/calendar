@@ -84,6 +84,7 @@ func (s *Server) AddCalendarToFolder(c *echo.Context) error {
 // (PATCH /folders/edit/:folderId)
 func (s *Server) EditFolder(c *echo.Context) error {
 	folderId, err := echo.PathParam[uuid.UUID](c, "folderId")
+	fmt.Println(folderId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
@@ -136,7 +137,7 @@ func (s *Server) RemoveCalendarFromFolder(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusNoContent, nil)
 }
 
 // (DELETE /folders/delete/:folderId)
@@ -158,5 +159,5 @@ func (s *Server) DeleteFolder(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusNoContent, nil)
 }
