@@ -100,6 +100,13 @@ func spawnPostgresContainer(t *testing.T, reuseName string) string {
 		postgres.WithUsername("postgres"),
 		postgres.WithPassword("postgres"),
 		postgres.WithOrderedInitScripts(filteredScripts...),
+		testcontainers.WithEnv(map[string]string{
+			"POSTGRES_INITDB_ARGS": "--nosync",
+		}),
+		testcontainers.WithCmdArgs("-c", "shared_buffers=256MB"),
+		testcontainers.WithTmpfs(map[string]string{
+			"/var/lib/postgresql": "size=50m",
+		}),
 		testcontainers.WithReuseByName(reuseName),
 		testcontainers.WithWaitStrategy(
 			wait.
